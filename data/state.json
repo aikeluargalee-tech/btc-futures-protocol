@@ -1,25 +1,23 @@
 {
   "protocol_version": "1.0",
-  "updated_at_utc": "2026-11-14T02:00:55Z",
-  "updated_at_ms": 1794621655864,
+  "updated_at_utc": "2026-11-14T02:01:52Z",
+  "updated_at_ms": 1794621712464,
   "ticker": {
-    "price": 68291.9,
+    "price": 68258.3,
     "high24": 70895.8,
     "low24": 67445.0,
-    "chg24_pct": -3.64,
+    "chg24_pct": -3.7,
     "source": "OKX BTC-USDT-SWAP"
   },
   "derivatives": {
     "current_rate_pct": 0.00429,
-    "oi_btc": 33470.5,
+    "oi_btc": 33474.0,
     "venues": {
-      "okx": 0.00429,
-      "binance": 0.00372,
-      "bybit": 0.00709
+      "okx": 0.00429
     }
   },
   "extras": {
-    "dvol": 39.92,
+    "dvol": 39.94,
     "fng_value": 13,
     "fng_label": "Extreme Fear"
   },
@@ -57,7 +55,7 @@
   "macro_calendar": [],
   "regime": {
     "ok": true,
-    "score": 23.99,
+    "score": 23.98,
     "bias": "SHORT_ELIGIBLE",
     "thresholds": {
       "long": 65.0,
@@ -69,19 +67,19 @@
     "groups": {
       "trend_structure": {
         "weight": 0.3,
-        "score": 13.84,
+        "score": 13.81,
         "daily_structure": "BEARISH_LH_LL",
         "h4_structure": "BEARISH_LH_LL",
         "ema50_d": 78171.9,
         "ema200_d": 74758.5,
-        "range_60d_pct": 4.2,
+        "range_60d_pct": 4.1,
         "components": {
           "daily_structure_score": 12.0,
           "h4_structure_score": 12.0,
           "ema_alignment_score": 24.0,
-          "swing_anchor_score": 4.2
+          "swing_anchor_score": 4.1
         },
-        "summary": "1D=BEARISH_LH_LL, 4H=BEARISH_LH_LL, P=68,292 vs EMA50=78,172, EMA200=74,759"
+        "summary": "1D=BEARISH_LH_LL, 4H=BEARISH_LH_LL, P=68,258 vs EMA50=78,172, EMA200=74,759"
       },
       "momentum_breadth": {
         "weight": 0.25,
@@ -144,9 +142,9 @@
       {
         "key": "trend_structure",
         "label": "Trend Structure",
-        "score": 13.84,
+        "score": 13.81,
         "weight": 0.3,
-        "weighted_impact_vs_50": -10.85
+        "weighted_impact_vs_50": -10.86
       },
       {
         "key": "momentum_breadth",
@@ -171,17 +169,17 @@
       }
     ],
     "dominant_factors": [
-      "Trend Structure (13.8/100, -10.8 pts)",
+      "Trend Structure (13.8/100, -10.9 pts)",
       "Momentum & Breadth (15.6/100, -8.6 pts)"
     ],
     "recalc_utc_day": "2026-11-14",
-    "recalc_at_utc": "2026-11-14T02:01:04Z",
+    "recalc_at_utc": "2026-11-14T02:01:56Z",
     "htf_structural_break": false
   },
   "signal": {
     "status": "FLAT",
     "direction": null,
-    "price": 68291.9,
+    "price": 68258.3,
     "atr_4h": 1170.7,
     "structural_levels": [
       {
@@ -266,7 +264,7 @@
         "id": 2,
         "rule": "HTF Structural Level Interaction",
         "passed": false,
-        "detail": "Nearest level Prior Daily Low (67,445.0) is $847 away (band \u00b1$683)"
+        "detail": "Nearest level Prior Daily Low (67,445.0) is $813 away (band \u00b1$683)"
       },
       {
         "id": 3,
@@ -278,7 +276,7 @@
         "id": 4,
         "rule": "R:R \u2265 1.8:1 & Stop \u2264 4%",
         "passed": false,
-        "detail": "R:R 0.60:1 to Prior Daily Low (67,445.0) < 1.8:1 minimum"
+        "detail": "R:R 0.58:1 to Prior Daily Low (67,445.0) < 1.8:1 minimum"
       },
       {
         "id": 5,
@@ -300,20 +298,20 @@
       }
     ],
     "rejection_reasons": [
-      "Nearest level Prior Daily Low (67,445.0) is $847 away (band \u00b1$683)",
+      "Nearest level Prior Daily Low (67,445.0) is $813 away (band \u00b1$683)",
       "No 4H bearish BOS (< 67445.0) or qualifying rejection candle (vol 0.52x)",
-      "R:R 0.60:1 to Prior Daily Low (67,445.0) < 1.8:1 minimum"
+      "R:R 0.58:1 to Prior Daily Low (67,445.0) < 1.8:1 minimum"
     ],
     "proposal": {
       "direction": "SHORT",
       "role": "primary",
       "entry_method": "LIMIT_AT_LEVEL",
-      "entry_price": 68291.9,
-      "stop_price": 69696.7,
+      "entry_price": 68258.3,
+      "stop_price": 69663.1,
       "target1_price": 67445.0,
       "target1_label": "Prior Daily Low",
-      "raw_rr": 0.6,
-      "funding_adjusted_rr": 0.6,
+      "raw_rr": 0.58,
+      "funding_adjusted_rr": 0.58,
       "funding_drag_pct": 0.0,
       "level_label": "Prior Daily Low",
       "level_price": 67445.0,
@@ -322,14 +320,14 @@
       "neutral_continuation": false,
       "valid": true,
       "size_btc": 0.355923,
-      "notional_usd": 24306.63,
+      "notional_usd": 24294.67,
       "leverage": 0.243,
       "leverage_capped": false,
       "target_risk_pct": 0.5,
       "actual_risk_pct": 0.5,
       "actual_risk_usd": 500.0,
       "stop_distance_usd": 1404.8,
-      "stop_distance_pct": 2.057
+      "stop_distance_pct": 2.058
     },
     "macro_blackout": {
       "in_blackout": false,
@@ -1293,6 +1291,7 @@
     }
   },
   "fetch_errors": [
-    "ForexFactory calendar: HTTPError 429"
+    "Binance funding: HTTPError 451",
+    "Bybit ticker: HTTPError 403"
   ]
 }
