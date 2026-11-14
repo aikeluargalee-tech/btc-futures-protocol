@@ -78,40 +78,38 @@ class _ProtocolVideoCardState extends State<ProtocolVideoCard> {
       child: Column(
         children: [
           InkWell(
-            borderRadius: BorderRadius.circular(12),
             onTap: widget.onToggleExpanded,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               child: Row(
                 children: [
                   const Icon(
-                    Icons.play_circle_outline,
+                    Icons.play_arrow_sharp,
                     color: TerminalColors.accent,
-                    size: 20,
+                    size: 16,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   const Expanded(
                     child: Text(
                       'PROTOCOL BRIEFING VIDEO (vGUZF.mp4)',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 10.5,
                         fontWeight: FontWeight.w700,
-                        letterSpacing: 0.6,
+                        letterSpacing: 0.4,
                         color: TerminalColors.text,
                       ),
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: TerminalColors.panelAlt,
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: TerminalColors.border),
+                      border: Border.all(color: TerminalColors.borderDark),
                     ),
                     child: Text(
-                      widget.expanded ? 'HIDE' : 'EXPAND',
+                      widget.expanded ? 'HIDE' : 'TAP TO PLAY',
                       style: const TextStyle(
-                        fontSize: 10,
+                        fontSize: 9.5,
                         fontWeight: FontWeight.w700,
                         color: TerminalColors.accent,
                       ),
@@ -123,7 +121,7 @@ class _ProtocolVideoCardState extends State<ProtocolVideoCard> {
           ),
           if (widget.expanded)
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
               child: _buildVideoBody(),
             ),
         ],
@@ -134,16 +132,15 @@ class _ProtocolVideoCardState extends State<ProtocolVideoCard> {
   Widget _buildVideoBody() {
     if (!widget.enablePlatformPlugins) {
       return Container(
-        height: 160,
+        height: 140,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: TerminalColors.border),
+          color: TerminalColors.panelAlt,
+          border: Border.all(color: TerminalColors.borderDark),
         ),
         child: const Text(
           'Video Briefing Player Ready (vGUZF.mp4)',
-          style: TextStyle(color: TerminalColors.muted, fontSize: 12),
+          style: TextStyle(color: TerminalColors.text, fontSize: 10.5),
         ),
       );
     }
@@ -151,18 +148,18 @@ class _ProtocolVideoCardState extends State<ProtocolVideoCard> {
     if (_loadError != null) {
       return Text(
         _loadError!,
-        style: const TextStyle(color: TerminalColors.down, fontSize: 12),
+        style: const TextStyle(color: TerminalColors.down, fontSize: 10.5),
       );
     }
 
     final ctrl = _controller;
     if (ctrl == null || !_initialized) {
       return Container(
-        height: 180,
+        height: 160,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(8),
+          color: TerminalColors.panelAlt,
+          border: Border.all(color: TerminalColors.border),
         ),
         child: const CircularProgressIndicator(strokeWidth: 2),
       );
@@ -170,8 +167,10 @@ class _ProtocolVideoCardState extends State<ProtocolVideoCard> {
 
     return Column(
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: TerminalColors.borderDark),
+          ),
           child: AspectRatio(
             aspectRatio: ctrl.value.aspectRatio > 0 ? ctrl.value.aspectRatio : 16 / 9,
             child: VideoPlayer(ctrl),

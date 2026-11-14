@@ -5,6 +5,7 @@ import 'package:http/testing.dart';
 import 'package:btc_futures_protocol/data/repositories/protocol_repository.dart';
 import 'package:btc_futures_protocol/data/services/protocol_api_service.dart';
 import 'package:btc_futures_protocol/domain/models/protocol_state.dart';
+import 'package:btc_futures_protocol/domain/telemetry_export.dart';
 import 'package:btc_futures_protocol/main.dart';
 import 'package:btc_futures_protocol/ui/features/dashboard/view_models/protocol_view_model.dart';
 
@@ -97,8 +98,18 @@ void main() {
   test('ProtocolState parses v4.0 JSON and sizing enforces 0.4% risk & 2x cap', () {
     final parsed = parseProtocolState(_sampleStateJson);
     expect(parsed.protocolVersion, '4.0');
+    expect(parsed.protocolName, 'BTC Short-Term Futures Protocol');
     expect(parsed.regime.score, 31.5);
     expect(parsed.signal.status, 'FLAT');
+
+    final packet = buildRawTelemetryPacket(parsed, livePrice: 67050.0, liveSource: 'BinanceVision');
+    final compact = serializeTelemetryCompact(packet);
+    expect(compact.contains('[1700000000000, 66500, 67500, 66200, 67000]'), isTrue);
+    expect(compact.contains('"checklist"'), isFalse);
+
+    final prompt = buildFullAiPrompt(parsed, livePrice: 67050.0, liveSource: 'BinanceVision');
+    expect(prompt.contains('answer any follow-up Q&A'), isTrue);
+    expect(prompt.contains('BinanceVision'), isTrue);
 
     final sizing = ProtocolViewModel.computeV4Sizing(
       equityUsd: 100000,
@@ -114,7 +125,7 @@ void main() {
     expect(sizing.sizeBtc, closeTo(2.0, 0.0001));
   });
 
-  testWidgets('HomeShell renders Signal Tab, expandable video card, Native & Banner slots', (tester) async {
+  testWidgets('HomeShell renders IBM Retro theme, AI Copy bar, Video, AdMob slots & F4 Audit copy', (tester) async {
     final mockClient = MockClient((req) async {
       if (req.url.toString().contains('state.json')) {
         return http.Response(_sampleStateJson, 200);
@@ -133,6 +144,11 @@ void main() {
     await tester.pump();
 
     expect(find.text('BTC PROTOCOL v4.0'), findsOneWidget);
+    expect(find.text('[COPY AI ANALYSIS PROMPT + JSON]'), findsOneWidget);
+    expect(
+      find.text('Paste into ChatGPT, Gemini, Claude, Grok, DeepSeek, Kimi, or any AI for direct verdict & Q&A.'),
+      findsOneWidget,
+    );
     expect(find.text('PROTOCOL BRIEFING VIDEO (vGUZF.mp4)'), findsOneWidget);
     expect(find.text('AdMob Banner Slot (320x50 · Test Mode)'), findsOneWidget);
     expect(find.text('AdMob Native Advanced Ad Slot (Medium Template · Test Mode)'), findsOneWidget);
@@ -140,5 +156,9 @@ void main() {
     await tester.tap(find.text('PROTOCOL BRIEFING VIDEO (vGUZF.mp4)'));
     await tester.pump();
     expect(find.text('Video Briefing Player Ready (vGUZF.mp4)'), findsOneWidget);
+
+    await tester.tap(find.text('F4 AUDIT'));
+    await tester.pump();
+    expect(find.text('[COPY RAW JSON ONLY]'), findsOneWidget);
   });
 }

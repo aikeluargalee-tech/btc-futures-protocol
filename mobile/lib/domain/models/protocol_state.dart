@@ -39,6 +39,7 @@ class ProtocolState {
   final List<AuditLogItem> auditLogRecent;
   final Map<String, dynamic> rawConfig;
   final List<String> fetchErrors;
+  final Map<String, dynamic> rawState;
 
   const ProtocolState({
     required this.protocolVersion,
@@ -57,6 +58,7 @@ class ProtocolState {
     required this.auditLogRecent,
     required this.rawConfig,
     required this.fetchErrors,
+    this.rawState = const {},
   });
 
   factory ProtocolState.fromJson(Map<String, dynamic> json) {
@@ -96,7 +98,7 @@ class ProtocolState {
 
     return ProtocolState(
       protocolVersion: (json['protocol_version'] ?? '4.0').toString(),
-      protocolName: (json['protocol_name'] ?? 'BTC Short-Term Futures + Inventory Protocol').toString(),
+      protocolName: (json['protocol_name'] ?? 'BTC Short-Term Futures Protocol').toString(),
       updatedAtUtc: (json['updated_at_utc'] ?? '').toString(),
       last4hCloseUtc: (json['last_4h_close_utc'] ?? '—').toString(),
       price: _asDouble(ticker['price']),
@@ -116,6 +118,7 @@ class ProtocolState {
       auditLogRecent: logs,
       rawConfig: (json['config'] as Map<String, dynamic>?) ?? const {},
       fetchErrors: errs,
+      rawState: json,
     );
   }
 }

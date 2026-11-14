@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../../data/repositories/protocol_repository.dart';
 import '../../../../domain/models/protocol_state.dart';
+import '../../../../domain/telemetry_export.dart';
 
 class CalcResult {
   final bool valid;
@@ -51,7 +52,48 @@ class ProtocolViewModel extends ChangeNotifier {
   String? _liveSource;
   double? get activePrice => _livePrice ?? _state?.price;
   String get liveFeedLabel =>
-      _liveSource != null ? 'Live $_liveSource' : 'Snapshot Price';
+      _liveSource != null ? 'Live $_liveSource' : 'Snapshot';
+
+  String? get snapshotAgeLabel {
+    final tsStr = _state?.updatedAtUtc;
+    if (tsStr == null || tsStr.isEmpty) return null;
+    final parsed = DateTime.tryParse(tsStr);
+    if (parsed == null) return null;
+    final mins = DateTime.now().toUtc().difference(parsed.toUtc()).inMinutes;
+    if (mins < 0) return '0m ago';
+    if (mins < 60) return '${mins}m ago';
+    final hrs = mins ~/ 60;
+    return '${hrs}h ${mins % 60}m ago';
+  }
+
+  bool get isSnapshotStale {
+    final tsStr = _state?.updatedAtUtc;
+    if (tsStr == null || tsStr.isEmpty) return false;
+    final parsed = DateTime.tryParse(tsStr);
+    if (parsed == null) return false;
+    return DateTime.now().toUtc().difference(parsed.toUtc()).inMinutes > 60;
+  }
+
+  String buildCompactRawJson() {
+    final s = _state;
+    if (s == null) return '{}';
+    final packet = buildRawTelemetryPacket(
+      s,
+      livePrice: _livePrice,
+      liveSource: _liveSource,
+    );
+    return serializeTelemetryCompact(packet);
+  }
+
+  String buildAiAnalysisPrompt() {
+    final s = _state;
+    if (s == null) return '';
+    return buildFullAiPrompt(
+      s,
+      livePrice: _livePrice,
+      liveSource: _liveSource,
+    );
+  }
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;

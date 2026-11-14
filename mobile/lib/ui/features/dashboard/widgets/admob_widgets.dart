@@ -77,12 +77,12 @@ class _AdMobBannerStripState extends State<AdMobBannerStrip> {
       width: double.infinity,
       alignment: Alignment.center,
       decoration: const BoxDecoration(
-        color: TerminalColors.panel,
-        border: Border(top: BorderSide(color: TerminalColors.border)),
+        color: TerminalColors.panelAlt,
+        border: Border(top: BorderSide(color: TerminalColors.borderDark)),
       ),
       child: const Text(
         'AdMob Banner Slot (320x50 · Test Mode)',
-        style: TextStyle(color: TerminalColors.muted, fontSize: 11),
+        style: TextStyle(color: TerminalColors.muted, fontSize: 10),
       ),
     );
   }
@@ -120,30 +120,30 @@ class _AdMobNativeAdCardState extends State<AdMobNativeAdCard> {
       nativeTemplateStyle: NativeTemplateStyle(
         templateType: TemplateType.medium,
         mainBackgroundColor: TerminalColors.panel,
-        cornerRadius: 12.0,
+        cornerRadius: 0.0,
         callToActionTextStyle: NativeTemplateTextStyle(
-          textColor: Colors.black,
+          textColor: Colors.white,
           backgroundColor: TerminalColors.accent,
           style: NativeTemplateFontStyle.bold,
-          size: 14.0,
+          size: 12.0,
         ),
         primaryTextStyle: NativeTemplateTextStyle(
           textColor: TerminalColors.text,
           backgroundColor: TerminalColors.panel,
           style: NativeTemplateFontStyle.bold,
-          size: 14.0,
+          size: 12.0,
         ),
         secondaryTextStyle: NativeTemplateTextStyle(
           textColor: TerminalColors.muted,
           backgroundColor: TerminalColors.panel,
           style: NativeTemplateFontStyle.normal,
-          size: 12.0,
+          size: 11.0,
         ),
         tertiaryTextStyle: NativeTemplateTextStyle(
           textColor: TerminalColors.muted,
           backgroundColor: TerminalColors.panel,
           style: NativeTemplateFontStyle.normal,
-          size: 11.0,
+          size: 10.0,
         ),
       ),
       listener: NativeAdListener(
@@ -188,26 +188,25 @@ class _AdMobNativeAdCardState extends State<AdMobNativeAdCard> {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(10),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
               decoration: BoxDecoration(
                 color: TerminalColors.panelAlt,
-                borderRadius: BorderRadius.circular(4),
                 border: Border.all(color: TerminalColors.border),
               ),
               child: const Text(
                 'SPONSORED',
-                style: TextStyle(fontSize: 10, color: TerminalColors.muted),
+                style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: TerminalColors.muted),
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             const Expanded(
               child: Text(
                 'AdMob Native Advanced Ad Slot (Medium Template · Test Mode)',
-                style: TextStyle(fontSize: 12, color: TerminalColors.muted),
+                style: TextStyle(fontSize: 10.5, color: TerminalColors.muted),
               ),
             ),
           ],

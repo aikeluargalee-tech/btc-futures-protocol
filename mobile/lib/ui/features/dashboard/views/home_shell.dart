@@ -19,12 +19,20 @@ class HomeShell extends StatelessWidget {
   final ProtocolViewModel vm;
   final bool enablePlatformPlugins;
 
+  static const _tabLabels = <String>[
+    'F1 SIGNAL',
+    'F2 REGIME',
+    'F3 CALC',
+    'F4 AUDIT',
+  ];
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: vm,
       builder: (context, _) {
         final s = vm.state;
+        final age = vm.snapshotAgeLabel;
         final tabs = <Widget>[
           SignalTabView(vm: vm, enablePlatformPlugins: enablePlatformPlugins),
           RegimeTabView(vm: vm),
@@ -33,74 +41,220 @@ class HomeShell extends StatelessWidget {
         ];
 
         return Scaffold(
-          appBar: AppBar(
-            backgroundColor: TerminalColors.panel,
-            surfaceTintColor: Colors.transparent,
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          body: SafeArea(
+            bottom: false,
+            child: Column(
               children: [
-                const Text(
-                  'BTC PROTOCOL v4.0',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 0.6),
+                // IBM Workstation Titlebar
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: const BoxDecoration(
+                    color: TerminalColors.accent,
+                    border: Border(
+                      bottom: BorderSide(color: TerminalColors.borderDark),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          '■ QUANT-WORKSTATION // BTC-PROTOCOL REV 4.0',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '4H · MAX 1:2',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                Text(
-                  s != null
-                      ? '${vm.liveFeedLabel} · 4H Close ${s.last4hCloseUtc}'
-                      : 'Connecting…',
-                  style: const TextStyle(fontSize: 11, color: TerminalColors.muted),
+
+                // Top Header Strip
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                  decoration: const BoxDecoration(
+                    color: TerminalColors.panel,
+                    border: Border(
+                      bottom: BorderSide(color: TerminalColors.borderDark),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'BTC PROTOCOL v4.0',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.4,
+                                color: TerminalColors.text,
+                              ),
+                            ),
+                            Text(
+                              s != null
+                                  ? '${vm.liveFeedLabel}${age != null ? " · $age" : ""} · 4H ${s.last4hCloseUtc}'
+                                  : 'Connecting…',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                color: vm.isSnapshotStale
+                                    ? TerminalColors.down
+                                    : TerminalColors.muted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: TerminalColors.panelAlt,
+                          border: Border.all(color: TerminalColors.border),
+                        ),
+                        child: Text(
+                          fmtUsd(vm.activePrice, decimals: 1),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: TerminalColors.text,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      InkWell(
+                        onTap: vm.isLoading ? null : vm.refreshAll,
+                        child: Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                            color: TerminalColors.panelAlt,
+                            border: Border.all(color: TerminalColors.borderDark),
+                          ),
+                          child: vm.isLoading
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(strokeWidth: 1.8),
+                                )
+                              : const Icon(
+                                  Icons.refresh_sharp,
+                                  size: 14,
+                                  color: TerminalColors.text,
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Main Content Body
+                Expanded(
+                  child: vm.error != null && s == null
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  vm.error!,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: TerminalColors.down,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                OutlinedButton(
+                                  onPressed: vm.refreshAll,
+                                  style: OutlinedButton.styleFrom(
+                                    shape: const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.zero,
+                                    ),
+                                    side: const BorderSide(
+                                      color: TerminalColors.borderDark,
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    '[RETRY]',
+                                    style: TextStyle(fontSize: 11),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : IndexedStack(index: vm.tabIndex, children: tabs),
                 ),
               ],
             ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 6),
-                child: Center(
-                  child: Text(
-                    fmtUsd(vm.activePrice, decimals: 1),
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: TerminalColors.accent),
-                  ),
-                ),
-              ),
-              IconButton(
-                icon: vm.isLoading
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.refresh_rounded),
-                onPressed: vm.isLoading ? null : vm.refreshAll,
-              ),
-            ],
           ),
-          body: vm.error != null && s == null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(vm.error!, textAlign: TextAlign.center, style: const TextStyle(color: TerminalColors.down)),
-                        const SizedBox(height: 12),
-                        FilledButton(onPressed: vm.refreshAll, child: const Text('Retry')),
-                      ],
-                    ),
-                  ),
-                )
-              : IndexedStack(index: vm.tabIndex, children: tabs),
           bottomNavigationBar: SafeArea(
             top: false,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 AdMobBannerStrip(enablePlatformPlugins: enablePlatformPlugins),
-                NavigationBar(
-                  backgroundColor: TerminalColors.panel,
-                  indicatorColor: TerminalColors.accent.withValues(alpha: 0.18),
-                  selectedIndex: vm.tabIndex,
-                  onDestinationSelected: vm.setTab,
-                  destinations: const [
-                    NavigationDestination(icon: Icon(Icons.bolt_rounded), label: 'Signal'),
-                    NavigationDestination(icon: Icon(Icons.analytics_outlined), label: '4H Regime'),
-                    NavigationDestination(icon: Icon(Icons.calculate_outlined), label: 'Risk & Calc'),
-                    NavigationDestination(icon: Icon(Icons.receipt_long_outlined), label: 'Audit'),
-                  ],
+                Container(
+                  decoration: const BoxDecoration(
+                    color: TerminalColors.panel,
+                    border: Border(
+                      top: BorderSide(color: TerminalColors.borderDark),
+                    ),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                  child: Row(
+                    children: List.generate(_tabLabels.length, (i) {
+                      final active = vm.tabIndex == i;
+                      return Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(right: i < _tabLabels.length - 1 ? 4 : 0),
+                          child: InkWell(
+                            onTap: () => vm.setTab(i),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 7),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: active ? TerminalColors.accent : TerminalColors.panelAlt,
+                                border: Border.all(
+                                  color: active
+                                      ? TerminalColors.borderDark
+                                      : TerminalColors.border,
+                                ),
+                              ),
+                              child: Text(
+                                _tabLabels[i],
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: active ? Colors.white : TerminalColors.text,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
                 ),
               ],
             ),

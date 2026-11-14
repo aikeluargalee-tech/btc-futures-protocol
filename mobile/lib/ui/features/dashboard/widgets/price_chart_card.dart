@@ -29,58 +29,62 @@ class _PriceChartCardState extends State<PriceChartCard> {
     final sliced = bars.length > 60 ? bars.sublist(bars.length - 60) : bars;
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const IbmSectionTitle('STRUCTURAL PRICE MAP'),
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'STRUCTURAL PRICE MAP',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.6,
-                    color: TerminalColors.muted,
-                  ),
-                ),
-                SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(value: 'h4', label: Text('4H')),
-                    ButtonSegment(value: 'd1', label: Text('1D')),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    SegmentedButton<String>(
+                      segments: const [
+                        ButtonSegment(value: 'h4', label: Text('4H', style: TextStyle(fontSize: 10))),
+                        ButtonSegment(value: 'd1', label: Text('1D', style: TextStyle(fontSize: 10))),
+                      ],
+                      selected: {_tf},
+                      onSelectionChanged: (s) => setState(() => _tf = s.first),
+                      style: ButtonStyle(
+                        visualDensity: VisualDensity.compact,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: WidgetStateProperty.all(
+                          const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                        ),
+                      ),
+                    ),
                   ],
-                  selected: {_tf},
-                  onSelectionChanged: (s) => setState(() => _tf = s.first),
-                  style: const ButtonStyle(
-                    visualDensity: VisualDensity.compact,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 170,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: TerminalColors.border),
                   ),
+                  child: sliced.length < 2
+                      ? const Center(
+                          child: Text(
+                            'Chart data unavailable',
+                            style: TextStyle(color: TerminalColors.muted, fontSize: 10.5),
+                          ),
+                        )
+                      : CustomPaint(
+                          painter: _ChartPainter(
+                            bars: sliced,
+                            levels: widget.levels,
+                            proposal: widget.proposal,
+                          ),
+                        ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 190,
-              width: double.infinity,
-              child: sliced.length < 2
-                  ? const Center(
-                      child: Text(
-                        'Chart data unavailable',
-                        style: TextStyle(color: TerminalColors.muted),
-                      ),
-                    )
-                  : CustomPaint(
-                      painter: _ChartPainter(
-                        bars: sliced,
-                        levels: widget.levels,
-                        proposal: widget.proposal,
-                      ),
-                    ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
