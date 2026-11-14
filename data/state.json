@@ -1,35 +1,35 @@
 {
   "protocol_version": "4.0",
   "protocol_name": "BTC Short-Term Futures Protocol",
-  "updated_at_utc": "2026-11-14T20:08:53Z",
-  "updated_at_ms": 1794686933332,
+  "updated_at_utc": "2026-11-14T23:58:00Z",
+  "updated_at_ms": 1794700680964,
   "last_4h_close_utc": "2026-11-14T16:00:00Z",
   "ticker": {
-    "price": 65647.0,
-    "high24": 69094.9,
-    "low24": 64956.5,
-    "chg24_pct": -4.94,
+    "price": 64171.7,
+    "high24": 68420.7,
+    "low24": 63272.2,
+    "chg24_pct": -5.98,
     "source": "OKX BTC-USDT-SWAP"
   },
   "derivatives": {
-    "current_rate_pct": 1e-05,
-    "oi_btc": 33708.9,
-    "total_oi_btc": 84653.3,
+    "current_rate_pct": -0.00381,
+    "oi_btc": 33745.1,
+    "total_oi_btc": 84404.7,
     "venues": {
-      "okx": 1e-05,
-      "kraken_futures": 0.00512,
-      "deribit": 3e-05,
-      "hyperliquid": 0.00409
+      "okx": -0.00381,
+      "kraken_futures": -0.00547,
+      "deribit": 5e-05,
+      "hyperliquid": 0.00486
     },
     "venue_oi_btc": {
-      "okx": 33708.9,
-      "kraken_futures": 2285.2,
-      "deribit": 11159.2,
-      "hyperliquid": 37500.0
+      "okx": 33745.1,
+      "kraken_futures": 2258.2,
+      "deribit": 11389.9,
+      "hyperliquid": 37011.5
     }
   },
   "extras": {
-    "dvol": 46.38,
+    "dvol": 47.64,
     "fng_value": 13,
     "fng_label": "Extreme Fear"
   },
@@ -61,8 +61,8 @@
     ]
   },
   "stables": {
-    "total_usd_b": 244.56,
-    "chg7d_pct": -1.16
+    "total_usd_b": 244.6,
+    "chg7d_pct": -1.15
   },
   "macro_calendar": [],
   "charts": {
@@ -1564,14 +1564,14 @@
         "atr_4h_pct": 1.88,
         "atr_4h_percentile": 99.17,
         "rel_volume_4h": 1.37,
-        "funding_rate_pct": 1e-05,
-        "funding_30d_percentile": 4.44,
+        "funding_rate_pct": -0.00381,
+        "funding_30d_percentile": 2.22,
         "components": {
           "atr_4h_percentile_score": 16.8,
           "rel_volume_4h_score": 69.8,
           "funding_score": 34.0
         },
-        "summary": "ATR4Hp=99.17, RelVol4H=1.37x, Fund=1e-05%",
+        "summary": "ATR4Hp=99.17, RelVol4H=1.37x, Fund=-0.00381%",
         "score": 61.19
       },
       "session_context": {
@@ -1631,7 +1631,7 @@
     "last_4h_close_ts": 1794672000000,
     "last_4h_close_utc": "2026-11-14T16:00:00Z",
     "recalc_utc_day": "2026-11-14",
-    "recalc_at_utc": "2026-11-14T20:08:53Z",
+    "recalc_at_utc": "2026-11-14T23:58:00Z",
     "is_weekend_utc": true,
     "htf_structural_break": false
   },
@@ -1642,7 +1642,7 @@
       "FLAT"
     ],
     "direction": null,
-    "price": 65647.0,
+    "price": 64171.7,
     "atr_4h": 1236.7,
     "structural_levels": [
       {
@@ -1711,8 +1711,8 @@
       {
         "id": 2,
         "rule": "4H Level Aligned w/ Daily Bias",
-        "passed": true,
-        "detail": "At Prior 4H High (66,170.9, dist $524) aligned w/ Daily BEAR"
+        "passed": false,
+        "detail": "Nearest 4H level Prior 4H Low (64,956.5) is $785 away (band \u00b1$642)"
       },
       {
         "id": 3,
@@ -1723,14 +1723,14 @@
       {
         "id": 4,
         "rule": "Risk-Reward \u2265 1.6 : 1",
-        "passed": false,
-        "detail": "R:R 0.56:1 (adj 0.56:1) to Prior 4H Low (64,956.5) < 1.6:1 min"
+        "passed": true,
+        "detail": "R:R 2.00:1 (funding-adj 1.99:1) to Projected 2.0R Target (61,698.3) \u2265 1.6:1"
       },
       {
         "id": 5,
         "rule": "Stop Distance \u2264 2.2%",
         "passed": true,
-        "detail": "Stop distance 1.88% \u2264 2.2% max"
+        "detail": "Stop distance 1.93% \u2264 2.2% max"
       },
       {
         "id": 6,
@@ -1759,32 +1759,32 @@
     ],
     "rejection_reasons": [
       "Weekend UTC requires extreme score (\u226580/\u226420); current 30.8",
-      "No 4H bearish BOS (< 65030.3) or qualifying rejection candle (vol 1.37x)",
-      "R:R 0.56:1 (adj 0.56:1) to Prior 4H Low (64,956.5) < 1.6:1 min"
+      "Nearest 4H level Prior 4H Low (64,956.5) is $785 away (band \u00b1$642)",
+      "No 4H bearish BOS (< 65030.3) or qualifying rejection candle (vol 1.37x)"
     ],
     "proposal": {
       "direction": "SHORT",
       "entry_method": "LIMIT_AT_LEVEL",
-      "entry_price": 65647.0,
-      "stop_price": 66883.7,
-      "target1_price": 64956.5,
-      "target1_label": "Prior 4H Low",
-      "raw_rr": 0.56,
-      "funding_adjusted_rr": 0.56,
-      "level_label": "Prior 4H High",
-      "level_price": 66170.9,
+      "entry_price": 64171.7,
+      "stop_price": 65408.4,
+      "target1_price": 61698.3,
+      "target1_label": "Projected 2.0R Target",
+      "raw_rr": 2.0,
+      "funding_adjusted_rr": 1.99,
+      "level_label": "Prior 4H Low",
+      "level_price": 64956.5,
       "confirmation_type": null,
       "weekend_halved": true,
       "valid": true,
       "size_btc": 0.161721,
-      "notional_usd": 10616.48,
-      "leverage": 0.106,
+      "notional_usd": 10377.89,
+      "leverage": 0.104,
       "leverage_capped": false,
       "target_risk_pct": 0.2,
       "actual_risk_pct": 0.2,
       "actual_risk_usd": 200.0,
       "stop_distance_usd": 1236.7,
-      "stop_distance_pct": 1.884
+      "stop_distance_pct": 1.927
     },
     "macro_blackout": {
       "blocked": false,
