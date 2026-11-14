@@ -1,10 +1,9 @@
 {
   "protocol_version": "4.0",
-  "protocol_name": "BTC Short-Term Futures + Inventory Protocol",
+  "protocol_name": "BTC Short-Term Futures Protocol",
   "symbol": "BTC-USDT-PERP",
   "account": {
     "initial_equity_usd": 100000.0,
-    "spot_inventory_btc": 2.0,
     "margin_mode": "isolated"
   },
   "timeframe_and_hold": {
@@ -23,11 +22,6 @@
     "min_rr": 1.6,
     "expected_hold_hours_for_funding": 24.0,
     "macro_blackout_minutes": 60
-  },
-  "inventory": {
-    "default_sell_pct": 0.20,
-    "min_sell_pct": 0.15,
-    "max_sell_pct": 0.25
   },
   "regime": {
     "weights": {

@@ -35,13 +35,13 @@ def migrate_ledger_schema(ledger: dict[str, Any], cfg: dict[str, Any], now: dt.d
     ledger.setdefault("equity", ledger["realized_equity"])
     ledger.setdefault("high_water_mark", ledger["equity"])
     ledger.setdefault("drawdown_pct", 0.0)
-    ledger.setdefault("spot_inventory_btc", float(cfg["account"].get("spot_inventory_btc", 2.0)))
+    ledger.pop("spot_inventory_btc", None)
     ledger.setdefault("day_key", ledger.get("utc_day", now.strftime("%Y-%m-%d")))
     ledger.setdefault("day_start_equity", ledger["equity"])
     ledger.setdefault("intraday_peak_equity", ledger["equity"])
     ledger.setdefault("week_key", ledger.get("utc_week", _utc_week_key(now)))
     ledger.setdefault("week_start_equity", ledger["equity"])
-    ledger.setdefault("last_sell_inventory_4h_ts", None)
+    ledger.pop("last_sell_inventory_4h_ts", None)
     ledger.setdefault("open_positions", [])
     ledger.setdefault("closed_trades", [])
     ledger.setdefault("audit_log", [])
@@ -63,7 +63,6 @@ def migrate_ledger_schema(ledger: dict[str, Any], cfg: dict[str, Any], now: dt.d
 def init_ledger(cfg: dict[str, Any], now: dt.datetime | None = None) -> dict[str, Any]:
     now = now or dt.datetime.now(dt.timezone.utc)
     eq = float(cfg["account"]["initial_equity_usd"])
-    spot_btc = float(cfg["account"].get("spot_inventory_btc", 2.0))
     return {
         "protocol_version": cfg["protocol_version"],
         "initial_equity": eq,
@@ -71,7 +70,6 @@ def init_ledger(cfg: dict[str, Any], now: dt.datetime | None = None) -> dict[str
         "equity": eq,
         "high_water_mark": eq,
         "drawdown_pct": 0.0,
-        "spot_inventory_btc": spot_btc,
         "day_key": now.strftime("%Y-%m-%d"),
         "day_start_equity": eq,
         "intraday_peak_equity": eq,
@@ -84,14 +82,13 @@ def init_ledger(cfg: dict[str, Any], now: dt.datetime | None = None) -> dict[str
             "dd_tier1_active": False,
             "dd_tier2_locked": False,
         },
-        "last_sell_inventory_4h_ts": None,
         "open_positions": [],
         "closed_trades": [],
         "audit_log": [
             {
                 "ts": _utc_iso(now),
                 "event": "LEDGER_INIT_V4",
-                "detail": f"Initialized v{cfg['protocol_version']} paper ledger with ${eq:,.2f} & {spot_btc:.2f} BTC inventory",
+                "detail": f"Initialized v{cfg['protocol_version']} paper ledger with ${eq:,.2f}",
             }
         ],
     }
@@ -200,7 +197,7 @@ def _update_equity_and_breakers(
             {
                 "ts": _utc_iso(now),
                 "event": "BREAKER_WEEKLY",
-                "detail": f"Weekly loss {wk_pnl*100:.2f}% breached {cb_cfg['weekly_loss_limit_pct']*100:.1f}% -> flattened futures (Sell Inventory remains allowed)",
+                "detail": f"Weekly loss {wk_pnl*100:.2f}% breached {cb_cfg['weekly_loss_limit_pct']*100:.1f}% -> flattened futures",
             }
         )
 
@@ -418,29 +415,6 @@ def execute_signal_entry(
         }
     )
     ledger["audit_log"] = ledger["audit_log"][-100:]
-    return ledger
-
-
-def record_sell_inventory_if_new(
-    ledger: dict[str, Any],
-    signal: dict[str, Any],
-    regime: dict[str, Any],
-    now: dt.datetime | None = None,
-) -> dict[str, Any]:
-    """Audit-log a Sell Inventory recommendation at most once per 4H bar."""
-    now = now or dt.datetime.now(dt.timezone.utc)
-    inv = signal.get("sell_inventory") or {}
-    bar_ts = regime.get("last_4h_close_ts")
-    if inv.get("active") and bar_ts and ledger.get("last_sell_inventory_4h_ts") != bar_ts:
-        ledger["last_sell_inventory_4h_ts"] = bar_ts
-        ledger["audit_log"].append(
-            {
-                "ts": _utc_iso(now),
-                "event": "SELL_INVENTORY_SIGNAL",
-                "detail": f"Reduce {inv['recommended_pct']:.0f}% spot ({inv['sell_btc']:.4f} BTC ≈ ${inv['sell_usd']:,.0f}) @ {inv.get('structural_ref') or '4H ref'}",
-            }
-        )
-        ledger["audit_log"] = ledger["audit_log"][-100:]
     return ledger
 
 

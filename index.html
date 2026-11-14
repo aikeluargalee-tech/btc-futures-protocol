@@ -5,22 +5,22 @@
   <meta http-equiv="Cache-Control" content="no-cache">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#E4E4DF">
-  <title>BTC Short-Term Futures + Inventory Protocol v4.0</title>
+  <title>BTC Short-Term Futures Protocol v4.0</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
   <div class="wrap">
-    <div class="ibm-titlebar">
-      <span>&#9632; IBM-WORKSTATION // BTC-PROTOCOL REV 4.0</span>
-      <span class="ibm-sysmeta">SYS: 4H-SWING &middot; MAX LEV 1:2 &middot; KEYS [1-4]</span>
+    <div class="ws-titlebar">
+      <span>&#9632; QUANT-WORKSTATION // BTC-PROTOCOL REV 4.0</span>
+      <span class="ws-sysmeta">SYS: 4H-SWING &middot; MAX LEV 1:2 &middot; KEYS [1-4]</span>
     </div>
 
     <header class="topbar">
       <div class="brand">
-        <h1>BTC Short-Term Futures + Inventory Protocol <span class="badge">v4.0 · 4H · MAX 1:2 LEV</span></h1>
+        <h1>BTC Short-Term Futures Protocol <span class="badge">v4.0 · 4H · MAX 1:2 LEV</span></h1>
         <div class="sub" id="snapMeta">Loading snapshot…</div>
       </div>
       <div class="live-bar">
@@ -34,7 +34,9 @@
     </header>
 
     <div class="actions" style="margin-bottom:12px;">
-      <button class="btn" id="btnDlJson">Download State JSON</button>
+      <button class="btn" id="btnCopyRaw">[Copy Raw JSON]</button>
+      <button class="btn btn-primary" id="btnCopyAi">[Copy AI Analysis Prompt + JSON]</button>
+      <button class="btn" id="btnDlJson">[Download .JSON]</button>
       <span class="mut" id="actionMsg" style="align-self:center;">4H Close Eval · 4–24h Hold · 0.4% Risk · ≤1.5% Heat</span>
     </div>
 
@@ -53,7 +55,7 @@
           <span class="badge">TAP TO EXPAND / PLAY</span>
         </summary>
         <div class="video-wrap">
-          <video id="protocolBriefingVideo" controls playsinline preload="metadata">
+          <video id="protocolBriefingVideo" controls playsinline preload="none">
             <source src="assets/vGUZF.mp4" type="video/mp4">
             Your browser does not support embedded MP4 playback.
           </video>
@@ -69,11 +71,6 @@
           <h2>4H Multi-Factor Regime Score (0–100)</h2>
           <div id="regimeGaugeBox">Loading…</div>
         </div>
-      </div>
-
-      <div class="card" id="sellInventoryCard">
-        <h2>Spot Inventory Action (Sell Inventory Option · Section 2 &amp; 6)</h2>
-        <div id="sellInventoryBox">Loading…</div>
       </div>
 
       <div class="card">
@@ -120,10 +117,9 @@
     <!-- TAB 3: PAPER LEDGER & RISK CALCULATOR -->
     <section class="tab-panel" id="tab-ledger">
       <div class="card">
-        <h2>Interactive v4.0 Position Sizing &amp; Inventory Calculator</h2>
+        <h2>Interactive v4.0 Position Sizing Calculator</h2>
         <div class="calc-grid">
           <label class="field">Account Equity (USD)<input type="number" id="cEq" value="100000" step="500"></label>
-          <label class="field">Spot BTC Inventory<input type="number" id="cInv" value="2.0" step="0.1"></label>
           <label class="field">Direction<select id="cDir"><option value="LONG">LONG</option><option value="SHORT">SHORT</option></select></label>
           <label class="field">Weekend Extreme (80/20)<select id="cWeekend"><option value="no">Normal (0.40% risk)</option><option value="yes">Weekend Half (0.20%)</option></select></label>
           <label class="field">Entry Price ($)<input type="number" id="cEntry" step="10"></label>
@@ -171,6 +167,6 @@
       </div>
     </section>
   </div>
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>

@@ -342,37 +342,7 @@ def evaluate_signal(
 
     all_futures_pass = all(c["passed"] for c in checklist)
     futures_status = candidate_dir if (all_futures_pass and candidate_dir) else "FLAT"
-
-    # Sell Inventory (Section 2 & 5): requires ONLY score <= short_th and a 4H structural reference
-    spot_inv_btc = float(cfg["account"].get("spot_inventory_btc", 0.0))
-    inv_pct = float(cfg["inventory"]["default_sell_pct"])
-    inv_active = (score <= th_short) and (nearest_level is not None)
-    # Note: Even under weekly/intraday/daily futures halts, Sell Inventory remains allowed (Section 8)
-    sell_btc = round(spot_inv_btc * inv_pct, 6) if inv_active else 0.0
-    sell_usd = round(sell_btc * price, 2) if inv_active else 0.0
-    sell_inventory = {
-        "active": inv_active,
-        "recommended_pct": round(inv_pct * 100.0, 1),
-        "band_pct": f"{cfg['inventory']['min_sell_pct']*100:.0f}–{cfg['inventory']['max_sell_pct']*100:.0f}%",
-        "spot_inventory_btc": spot_inv_btc,
-        "sell_btc": sell_btc,
-        "sell_usd": sell_usd,
-        "structural_ref": f"{nearest_level['label']} @ {nearest_level['price']:,.1f}" if nearest_level else None,
-        "counts_toward_heat": False,
-        "reason": (
-            f"Score {score:.1f} ≤ {th_short:.0f} w/ 4H ref {nearest_level['label']} ({nearest_level['price']:,.1f}) — reduce {inv_pct*100:.0f}% spot inventory"
-            if inv_active
-            else f"Hold spot inventory (requires score ≤ {th_short:.0f}; current {score:.1f})"
-        ),
-    }
-
-    active_signals: list[str] = []
-    if futures_status in ("LONG", "SHORT"):
-        active_signals.append(futures_status)
-    if inv_active:
-        active_signals.append("SELL_INVENTORY")
-    if not active_signals:
-        active_signals.append("FLAT")
+    active_signals = [futures_status]
 
     proposal = {
         "direction": eval_dir,
@@ -401,6 +371,5 @@ def evaluate_signal(
         "checklist": checklist,
         "rejection_reasons": [] if futures_status != "FLAT" else rejections,
         "proposal": proposal,
-        "sell_inventory": sell_inventory,
         "macro_blackout": macro_chk,
     }

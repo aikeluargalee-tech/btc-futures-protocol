@@ -11,7 +11,7 @@ import 'package:btc_futures_protocol/ui/features/dashboard/view_models/protocol_
 const String _sampleStateJson = '''
 {
   "protocol_version": "4.0",
-  "protocol_name": "BTC Short-Term Futures + Inventory Protocol",
+  "protocol_name": "BTC Short-Term Futures Protocol",
   "updated_at_utc": "2026-11-14T05:00:00Z",
   "last_4h_close_utc": "2026-11-14T04:00:00Z",
   "ticker": {"price": 67000.0, "chg24_pct": -1.5, "source": "OKX"},
@@ -38,7 +38,7 @@ const String _sampleStateJson = '''
   },
   "signal": {
     "status": "FLAT",
-    "active_signals": ["SELL_INVENTORY"],
+    "active_signals": ["FLAT"],
     "checklist": [
       {"id": 1, "rule": "Regime Score Meets Threshold", "passed": true, "detail": "Score 31.5 <= 32"}
     ],
@@ -61,22 +61,11 @@ const String _sampleStateJson = '''
       "stop_distance_pct": 1.49,
       "weekend_halved": false
     },
-    "sell_inventory": {
-      "active": true,
-      "recommended_pct": 20.0,
-      "band_pct": "15-25%",
-      "spot_inventory_btc": 2.0,
-      "sell_btc": 0.4,
-      "sell_usd": 26800.0,
-      "structural_ref": "Prior 4H High @ 67,200.0",
-      "reason": "Score 31.5 <= 32 - reduce 20% spot inventory"
-    },
     "structural_levels": []
   },
   "portfolio": {
     "equity_usd": 100000.0,
     "high_water_mark_usd": 100000.0,
-    "spot_inventory_btc": 2.0,
     "drawdown_pct": 0.0,
     "intraday_pnl_pct": 0.0,
     "daily_pnl_pct": 0.0,
@@ -97,7 +86,7 @@ const String _sampleStateJson = '''
     "review": {"total_closed_legs": 0, "win_rate_pct": 0.0, "profit_factor": 0.0, "expectancy_r": 0.0, "total_realized_pnl_usd": 0.0}
   },
   "audit_log_recent": [
-    {"ts": "2026-11-14T04:00:00Z", "event": "SELL_INVENTORY_SIGNAL", "detail": "Trim 20% spot"}
+    {"ts": "2026-11-14T04:00:00Z", "event": "CYCLE_OK", "detail": "Evaluated 4H futures signal"}
   ],
   "config": {},
   "fetch_errors": []
@@ -109,12 +98,10 @@ void main() {
     final parsed = parseProtocolState(_sampleStateJson);
     expect(parsed.protocolVersion, '4.0');
     expect(parsed.regime.score, 31.5);
-    expect(parsed.signal.sellInventory.active, isTrue);
-    expect(parsed.signal.sellInventory.sellBtc, 0.4);
+    expect(parsed.signal.status, 'FLAT');
 
     final sizing = ProtocolViewModel.computeV4Sizing(
       equityUsd: 100000,
-      spotInventoryBtc: 2.0,
       direction: 'LONG',
       weekendExtremeHalf: false,
       ddTier1Active: false,
@@ -125,7 +112,6 @@ void main() {
     expect(sizing.valid, isTrue);
     expect(sizing.leverageCapped, isTrue);
     expect(sizing.sizeBtc, closeTo(2.0, 0.0001));
-    expect(sizing.sell20Btc, closeTo(0.4, 0.0001));
   });
 
   testWidgets('HomeShell renders Signal Tab, expandable video card, Native & Banner slots', (tester) async {

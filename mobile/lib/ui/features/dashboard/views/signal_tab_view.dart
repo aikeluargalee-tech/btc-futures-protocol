@@ -26,12 +26,11 @@ class SignalTabView extends StatelessWidget {
     final sig = s.signal;
     final reg = s.regime;
     final port = s.portfolio;
-    final inv = sig.sellInventory;
     final prop = sig.proposal;
 
     final statusColor = sig.status == 'LONG'
         ? TerminalColors.up
-        : (sig.status == 'SHORT' || inv.active)
+        : sig.status == 'SHORT'
             ? TerminalColors.down
             : TerminalColors.warn;
 
@@ -70,7 +69,7 @@ class SignalTabView extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          sig.activeSignals.join(' + '),
+                          sig.status,
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
@@ -80,7 +79,7 @@ class SignalTabView extends StatelessWidget {
                       ),
                       _Pill(
                         label: sig.status == 'FLAT'
-                            ? (inv.active ? 'INVENTORY TRIM' : 'NO FUTURES')
+                            ? 'NO FUTURES'
                             : (prop?.entryMethod ?? 'ACTIVE'),
                         color: statusColor,
                       ),
@@ -163,45 +162,7 @@ class SignalTabView extends StatelessWidget {
           AdMobNativeAdCard(enablePlatformPlugins: enablePlatformPlugins),
           const SizedBox(height: 10),
 
-          // 5. Sell Inventory Card
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        inv.active ? 'SELL INVENTORY ACTIVE' : 'HOLD SPOT INVENTORY',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: inv.active ? TerminalColors.down : TerminalColors.muted,
-                        ),
-                      ),
-                      _Pill(
-                        label: inv.active
-                            ? '${inv.recommendedPct.toInt()}% (${inv.sellBtc} BTC)'
-                            : inv.bandPct,
-                        color: inv.active ? TerminalColors.down : TerminalColors.muted,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(inv.reason, style: const TextStyle(fontSize: 12, color: TerminalColors.text)),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Ref: ${inv.structuralRef}  •  Spot Held: ${inv.spotInventoryBtc.toStringAsFixed(2)} BTC  •  0% Futures Heat',
-                    style: const TextStyle(fontSize: 11, color: TerminalColors.muted),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-
-          // 6. 9-Point Checklist Card
+          // 5. 9-Point Checklist Card
           Card(
             child: Padding(
               padding: const EdgeInsets.all(14),

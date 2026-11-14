@@ -1,4 +1,4 @@
-"""Unit tests verifying BTC Short-Term Futures + Inventory Protocol v4.0 deterministic rules."""
+"""Unit tests verifying BTC Short-Term Futures Protocol v4.0 deterministic rules."""
 from __future__ import annotations
 
 import datetime as dt
@@ -10,7 +10,6 @@ from engine.paper_ledger import (
     execute_signal_entry,
     init_ledger,
     process_cycle,
-    record_sell_inventory_if_new,
 )
 from engine.regime_engine import compute_regime
 from engine.signal_engine import calculate_position_sizing, check_macro_release_window, evaluate_signal
@@ -154,7 +153,8 @@ class ProtocolV4Tests(unittest.TestCase):
         ledger = init_ledger(cfg)
         sig = evaluate_signal(mkt, _qualifying_regime(67.5, "BULL"), ledger, cfg)
         self.assertEqual(sig["status"], "FLAT")
-        self.assertFalse(sig["sell_inventory"]["active"])
+        self.assertEqual(sig["active_signals"], ["FLAT"])
+        self.assertNotIn("sell_inventory", sig)
         self.assertFalse(sig["checklist"][0]["passed"])
 
     def test_macro_blackout_60m_strict_rule(self):
@@ -180,10 +180,8 @@ class ProtocolV4Tests(unittest.TestCase):
         ledger = init_ledger(cfg)
         sig = evaluate_signal(mkt, _qualifying_regime(20.0, "BEAR"), ledger, cfg)
         self.assertEqual(sig["status"], "FLAT")
+        self.assertEqual(sig["active_signals"], ["FLAT"])
         self.assertFalse(sig["checklist"][4]["passed"])  # Rule 5: Stop <= 2.2%
-        # Meanwhile Sell Inventory STILL activates because score <= 32 & 4H ref exists!
-        self.assertTrue(sig["sell_inventory"]["active"])
-        self.assertIn("SELL_INVENTORY", sig["active_signals"])
 
         # Min R:R 1.6 check via custom cfg threshold
         cfg_rr = load_config()
@@ -192,25 +190,15 @@ class ProtocolV4Tests(unittest.TestCase):
         self.assertEqual(sig_rr["status"], "FLAT")
         self.assertFalse(sig_rr["checklist"][3]["passed"])
 
-    def test_sell_inventory_works_under_weekly_halt(self):
+    def test_weekly_halt_blocks_futures_signal(self):
         cfg = load_config()
         mkt = _make_market("bear")
         ledger = init_ledger(cfg)
         ledger["breakers"]["weekly_halted"] = True
         sig = evaluate_signal(mkt, _qualifying_regime(28.0, "BEAR"), ledger, cfg)
-        # Futures blocked by Rule 8, Sell Inventory active!
         self.assertEqual(sig["status"], "FLAT")
+        self.assertEqual(sig["active_signals"], ["FLAT"])
         self.assertFalse(sig["checklist"][7]["passed"])
-        self.assertTrue(sig["sell_inventory"]["active"])
-        self.assertAlmostEqual(sig["sell_inventory"]["sell_btc"], 0.4, places=4)  # 20% of 2.0 BTC
-
-        # Audit logged once per 4H bar
-        now = dt.datetime(2026, 11, 12, 14, 0, tzinfo=dt.timezone.utc)
-        reg = _qualifying_regime(28.0, "BEAR")
-        record_sell_inventory_if_new(ledger, sig, reg, now)
-        record_sell_inventory_if_new(ledger, sig, reg, now + dt.timedelta(minutes=15))
-        inv_events = [e for e in ledger["audit_log"] if e["event"] == "SELL_INVENTORY_SIGNAL"]
-        self.assertEqual(len(inv_events), 1)
 
     def test_weekend_80_20_extreme_and_half_size(self):
         cfg = load_config()

@@ -15,7 +15,6 @@ from .paper_ledger import (
     init_ledger,
     migrate_ledger_schema,
     process_cycle,
-    record_sell_inventory_if_new,
     reset_review_lock,
 )
 from .regime_engine import compute_regime
@@ -63,7 +62,6 @@ def main() -> int:
     ledger = process_cycle(ledger, market, regime, cfg, now)
     signal = evaluate_signal(market, regime, ledger, cfg)
     ledger = execute_signal_entry(ledger, signal, regime=regime, now=now)
-    ledger = record_sell_inventory_if_new(ledger, signal, regime, now=now)
 
     if signal["status"] in ("LONG", "SHORT"):
         signal = evaluate_signal(market, regime, ledger, cfg)
@@ -109,15 +107,34 @@ def main() -> int:
     h4_bars = (market.get("klines") or {}).get("4h") or []
     d1_bars = (market.get("klines") or {}).get("1d") or []
     charts = {
-        "h4": [[c["ts"], round(c["open"], 1), round(c["high"], 1), round(c["low"], 1), round(c["close"], 1)] for c in h4_bars[-90:]],
-        "d1": [[c["ts"], round(c["open"], 1), round(c["high"], 1), round(c["low"], 1), round(c["close"], 1)] for c in d1_bars[-90:]],
+        "h4": [
+            [
+                c["ts"],
+                round(c["open"], 1),
+                round(c["high"], 1),
+                round(c["low"], 1),
+                round(c["close"], 1),
+                round(c.get("volume", 0.0), 2),
+            ]
+            for c in h4_bars[-90:]
+        ],
+        "d1": [
+            [
+                c["ts"],
+                round(c["open"], 1),
+                round(c["high"], 1),
+                round(c["low"], 1),
+                round(c["close"], 1),
+                round(c.get("volume", 0.0), 2),
+            ]
+            for c in d1_bars[-90:]
+        ],
     }
 
     portfolio = {
         "equity_usd": eq,
         "realized_equity_usd": ledger["realized_equity"],
         "high_water_mark_usd": ledger["high_water_mark"],
-        "spot_inventory_btc": ledger["spot_inventory_btc"],
         "drawdown_pct": dd_pct,
         "intraday_pnl_pct": intraday_pnl_pct,
         "intraday_limit_pct": intraday_lim,
@@ -154,7 +171,9 @@ def main() -> int:
         "derivatives": {
             "current_rate_pct": (market.get("derivatives") or {}).get("current_rate_pct"),
             "oi_btc": (market.get("derivatives") or {}).get("oi_btc"),
+            "total_oi_btc": (market.get("derivatives") or {}).get("total_oi_btc"),
             "venues": (market.get("derivatives") or {}).get("venues"),
+            "venue_oi_btc": (market.get("derivatives") or {}).get("venue_oi_btc"),
         },
         "extras": market.get("extras") or {},
         "etf": market.get("etf"),
@@ -169,9 +188,8 @@ def main() -> int:
         "fetch_errors": market.get("fetch_errors") or [],
     }
     _save_json(STATE_PATH, state)
-    inv_tag = " + SELL_INVENTORY" if (signal.get("sell_inventory") or {}).get("active") else ""
     print(
-        f"[OK] BTC={market['ticker']['price']} | v4.0 Regime={regime['score']} ({regime['bias']}, 1D={regime.get('daily_bias')}) | Signal={signal['status']}{inv_tag} | Eq=${eq:,.2f}"
+        f"[OK] BTC={market['ticker']['price']} | v4.0 Regime={regime['score']} ({regime['bias']}, 1D={regime.get('daily_bias')}) | Signal={signal['status']} | Eq=${eq:,.2f}"
     )
     return 0
 

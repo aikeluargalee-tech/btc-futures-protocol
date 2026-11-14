@@ -15,7 +15,6 @@ class LedgerTabView extends StatefulWidget {
 
 class _LedgerTabViewState extends State<LedgerTabView> {
   final _eqCtrl = TextEditingController(text: '100000');
-  final _invCtrl = TextEditingController(text: '2.0');
   final _entryCtrl = TextEditingController();
   final _stopCtrl = TextEditingController();
   final _tpCtrl = TextEditingController();
@@ -26,7 +25,6 @@ class _LedgerTabViewState extends State<LedgerTabView> {
   @override
   void dispose() {
     _eqCtrl.dispose();
-    _invCtrl.dispose();
     _entryCtrl.dispose();
     _stopCtrl.dispose();
     _tpCtrl.dispose();
@@ -39,7 +37,6 @@ class _LedgerTabViewState extends State<LedgerTabView> {
     final prop = s?.signal.proposal;
     if (s == null || prop == null || prop.entryPrice <= 0) return;
     _eqCtrl.text = s.portfolio.equityUsd.round().toString();
-    _invCtrl.text = s.portfolio.spotInventoryBtc.toStringAsFixed(2);
     _entryCtrl.text = prop.entryPrice.toStringAsFixed(1);
     _stopCtrl.text = prop.stopPrice.toStringAsFixed(1);
     _tpCtrl.text = prop.target1Price.toStringAsFixed(1);
@@ -57,7 +54,6 @@ class _LedgerTabViewState extends State<LedgerTabView> {
 
     final calc = ProtocolViewModel.computeV4Sizing(
       equityUsd: double.tryParse(_eqCtrl.text) ?? 100000,
-      spotInventoryBtc: double.tryParse(_invCtrl.text) ?? 2.0,
       direction: _dir,
       weekendExtremeHalf: _weekendHalf,
       ddTier1Active: port.breakers.ddTier1Active,
@@ -78,17 +74,11 @@ class _LedgerTabViewState extends State<LedgerTabView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'v4.0 POSITION SIZING & INVENTORY CALCULATOR',
+                    'v4.0 POSITION SIZING CALCULATOR',
                     style: TextStyle(color: TerminalColors.muted, fontSize: 11, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(child: _numField('Equity USD', _eqCtrl)),
-                      const SizedBox(width: 8),
-                      Expanded(child: _numField('Spot BTC Inv', _invCtrl)),
-                    ],
-                  ),
+                  _numField('Equity USD', _eqCtrl),
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -142,10 +132,6 @@ class _LedgerTabViewState extends State<LedgerTabView> {
                   Text(
                     'Risk: ${calc.actualRiskPct.toStringAsFixed(3)}% (${fmtUsd(calc.actualRiskUsd, decimals: 2)}) · Stop: ${calc.stopDistPct.toStringAsFixed(2)}% · R:R: ${calc.rawRr.toStringAsFixed(2)}:1',
                     style: const TextStyle(fontSize: 12, color: TerminalColors.muted),
-                  ),
-                  Text(
-                    'Sell Inventory (20% Short Opt): ${calc.sell20Btc.toStringAsFixed(4)} BTC (≈ ${fmtUsd(calc.sell20Usd)})',
-                    style: const TextStyle(fontSize: 12, color: TerminalColors.accent),
                   ),
                 ],
               ),

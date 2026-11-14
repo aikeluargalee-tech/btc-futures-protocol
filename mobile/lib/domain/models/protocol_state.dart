@@ -292,41 +292,6 @@ class OrderProposal {
   }
 }
 
-class SellInventoryData {
-  final bool active;
-  final double recommendedPct;
-  final String bandPct;
-  final double spotInventoryBtc;
-  final double sellBtc;
-  final double sellUsd;
-  final String structuralRef;
-  final String reason;
-
-  const SellInventoryData({
-    required this.active,
-    required this.recommendedPct,
-    required this.bandPct,
-    required this.spotInventoryBtc,
-    required this.sellBtc,
-    required this.sellUsd,
-    required this.structuralRef,
-    required this.reason,
-  });
-
-  factory SellInventoryData.fromJson(Map<String, dynamic> json) {
-    return SellInventoryData(
-      active: _asBool(json['active']),
-      recommendedPct: _asDouble(json['recommended_pct'], 20.0),
-      bandPct: (json['band_pct'] ?? '15–25%').toString(),
-      spotInventoryBtc: _asDouble(json['spot_inventory_btc'], 2.0),
-      sellBtc: _asDouble(json['sell_btc']),
-      sellUsd: _asDouble(json['sell_usd']),
-      structuralRef: (json['structural_ref'] ?? '—').toString(),
-      reason: (json['reason'] ?? '—').toString(),
-    );
-  }
-}
-
 class StructuralLevel {
   final double price;
   final String label;
@@ -349,7 +314,6 @@ class SignalData {
   final List<ChecklistItem> checklist;
   final List<String> rejectionReasons;
   final OrderProposal? proposal;
-  final SellInventoryData sellInventory;
   final List<StructuralLevel> structuralLevels;
 
   const SignalData({
@@ -358,7 +322,6 @@ class SignalData {
     required this.checklist,
     required this.rejectionReasons,
     required this.proposal,
-    required this.sellInventory,
     required this.structuralLevels,
   });
 
@@ -382,9 +345,6 @@ class SignalData {
           .map((e) => e.toString())
           .toList(),
       proposal: propMap != null ? OrderProposal.fromJson(propMap) : null,
-      sellInventory: SellInventoryData.fromJson(
-        (json['sell_inventory'] as Map<String, dynamic>?) ?? const {},
-      ),
       structuralLevels: lvls,
     );
   }
@@ -429,7 +389,6 @@ class CircuitBreakers {
 class PortfolioData {
   final double equityUsd;
   final double highWaterMarkUsd;
-  final double spotInventoryBtc;
   final double drawdownPct;
   final double intradayPnlPct;
   final double dailyPnlPct;
@@ -450,7 +409,6 @@ class PortfolioData {
   const PortfolioData({
     required this.equityUsd,
     required this.highWaterMarkUsd,
-    required this.spotInventoryBtc,
     required this.drawdownPct,
     required this.intradayPnlPct,
     required this.dailyPnlPct,
@@ -474,7 +432,6 @@ class PortfolioData {
     return PortfolioData(
       equityUsd: _asDouble(json['equity_usd'], 100000.0),
       highWaterMarkUsd: _asDouble(json['high_water_mark_usd'], 100000.0),
-      spotInventoryBtc: _asDouble(json['spot_inventory_btc'], 2.0),
       drawdownPct: _asDouble(json['drawdown_pct']),
       intradayPnlPct: _asDouble(json['intraday_pnl_pct']),
       dailyPnlPct: _asDouble(json['daily_pnl_pct']),

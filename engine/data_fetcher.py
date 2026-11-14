@@ -13,13 +13,27 @@ from typing import Any
 UA = {"User-Agent": "Mozilla/5.0 btc-futures-protocol/1.0"}
 OKX_BASE = "https://www.okx.com/api/v5"
 BINANCE_VISION = "https://data-api.binance.vision/api/v3"
-BINANCE_FAPI = "https://fapi.binance.com/fapi/v1"
-BYBIT_BASE = "https://api.bybit.com/v5"
+KRAKEN_FUTURES = "https://futures.kraken.com/derivatives/api/v3"
+DERIBIT_PUBLIC = "https://www.deribit.com/api/v2/public"
+HYPERLIQUID_INFO = "https://api.hyperliquid.xyz/info"
 
 
-def _get_json(url: str, name: str, errors: list[str], timeout: int = 15) -> Any:
+def _get_json(url: str, name: str, errors: list[str], timeout: int = 12) -> Any:
     try:
         req = urllib.request.Request(url, headers=UA)
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except Exception as exc:
+        code = getattr(exc, "code", "")
+        errors.append(f"{name}: {type(exc).__name__} {code}".strip())
+        return None
+
+
+def _post_json(url: str, payload: dict[str, Any], name: str, errors: list[str], timeout: int = 12) -> Any:
+    try:
+        data = json.dumps(payload).encode("utf-8")
+        headers = {**UA, "Content-Type": "application/json"}
+        req = urllib.request.Request(url, data=data, headers=headers, method="POST")
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return json.loads(resp.read().decode("utf-8"))
     except Exception as exc:
@@ -137,12 +151,14 @@ def fetch_live_ticker(errors: list[str]) -> dict[str, Any]:
 
 
 def fetch_funding_and_oi(errors: list[str]) -> dict[str, Any]:
-    """Fetch current funding rate, 30d funding history (90 x 8h), and open interest."""
+    """Fetch current 8h-equivalent funding rates, 30d history, and open interest across US-accessible venues."""
     out: dict[str, Any] = {
         "current_rate_pct": None,
         "history_pct": [],
         "oi_btc": None,
+        "total_oi_btc": None,
         "venues": {},
+        "venue_oi_btc": {},
     }
     r = _get_json(f"{OKX_BASE}/public/funding-rate?instId=BTC-USDT-SWAP", "OKX funding", errors)
     if r and r.get("data"):
@@ -157,23 +173,55 @@ def fetch_funding_and_oi(errors: list[str]) -> dict[str, Any]:
 
     roi = _get_json(f"{OKX_BASE}/public/open-interest?instType=SWAP&instId=BTC-USDT-SWAP", "OKX OI", errors)
     if roi and roi.get("data"):
-        out["oi_btc"] = round(float(roi["data"][0]["oiCcy"]), 1)
+        okx_oi = round(float(roi["data"][0]["oiCcy"]), 1)
+        out["oi_btc"] = okx_oi
+        out["venue_oi_btc"]["okx"] = okx_oi
 
-    # Best-effort secondary venues (may 451 on US GitHub runners, fail-soft)
-    bf = _get_json(f"{BINANCE_FAPI}/premiumIndex?symbol=BTCUSDT", "Binance funding", errors)
-    if bf and "lastFundingRate" in bf:
-        bfr = round(float(bf["lastFundingRate"]) * 100.0, 5)
-        out["venues"]["binance"] = bfr
-        if out["current_rate_pct"] is None:
-            out["current_rate_pct"] = bfr
+    # Kraken Futures PF_XBTUSD (fundingRate is 1h USD/BTC; divide by markPrice -> 1h rel rate, x8x100 -> 8h %)
+    kf = _get_json(f"{KRAKEN_FUTURES}/tickers", "Kraken Futures ticker", errors)
+    if kf and isinstance(kf.get("tickers"), list):
+        pf = next((t for t in kf["tickers"] if t.get("symbol") == "PF_XBTUSD"), None)
+        if pf:
+            mark = float(pf.get("markPrice") or pf.get("last") or 0.0)
+            if mark > 0 and pf.get("fundingRate") is not None:
+                kfr = round((float(pf["fundingRate"]) / mark) * 8.0 * 100.0, 5)
+                out["venues"]["kraken_futures"] = kfr
+            if pf.get("openInterest") is not None:
+                out["venue_oi_btc"]["kraken_futures"] = round(float(pf["openInterest"]), 1)
 
-    by = _get_json(f"{BYBIT_BASE}/market/tickers?category=linear&symbol=BTCUSDT", "Bybit ticker", errors)
-    if by and (by.get("result") or {}).get("list"):
-        x = by["result"]["list"][0]
-        byfr = round(float(x["fundingRate"]) * 100.0, 5)
-        out["venues"]["bybit"] = byfr
-        if out["current_rate_pct"] is None:
-            out["current_rate_pct"] = byfr
+    # Deribit BTC-PERPETUAL (funding_8h decimal fraction, open_interest in USD inverse)
+    db = _get_json(f"{DERIBIT_PUBLIC}/get_book_summary_by_currency?currency=BTC&kind=future", "Deribit perp", errors)
+    if db and isinstance(db.get("result"), list):
+        perp = next((x for x in db["result"] if x.get("instrument_name") == "BTC-PERPETUAL"), None)
+        if perp:
+            if perp.get("funding_8h") is not None:
+                out["venues"]["deribit"] = round(float(perp["funding_8h"]) * 100.0, 5)
+            mark = float(perp.get("mark_price") or perp.get("last") or 0.0)
+            if mark > 0 and perp.get("open_interest") is not None:
+                out["venue_oi_btc"]["deribit"] = round(float(perp["open_interest"]) / mark, 1)
+
+    # Hyperliquid BTC perp (funding is 1h decimal fraction, openInterest in BTC)
+    hl = _post_json(HYPERLIQUID_INFO, {"type": "metaAndAssetCtxs"}, "Hyperliquid perp", errors)
+    if isinstance(hl, list) and len(hl) >= 2:
+        universe = (hl[0] or {}).get("universe") or []
+        ctxs = hl[1] or []
+        idx = next((i for i, u in enumerate(universe) if u.get("name") == "BTC"), None)
+        if idx is not None and idx < len(ctxs):
+            ctx = ctxs[idx] or {}
+            if ctx.get("funding") is not None:
+                out["venues"]["hyperliquid"] = round(float(ctx["funding"]) * 8.0 * 100.0, 5)
+            if ctx.get("openInterest") is not None:
+                out["venue_oi_btc"]["hyperliquid"] = round(float(ctx["openInterest"]), 1)
+
+    if out["current_rate_pct"] is None and out["venues"]:
+        vals = sorted(out["venues"].values())
+        out["current_rate_pct"] = vals[len(vals) // 2]
+
+    if out["venue_oi_btc"]:
+        tot = round(sum(out["venue_oi_btc"].values()), 1)
+        out["total_oi_btc"] = tot
+        if out["oi_btc"] is None:
+            out["oi_btc"] = tot
 
     return out
 

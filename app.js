@@ -59,19 +59,17 @@ function renderSignalTab() {
   const reg = STATE.regime || {};
   const port = STATE.portfolio || {};
   const prop = sig.proposal || {};
-  const inv = sig.sell_inventory || {};
   const status = sig.status || "FLAT";
-  const activeSignals = sig.active_signals || [status];
 
   const banner = $("signalBanner");
   banner.className = "card signal-banner " + status;
-  const stBadge = status === "LONG" ? "up" : status === "SHORT" ? "dn" : inv.active ? "dn" : "warn";
+  const stBadge = status === "LONG" ? "up" : status === "SHORT" ? "dn" : "warn";
   const biasBadge = reg.bias === "LONG" ? "up" : reg.bias === "SHORT" ? "dn" : "warn";
 
   $("signalSummary").innerHTML = `
     <div class="signal-head">
-      <div class="big-num ${status === "LONG" ? "up" : status === "SHORT" ? "dn" : "warn"}">${esc(activeSignals.join(" + "))}</div>
-      <span class="badge ${stBadge}">${status === "FLAT" ? (inv.active ? "INVENTORY REDUCTION" : "NO FUTURES ENTRY") : esc(prop.entry_method || "FUTURES ACTIVE")}</span>
+      <div class="big-num ${status === "LONG" ? "up" : status === "SHORT" ? "dn" : "warn"}">${esc(status)}</div>
+      <span class="badge ${stBadge}">${status === "FLAT" ? "NO FUTURES ENTRY" : esc(prop.entry_method || "FUTURES ACTIVE")}</span>
     </div>
     <p class="mut" style="margin:8px 0 4px;">Dominant 4H drivers: <b>${esc((reg.dominant_factors || []).join(" · ") || "—")}</b></p>
     <p class="mut" style="margin:0;">1D Bias: <b>${esc(reg.daily_bias || "—")}</b> · Open Futures: <b>${(port.open_positions || []).length}/1</b> · Equity: <b>${usd(port.equity_usd, 2)}</b></p>
@@ -94,17 +92,6 @@ function renderSignalTab() {
       Last 4H Close: ${esc(reg.last_4h_close_utc || "—")} · Weekend: ${reg.is_weekend_utc ? `<b class="warn">YES (${th.weekend_long}/${th.weekend_short} 0.5x)</b>` : "No"}
       ${th.dd_tier1_active ? ' · <b class="dn">-6% DD Tier 1 Active (0.2% risk, 75/25)</b>' : ""}
     </p>
-  `;
-
-  $("sellInventoryBox").innerHTML = `
-    <div class="signal-head" style="margin-bottom:6px;">
-      <div>
-        <b class="${inv.active ? "dn" : "mut"}" style="font-size:11.5px;">${inv.active ? "SELL INVENTORY ACTIVE" : "HOLD SPOT INVENTORY"}</b>
-        <span class="mut"> · Ref: ${esc(inv.structural_ref || "—")}</span>
-      </div>
-      <span class="badge ${inv.active ? "dn" : ""}">${inv.active ? `REDUCE ${num(inv.recommended_pct, 0)}% (${inv.sell_btc} BTC ≈ ${usd(inv.sell_usd, 0)})` : `Band ${esc(inv.band_pct || "15–25%")}`}</span>
-    </div>
-    <p class="mut" style="margin:0;">${esc(inv.reason || "—")} · Spot Inventory: <b>${num(inv.spot_inventory_btc, 2)} BTC</b> · Counts toward Futures Heat: <b>No</b> · Exempt from Futures Halts: <b>Yes</b></p>
   `;
 
   const checks = sig.checklist || [];
@@ -300,7 +287,6 @@ function renderChart() {
 
 function updateCalc() {
   const eq = +$("cEq").value || 0;
-  const invBtc = +$("cInv").value || 0;
   const dir = $("cDir").value;
   const isWk = $("cWeekend").value === "yes";
   const entry = +$("cEntry").value || 0;
@@ -326,9 +312,6 @@ function updateCalc() {
   const actualRiskUsd = sizeBtc * stopDist;
   const actualRiskPct = eq > 0 ? (actualRiskUsd / eq) * 100 : 0;
 
-  const sell20Btc = invBtc * 0.2;
-  const sell20Usd = sell20Btc * entry;
-
   const issues = [];
   if (!validStopSide) issues.push("Stop on wrong side of entry");
   if (stopPct > 2.2) issues.push(`Stop ${stopPct.toFixed(2)}% > 2.20% max`);
@@ -341,7 +324,6 @@ function updateCalc() {
     ["Effective Leverage", `${lev.toFixed(2)}x / 2.00x max${clamped ? " (2x LEVERAGE CLAMPED)" : ""}`],
     ["Actual Risk", `${actualRiskPct.toFixed(3)}% (${usd(actualRiskUsd, 2)})`],
     ["Stop Distance / R:R", `${stopPct.toFixed(2)}% (≤2.2%) / ${rawRR.toFixed(2)}:1 (≥1.6:1)`],
-    ["Sell Inventory (20% Short Opt)", `${sell20Btc.toFixed(4)} BTC (≈ ${usd(sell20Usd, 0)}) · 15–25% band`],
   ]);
 }
 
@@ -374,14 +356,19 @@ function renderLedgerTab() {
     ["Profit Factor", `${rev.profit_factor ?? 0}`],
     ["Expectancy (R)", `${rev.expectancy_r ?? 0}R`],
     ["Net Realized PnL", usd(rev.total_realized_pnl_usd, 2)],
-    ["Spot Inventory Tracked", `${num(port.spot_inventory_btc, 2)} BTC`],
   ]);
 
   const drv = STATE.derivatives || {};
   const ext = STATE.extras || {};
+  const ven = drv.venues || {};
+  const venueStr = Object.keys(ven).length
+    ? Object.entries(ven)
+        .map(([k, v]) => `${k.replace("_futures", "").toUpperCase()} ${pct(v, 4)}`)
+        .join(" · ")
+    : pct(drv.current_rate_pct, 5);
   $("derivKv").innerHTML = kv([
-    ["Perp Funding (8h)", pct(drv.current_rate_pct, 5)],
-    ["Open Interest (OKX)", drv.oi_btc != null ? `${Math.round(drv.oi_btc).toLocaleString()} BTC` : "—"],
+    ["Funding 8h (Venues)", venueStr],
+    ["Open Interest (OKX / Total)", `${drv.oi_btc != null ? Math.round(drv.oi_btc).toLocaleString() + " BTC" : "—"} / ${drv.total_oi_btc != null ? Math.round(drv.total_oi_btc).toLocaleString() + " BTC" : "—"}`],
     ["Deribit DVOL", ext.dvol ?? "—"],
     ["Fear & Greed", ext.fng_value != null ? `${ext.fng_value} (${ext.fng_label})` : "—"],
     ["ETF Latest / 5D", STATE.etf ? `${STATE.etf.latest_usd_m}M (${STATE.etf.latest_date}) / ${STATE.etf.sum5_usd_m}M` : "—"],
@@ -425,7 +412,6 @@ function seedCalcFromState() {
     $("cTp").value = prop.target1_price;
     $("cDir").value = prop.direction || "LONG";
     $("cEq").value = Math.round(STATE?.portfolio?.equity_usd || 100000);
-    $("cInv").value = STATE?.portfolio?.spot_inventory_btc ?? 2.0;
     $("cWeekend").value = STATE?.regime?.is_weekend_utc ? "yes" : "no";
   }
   updateCalc();
@@ -434,6 +420,180 @@ function seedCalcFromState() {
 function activateTab(tabId) {
   document.querySelectorAll("#tabNav .tab-btn").forEach((x) => x.classList.toggle("active", x.dataset.tab === tabId));
   document.querySelectorAll(".tab-panel").forEach((p) => p.classList.toggle("active", p.id === `tab-${tabId}`));
+}
+
+const MASTER_QUANT_PROMPT_TEMPLATE = `### ROLE & OBJECTIVE
+Act as an Institutional Quantitative Bitcoin Swing Strategist and Risk Officer. Below is a raw, unopinionated market telemetry packet from the **BTC Short-Term Futures Protocol (v4.0)**. Your job is to analyze the raw data independently from first principles (Auction Market Theory, 4H/1D price structure, Volume Profile, momentum exhaustion vs. impulse, multi-venue derivatives positioning, and institutional ETF/stablecoin flows) and issue an unbiased Long, Short, or Stand-Aside execution verdict.
+
+---
+
+### HARD PROTOCOL RISK CONSTRAINTS (NON-NEGOTIABLE)
+Every trade idea you evaluate MUST strictly obey these guardrails:
+1. **Evaluation Cadence & Hold Window:** Signals are evaluated on **4H candle closes** with a **maximum hold window of 24 hours** (time-stop reduction at 8h, hard exit at 12–24h if stagnant).
+2. **Leverage & Capital Risk:**
+   - Maximum Futures Leverage: **1:2 (2.0x Isolated)**.
+   - Maximum Risk per Trade: **0.40% of Account Equity** on weekdays; **0.20% (halved)** on weekends (\`is_weekend_utc: true\`).
+   - Maximum Portfolio Heat: **<= 1.50%** across all open risk.
+   - Maximum Concurrent Futures Positions: **1** (LONG or SHORT only).
+3. **Structural Geometry & R:R:**
+   - **Minimum Reward-to-Risk (R:R):** **>= 1.6 : 1** to the first major opposing structural level (\`Target 1\`), net of estimated 24h funding and maker/taker fee drag.
+   - **Maximum Stop Distance:** **<= 2.20%** from entry (placed beyond structural invalidation + ATR buffer).
+4. **Macro Blackout:** **Zero new entries** if a high-impact USD macro release is scheduled within **<= 60 minutes**.
+5. **Anti-Chasing & Exhaustion Guardrail (CRITICAL):**
+   - **DO NOT** recommend market shorting into extreme oversold capitulation (\`rsi_4h < 25\`, \`rsi_d < 30\`, \`fng_value < 15\`, or price sitting directly on top of a primary 4H/1D support level where R:R to the next support is \`< 1.6:1\`).
+   - **DO NOT** recommend market longing into extreme overbought exhaustion (\`rsi_4h > 75\`) or directly beneath a major resistance ceiling.
+   - When trend and momentum are aligned in a strong impulse but price is overextended, your verdict MUST be **\`STAND ASIDE / CONDITIONAL LIMIT ORDER\`** at a mean-reversion structural pullback level (e.g., 4H EMA20, prior broken S/R, or 30D Volume Profile node).
+
+---
+
+### REQUIRED 4-STEP ANALYTICAL OUTPUT FORMAT
+
+#### 1. EXECUTIVE DIRECTIVE (3-Second Summary)
+- **Verdict:** \`[STAND ASIDE — WAIT]\` | \`[PLACE CONDITIONAL LIMIT ORDER]\` | \`[EXECUTE LONG/SHORT ON 4H CLOSE]\`
+- **Directional Bias:** \`BULLISH\` | \`BEARISH\` | \`NEUTRAL / RANGE-BOUND\` (State 1D structural bias vs. 4H tactical state).
+- **Primary Rationale:** 2 concise sentences explaining *why* with concrete prices, RSI/ATR figures, and R:R math.
+
+#### 2. 5-PILLAR TELEMETRY AUDIT
+- **A. Price Structure & Volume Profile:** Analyze \`charts.h4\` and \`charts.d1\` OHLCV arrays (\`[ts, O, H, L, C, Vol]\`), EMA alignment (\`ema20_4h\`, \`ema50_4h\`, \`ema50_d\`, \`ema200_d\`), and distance to \`30D VAH / VPOC / VAL\` and nearest swing highs/lows.
+- **B. Momentum & Volatility Regime:** Evaluate \`rsi_4h\`, \`rsi_d\`, \`roc6/12/20_4h_pct\`, \`atr_4h_usd\` (\`atr_4h_percentile\`), and \`dvol\`. Classify as **Compression**, **Early Expansion**, or **Late Climax / Exhaustion**.
+- **C. Multi-Venue Derivatives & Microstructure:** Evaluate \`funding_rate_pct\` across OKX, Kraken Futures, Deribit, and Hyperliquid plus \`oi_btc\` / \`venue_oi_btc\`. Identify crowding or squeeze asymmetry.
+- **D. Institutional Flows & Macro Context:** Evaluate 5-day ETF flows (\`etf.sum5_usd_m\`), 7d stablecoin liquidity (\`stables.chg7d_pct\`), \`dxy\`, \`vix\`, Fear & Greed (\`fng_value\`), and weekend/session liquidity (\`session_name\`).
+- **E. Telemetry Integrity Check:** Flag any \`fetch_errors\` or timestamp staleness (\`updated_at_utc\` vs. \`last_4h_close_utc\`) that reduce conviction.
+
+#### 3. FUTURES EXECUTION VERDICT (1:2 ISOLATED LONG / SHORT)
+State clearly whether an immediate **4H Close Long**, **4H Close Short**, or **Flat / Wait** setup passes all v4.0 rules right now, listing which rules pass or block.
+
+#### 4. CALCULATOR-READY EXECUTION OR CONDITIONAL TRIGGER TABLE
+*(If \`STAND ASIDE\` at market, provide the exact **Conditional Limit / Alert Setup** that WOULD satisfy >= 1.6:1 R:R and <= 2.2% stop distance on a retest)*:
+- **Setup Type:** \`Market on 4H Close\` OR \`Conditional Retest / Limit\`
+- **Direction:** \`LONG\` | \`SHORT\`
+- **Trigger / Entry Price ($):** \`$XX,XXX\` (Structural level reference)
+- **Hard Invalidation Stop ($ & %):** \`$XX,XXX\` (\`X.XX%\` — must be \`<= 2.20%\`)
+- **Target 1 ($ & R:R):** \`$XX,XXX\` (\`X.XX : 1\` — must be \`>= 1.60 : 1\`)
+- **Target 2 ($ & R:R):** \`$XX,XXX\` (\`X.XX : 1\`)
+- **Recommended Risk %:** \`0.40%\` (or \`0.20%\` if Weekend)
+- **What Invalidates Waiting for This Setup:** Exact price level or candle close that cancels the plan.
+
+---
+
+### LIVE RAW TELEMETRY PACKET (JSON)
+\`\`\`json
+{{RAW_JSON_PAYLOAD}}
+\`\`\``;
+
+function buildRawTelemetryPacket(fullState) {
+  if (!fullState) return null;
+  const g = fullState.regime?.groups || {};
+  const ts = g.trend_structure || {};
+  const mom = g.momentum || {};
+  const vl = g.volatility_liquidity || {};
+  const sc = g.session_context || {};
+  const refPrice = activePrice() || fullState.ticker?.price || 0;
+  const atrUsd = vl.atr_4h_usd || fullState.signal?.atr_4h || 0;
+
+  const levels = (fullState.signal?.structural_levels || []).map((l) => {
+    const diff = refPrice > 0 ? l.price - refPrice : 0;
+    return {
+      label: l.label,
+      kind: l.kind,
+      price: l.price,
+      distance_pct: refPrice > 0 ? +((diff / refPrice) * 100).toFixed(2) : null,
+      distance_atr: atrUsd > 0 ? +(diff / atrUsd).toFixed(2) : null,
+    };
+  });
+
+  const lr = fullState.config?.leverage_and_risk || {};
+  const th = fullState.config?.timeframe_and_hold || {};
+
+  return {
+    meta: {
+      protocol_version: fullState.protocol_version || "4.0",
+      updated_at_utc: fullState.updated_at_utc,
+      updated_at_ms: fullState.updated_at_ms,
+      last_4h_close_utc: fullState.last_4h_close_utc,
+      session_name: sc.session_name ?? null,
+      is_weekend_utc: fullState.regime?.is_weekend_utc ?? null,
+    },
+    ticker: {
+      ...(fullState.ticker || {}),
+      live_spot_price: LIVE.price ?? null,
+      live_spot_source: LIVE.src ?? null,
+    },
+    indicators: {
+      trend: {
+        ema20_4h: ts.ema20_4h ?? null,
+        ema50_4h: ts.ema50_4h ?? null,
+        ema50_d: ts.ema50_d ?? null,
+        ema200_d: ts.ema200_d ?? null,
+        h4_structure: ts.h4_structure ?? null,
+        daily_structure: ts.daily_structure ?? null,
+      },
+      momentum: {
+        rsi_4h: mom.rsi_4h ?? null,
+        rsi_d: mom.rsi_d ?? null,
+        roc6_4h_pct: mom.roc6_4h_pct ?? null,
+        roc12_4h_pct: mom.roc12_4h_pct ?? null,
+        roc20_4h_pct: mom.roc20_4h_pct ?? null,
+      },
+      volatility_volume: {
+        atr_4h_usd: atrUsd || null,
+        atr_4h_pct: vl.atr_4h_pct ?? null,
+        atr_4h_percentile: vl.atr_4h_percentile ?? null,
+        rel_volume_4h: vl.rel_volume_4h ?? null,
+        dvol: fullState.extras?.dvol ?? null,
+      },
+    },
+    structural_levels: levels,
+    derivatives: {
+      ...(fullState.derivatives || {}),
+      funding_30d_percentile: vl.funding_30d_percentile ?? null,
+    },
+    macro_and_flows: {
+      vix: sc.vix ?? null,
+      dxy: sc.dxy ?? null,
+      fng_value: fullState.extras?.fng_value ?? null,
+      fng_label: fullState.extras?.fng_label ?? null,
+      etf: fullState.etf ?? null,
+      stables: fullState.stables ?? null,
+      macro_calendar: fullState.macro_calendar || [],
+      next_macro_event: sc.next_macro_event ?? null,
+      next_macro_minutes: sc.next_macro_minutes ?? null,
+    },
+    charts_ohlcv_last30: {
+      schema: "[timestamp_ms, open, high, low, close, volume]",
+      h4: (fullState.charts?.h4 || []).slice(-30),
+      d1: (fullState.charts?.d1 || []).slice(-30),
+    },
+    risk_constraints_reference: {
+      max_leverage: lr.max_leverage ?? 2.0,
+      risk_per_trade_pct: lr.risk_per_trade_pct ?? 0.004,
+      weekend_size_mult: th.weekend_size_mult ?? 0.5,
+      max_portfolio_heat_pct: lr.max_portfolio_heat_pct ?? 0.015,
+      max_concurrent_futures: lr.max_concurrent_futures ?? 1,
+      min_rr: lr.min_rr ?? 1.6,
+      max_stop_distance_pct: lr.max_stop_distance_pct ?? 0.022,
+      max_hold_hours: th.max_hold_hours ?? 24,
+      macro_blackout_minutes: lr.macro_blackout_minutes ?? 60,
+    },
+    fetch_errors: fullState.fetch_errors || [],
+  };
+}
+
+async function copyTextWithFeedback(text, label) {
+  const msgEl = $("actionMsg");
+  const prev = msgEl.textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    msgEl.textContent = label;
+    msgEl.style.color = "var(--up)";
+  } catch {
+    msgEl.textContent = "Clipboard blocked — use Download .JSON instead.";
+    msgEl.style.color = "var(--dn)";
+  }
+  setTimeout(() => {
+    msgEl.textContent = prev;
+    msgEl.style.color = "";
+  }, 3000);
 }
 
 function bindEvents() {
@@ -454,7 +614,18 @@ function bindEvents() {
     document.querySelectorAll("#chartSeg .tab-btn").forEach((x) => x.classList.toggle("active", x === b));
     renderChart();
   });
-  ["cEq", "cInv", "cDir", "cWeekend", "cEntry", "cStop", "cTp"].forEach((id) => $(id).addEventListener("input", updateCalc));
+  ["cEq", "cDir", "cWeekend", "cEntry", "cStop", "cTp"].forEach((id) => $(id).addEventListener("input", updateCalc));
+  $("btnCopyRaw").onclick = () => {
+    const raw = buildRawTelemetryPacket(STATE);
+    if (!raw) return;
+    copyTextWithFeedback(JSON.stringify(raw, null, 2), "Copied clean Raw Telemetry JSON (no pre-computed verdicts).");
+  };
+  $("btnCopyAi").onclick = () => {
+    const raw = buildRawTelemetryPacket(STATE);
+    if (!raw) return;
+    const promptText = MASTER_QUANT_PROMPT_TEMPLATE.replace("{{RAW_JSON_PAYLOAD}}", JSON.stringify(raw, null, 2));
+    copyTextWithFeedback(promptText, "Copied Master AI Prompt + unbiased Raw JSON (ready for Gemini/Claude/Grok).");
+  };
   $("btnDlJson").onclick = () => {
     const u = URL.createObjectURL(new Blob([JSON.stringify(STATE, null, 2)], { type: "application/json" }));
     const a = document.createElement("a");

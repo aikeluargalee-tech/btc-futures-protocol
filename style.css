@@ -43,7 +43,7 @@ html, body {
   padding: 12px 12px 40px;
 }
 
-.ibm-titlebar {
+.ws-titlebar {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -61,7 +61,7 @@ html, body {
   text-transform: uppercase;
 }
 
-.ibm-sysmeta {
+.ws-sysmeta {
   font-weight: 500;
   opacity: 0.92;
 }
@@ -422,6 +422,17 @@ header.topbar {
 .btn:active {
   transform: translate(1px, 1px);
   box-shadow: inset 1px 1px 0 var(--bevel-lo);
+}
+
+.btn-primary {
+  background: var(--acc);
+  color: #ffffff;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.25), inset -1px -1px 0 #002375, 2px 2px 0 var(--shadow);
+}
+
+.btn-primary:hover {
+  background: var(--acc-bright);
+  color: #ffffff;
 }
 
 .calc-grid {

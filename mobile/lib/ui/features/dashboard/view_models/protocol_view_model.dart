@@ -18,8 +18,6 @@ class CalcResult {
   final double actualRiskPct;
   final double stopDistPct;
   final double rawRr;
-  final double sell20Btc;
-  final double sell20Usd;
 
   const CalcResult({
     required this.valid,
@@ -34,8 +32,6 @@ class CalcResult {
     required this.actualRiskPct,
     required this.stopDistPct,
     required this.rawRr,
-    required this.sell20Btc,
-    required this.sell20Usd,
   });
 }
 
@@ -123,7 +119,6 @@ class ProtocolViewModel extends ChangeNotifier {
 
   static CalcResult computeV4Sizing({
     required double equityUsd,
-    required double spotInventoryBtc,
     required String direction,
     required bool weekendExtremeHalf,
     required bool ddTier1Active,
@@ -164,9 +159,6 @@ class ProtocolViewModel extends ChangeNotifier {
       }
     }
 
-    final sell20Btc = spotInventoryBtc * 0.20;
-    final sell20Usd = sell20Btc * entry;
-
     return CalcResult(
       valid: issues.isEmpty,
       issues: issues,
@@ -180,8 +172,6 @@ class ProtocolViewModel extends ChangeNotifier {
       actualRiskPct: actualRiskPct,
       stopDistPct: stopDistPct,
       rawRr: rawRr,
-      sell20Btc: sell20Btc,
-      sell20Usd: sell20Usd,
     );
   }
 

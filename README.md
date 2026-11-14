@@ -1,6 +1,6 @@
-# BTC Short-Term Futures + Inventory Protocol v4.0
+# BTC Short-Term Futures Protocol v4.0
 
-**4H / Day-Trade Only · Long & Short Futures at ≤ 1:2 · Sell Inventory Option · Multi-Factor Regime · Rigorous Risk Management**
+**4H / Day-Trade Only · Long & Short Futures at ≤ 1:2 · Multi-Factor Regime · Rigorous Risk Management**
 
 Automated protocol evaluation engine running every 15 minutes via GitHub Actions and serving a live Signal Tab HUD on GitHub Pages:
 https://aikeluargalee-tech.github.io/btc-futures-protocol/
@@ -9,7 +9,6 @@ https://aikeluargalee-tech.github.io/btc-futures-protocol/
 - **Actions**:
   - `LONG`: score `≥ 68` + all 9 futures checks pass (≤ 1:2 leverage)
   - `SHORT`: score `≤ 32` + all 9 futures checks pass (≤ 1:2 leverage)
-  - `SELL INVENTORY`: score `≤ 32` + valid 4H structural reference (15–25%, default 20% spot BTC trim; exempt from futures checks 3–9 & futures halts; counts as 0% futures heat)
   - `FLAT`: score `33–67` (strict, no exceptions) or any failed futures check
 - **4H Multi-Factor Regime (0–100)**: Trend Structure (30%), Momentum 4H (25%), Volatility & Liquidity 4H (25%), Session / Context (20%).
 - **Position Sizing & Risk**: `0.4%` equity risk per trade, hard `1:2` leverage cap, `≤ 1.5%` portfolio heat, max 1 concurrent futures position, `≤ 2.2%` max stop distance, `≥ 1.6 : 1` R:R, `±60m` macro release blackout.

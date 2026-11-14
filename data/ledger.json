@@ -26,11 +26,9 @@
   "trade_seq": 0,
   "unrealized_pnl_usd": 0,
   "initial_equity": 100000.0,
-  "spot_inventory_btc": 2.0,
   "day_key": "2026-11-14",
   "intraday_peak_equity": 100000.0,
   "week_key": "2026-W46",
-  "last_sell_inventory_4h_ts": 1794614400000,
   "audit_log": [
     {
       "ts": "2026-11-14T04:52:59Z",
