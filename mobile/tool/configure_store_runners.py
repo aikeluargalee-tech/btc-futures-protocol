@@ -1,13 +1,18 @@
-"""Inject Google AdMob App IDs, Play Store API 35 SDK targets, and iOS ATT/SKAdNetwork into generated Flutter runners."""
+"""Inject Google AdMob App IDs, store launcher icons, Play Store API 35 SDK targets, signing config, and iOS ATT/SKAdNetwork."""
 from __future__ import annotations
 
+import os
 import pathlib
 import plistlib
 import re
+import shutil
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-ANDROID_APP_ID = "ca-app-pub-3940256099942544~3347511713"
-IOS_APP_ID = "ca-app-pub-3940256099942544~1458002511"
+ANDROID_TEST_APP_ID = "ca-app-pub-3940256099942544~3347511713"
+IOS_TEST_APP_ID = "ca-app-pub-3940256099942544~1458002511"
+
+ANDROID_APP_ID = os.environ.get("ADMOB_ANDROID_APP_ID") or ANDROID_TEST_APP_ID
+IOS_APP_ID = os.environ.get("ADMOB_IOS_APP_ID") or IOS_TEST_APP_ID
 
 
 def patch_android_manifest() -> None:
@@ -48,17 +53,50 @@ def patch_android_gradle() -> None:
         )
         sp.write_text(stxt, encoding="utf-8")
 
-    for fname in ("build.gradle.kts", "build.gradle"):
-        gp = ROOT / "android" / "app" / fname
-        if not gp.exists():
-            continue
-        txt = gp.read_text(encoding="utf-8")
+    key_props = ROOT / "android" / "key.properties"
+
+    gp_kts = ROOT / "android" / "app" / "build.gradle.kts"
+    if gp_kts.exists():
+        txt = gp_kts.read_text(encoding="utf-8")
         txt = re.sub(r"minSdk\s*=?\s*flutter\.minSdkVersion", "minSdk = 24", txt)
-        txt = re.sub(r"minSdkVersion\s+flutter\.minSdkVersion", "minSdkVersion 24", txt)
         txt = re.sub(r"compileSdk\s*=?\s*flutter\.compileSdkVersion", "compileSdk = 35", txt)
         txt = re.sub(r"targetSdk\s*=?\s*flutter\.targetSdkVersion", "targetSdk = 35", txt)
+
+        if key_props.exists() and "keystorePropertiesFile" not in txt:
+            header = (
+                'import java.util.Properties\n'
+                'import java.io.FileInputStream\n\n'
+                'val keystoreProperties = Properties()\n'
+                'val keystorePropertiesFile = rootProject.file("key.properties")\n'
+                'if (keystorePropertiesFile.exists()) {\n'
+                '    keystoreProperties.load(FileInputStream(keystorePropertiesFile))\n'
+                '}\n'
+            )
+            txt = header + "\n" + txt
+            signing_block = (
+                '    signingConfigs {\n'
+                '        create("release") {\n'
+                '            keyAlias = keystoreProperties.getProperty("keyAlias")\n'
+                '            keyPassword = keystoreProperties.getProperty("keyPassword")\n'
+                '            storeFile = keystoreProperties.getProperty("storeFile")?.let { file(it) }\n'
+                '            storePassword = keystoreProperties.getProperty("storePassword")\n'
+                '        }\n'
+                '    }\n'
+                '    buildTypes {'
+            )
+            txt = txt.replace("    buildTypes {", signing_block, 1)
+            txt = txt.replace(
+                "signingConfig = signingConfigs.getByName(\"debug\")",
+                'signingConfig = signingConfigs.getByName("release")',
+            )
+        gp_kts.write_text(txt, encoding="utf-8")
+
+    gp_groovy = ROOT / "android" / "app" / "build.gradle"
+    if gp_groovy.exists():
+        txt = gp_groovy.read_text(encoding="utf-8")
+        txt = re.sub(r"minSdkVersion\s+flutter\.minSdkVersion", "minSdkVersion 24", txt)
         txt = re.sub(r"targetSdkVersion\s+flutter\.targetSdkVersion", "targetSdkVersion 35", txt)
-        gp.write_text(txt, encoding="utf-8")
+        gp_groovy.write_text(txt, encoding="utf-8")
 
 
 def patch_ios_plist_and_podfile() -> None:
@@ -93,8 +131,28 @@ def patch_ios_plist_and_podfile() -> None:
         pbx.write_text(txt, encoding="utf-8")
 
 
+def install_store_icons() -> None:
+    icons_dir = ROOT / "assets" / "store_icons"
+    android_src = icons_dir / "android"
+    android_res = ROOT / "android" / "app" / "src" / "main" / "res"
+    if android_src.exists() and android_res.exists():
+        for mipmap in android_src.iterdir():
+            src_png = mipmap / "ic_launcher.png"
+            if mipmap.is_dir() and src_png.exists():
+                dst_dir = android_res / mipmap.name
+                dst_dir.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src_png, dst_dir / "ic_launcher.png")
+
+    ios_src = icons_dir / "ios" / "AppIcon.appiconset"
+    ios_dst = ROOT / "ios" / "Runner" / "Assets.xcassets" / "AppIcon.appiconset"
+    if ios_src.exists() and ios_dst.exists():
+        for png in ios_src.glob("*.png"):
+            shutil.copy2(png, ios_dst / png.name)
+
+
 if __name__ == "__main__":
     patch_android_manifest()
     patch_android_gradle()
     patch_ios_plist_and_podfile()
-    print("[OK] Configured Android & iOS store runners for AdMob + Play Store / App Store.")
+    install_store_icons()
+    print("[OK] Configured Android & iOS store runners (icons, AdMob IDs, signing, ATT).")

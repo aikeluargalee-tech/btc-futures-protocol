@@ -46,12 +46,28 @@ jobs:
           cache: true
       - name: Build Android APK & Play Store AppBundle
         working-directory: mobile
+        env:
+          ADMOB_ANDROID_APP_ID: ${{ secrets.ADMOB_ANDROID_APP_ID }}
+          ADMOB_ANDROID_BANNER_ID: ${{ secrets.ADMOB_ANDROID_BANNER_ID }}
+          ADMOB_ANDROID_NATIVE_ID: ${{ secrets.ADMOB_ANDROID_NATIVE_ID }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           flutter create --org io.github.aikeluargalee --project-name btc_futures_protocol --platforms=android .
+          if [ -n "${ANDROID_KEYSTORE_BASE64:-}" ]; then
+            printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+            printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=upload-keystore.jks\n' \
+              "$ANDROID_STORE_PASSWORD" "$ANDROID_KEY_PASSWORD" "$ANDROID_KEY_ALIAS" > android/key.properties
+          fi
           python3 tool/configure_store_runners.py
           flutter pub get
-          flutter build apk --release
-          flutter build appbundle --release
+          DART_DEFINES=""
+          [ -n "${ADMOB_ANDROID_BANNER_ID:-}" ] && DART_DEFINES="$DART_DEFINES --dart-define=ADMOB_ANDROID_BANNER_ID=${ADMOB_ANDROID_BANNER_ID}"
+          [ -n "${ADMOB_ANDROID_NATIVE_ID:-}" ] && DART_DEFINES="$DART_DEFINES --dart-define=ADMOB_ANDROID_NATIVE_ID=${ADMOB_ANDROID_NATIVE_ID}"
+          flutter build apk --release $DART_DEFINES
+          flutter build appbundle --release $DART_DEFINES
       - uses: actions/upload-artifact@v4
         with:
           name: android-release-artifacts
@@ -71,11 +87,18 @@ jobs:
           cache: true
       - name: Build iOS Release (Unsigned CI Verification)
         working-directory: mobile
+        env:
+          ADMOB_IOS_APP_ID: ${{ secrets.ADMOB_IOS_APP_ID }}
+          ADMOB_IOS_BANNER_ID: ${{ secrets.ADMOB_IOS_BANNER_ID }}
+          ADMOB_IOS_NATIVE_ID: ${{ secrets.ADMOB_IOS_NATIVE_ID }}
         run: |
           flutter create --org io.github.aikeluargalee --project-name btc_futures_protocol --platforms=ios .
           python3 tool/configure_store_runners.py
           flutter pub get
-          flutter build ios --release --no-codesign
+          DART_DEFINES=""
+          [ -n "${ADMOB_IOS_BANNER_ID:-}" ] && DART_DEFINES="$DART_DEFINES --dart-define=ADMOB_IOS_BANNER_ID=${ADMOB_IOS_BANNER_ID}"
+          [ -n "${ADMOB_IOS_NATIVE_ID:-}" ] && DART_DEFINES="$DART_DEFINES --dart-define=ADMOB_IOS_NATIVE_ID=${ADMOB_IOS_NATIVE_ID}"
+          flutter build ios --release --no-codesign $DART_DEFINES
       - uses: actions/upload-artifact@v4
         with:
           name: ios-unsigned-app

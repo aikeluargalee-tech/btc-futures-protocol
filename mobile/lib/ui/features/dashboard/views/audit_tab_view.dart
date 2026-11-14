@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../config/ad_config.dart';
 import '../../../core/theme.dart';
 import '../view_models/protocol_view_model.dart';
 
@@ -160,6 +161,11 @@ class _AuditTabViewState extends State<AuditTabView> {
                       const Text(
                         'Disclaimer: Educational & paper-trading telemetry tool only. Not financial advice, brokerage execution, or investment solicitation.',
                         style: TextStyle(fontSize: 9.5, color: TerminalColors.muted),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Privacy Policy: ${AppConfig.privacyPolicyUrl}',
+                        style: TextStyle(fontSize: 9.5, color: TerminalColors.accent),
                       ),
                     ],
                   ),

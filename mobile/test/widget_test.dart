@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
+import 'package:btc_futures_protocol/config/ad_config.dart';
 import 'package:btc_futures_protocol/data/repositories/protocol_repository.dart';
 import 'package:btc_futures_protocol/data/services/protocol_api_service.dart';
 import 'package:btc_futures_protocol/domain/models/protocol_state.dart';
@@ -160,5 +161,7 @@ void main() {
     await tester.tap(find.text('F4 AUDIT'));
     await tester.pump();
     expect(find.text('[COPY RAW JSON ONLY]'), findsOneWidget);
+    expect(AppConfig.privacyPolicyUrl.endsWith('/privacy.html'), isTrue);
+    expect(find.textContaining('/privacy.html'), findsOneWidget);
   });
 }

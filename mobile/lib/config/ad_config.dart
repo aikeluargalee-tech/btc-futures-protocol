@@ -19,7 +19,7 @@ class AppConfig {
       'https://api.exchange.coinbase.com/products/BTC-USD/ticker';
 
   static const String privacyPolicyUrl =
-      'https://aikeluargalee-tech.github.io/btc-futures-protocol/';
+      'https://aikeluargalee-tech.github.io/btc-futures-protocol/privacy.html';
 
   static const String briefingVideoAsset = 'assets/video/vGUZF.mp4';
 
@@ -27,12 +27,24 @@ class AppConfig {
   static const String androidTestAppId = 'ca-app-pub-3940256099942544~3347511713';
   static const String iosTestAppId = 'ca-app-pub-3940256099942544~1458002511';
 
-  // Official Google AdMob Test Ad Unit IDs
-  static const String _androidBannerUnitId = 'ca-app-pub-3940256099942544/6300978111';
-  static const String _iosBannerUnitId = 'ca-app-pub-3940256099942544/2934735716';
+  // Ad Unit IDs support CI --dart-define injection, defaulting to official Google AdMob Test IDs
+  static const String _androidBannerUnitId = String.fromEnvironment(
+    'ADMOB_ANDROID_BANNER_ID',
+    defaultValue: 'ca-app-pub-3940256099942544/6300978111',
+  );
+  static const String _iosBannerUnitId = String.fromEnvironment(
+    'ADMOB_IOS_BANNER_ID',
+    defaultValue: 'ca-app-pub-3940256099942544/2934735716',
+  );
 
-  static const String _androidNativeUnitId = 'ca-app-pub-3940256099942544/2247696110';
-  static const String _iosNativeUnitId = 'ca-app-pub-3940256099942544/3986624511';
+  static const String _androidNativeUnitId = String.fromEnvironment(
+    'ADMOB_ANDROID_NATIVE_ID',
+    defaultValue: 'ca-app-pub-3940256099942544/2247696110',
+  );
+  static const String _iosNativeUnitId = String.fromEnvironment(
+    'ADMOB_IOS_NATIVE_ID',
+    defaultValue: 'ca-app-pub-3940256099942544/3986624511',
+  );
 
   static String get bannerAdUnitId {
     if (defaultTargetPlatform == TargetPlatform.iOS) return _iosBannerUnitId;
