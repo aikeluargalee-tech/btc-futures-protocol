@@ -37,7 +37,7 @@ class RegimeTabView extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.all(10),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             '${groups[k]!.score.toStringAsFixed(1)} / 100',

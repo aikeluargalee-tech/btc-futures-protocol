@@ -108,7 +108,7 @@ class SignalTabView extends StatelessWidget {
           // 3. 4H Multi-Factor Regime Score Gauge Card
           Card(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const IbmSectionTitle('4H MULTI-FACTOR REGIME SCORE (0-100)'),
                 Padding(
