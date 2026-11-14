@@ -1,0 +1,82 @@
+name: Flutter Mobile App CI (Android & iOS)
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/mobile_build.yml"
+  workflow_dispatch:
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.27.3"
+          channel: stable
+          cache: true
+      - name: Generate platform runner scaffolding & apply store config
+        working-directory: mobile
+        run: |
+          flutter create --org io.github.aikeluargalee --project-name btc_futures_protocol --platforms=android,ios .
+          python3 tool/configure_store_runners.py
+          flutter pub get
+      - name: Analyze & Run Widget/Unit Tests
+        working-directory: mobile
+        run: |
+          flutter analyze
+          flutter test
+
+  build-android:
+    needs: analyze-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.27.3"
+          channel: stable
+          cache: true
+      - name: Build Android APK & Play Store AppBundle
+        working-directory: mobile
+        run: |
+          flutter create --org io.github.aikeluargalee --project-name btc_futures_protocol --platforms=android .
+          python3 tool/configure_store_runners.py
+          flutter pub get
+          flutter build apk --release
+          flutter build appbundle --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-release-artifacts
+          path: |
+            mobile/build/app/outputs/flutter-apk/app-release.apk
+            mobile/build/app/outputs/bundle/release/app-release.aab
+
+  build-ios:
+    needs: analyze-and-test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.27.3"
+          channel: stable
+          cache: true
+      - name: Build iOS Release (Unsigned CI Verification)
+        working-directory: mobile
+        run: |
+          flutter create --org io.github.aikeluargalee --project-name btc_futures_protocol --platforms=ios .
+          python3 tool/configure_store_runners.py
+          flutter pub get
+          flutter build ios --release --no-codesign
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-unsigned-app
+          path: mobile/build/ios/iphoneos/Runner.app
