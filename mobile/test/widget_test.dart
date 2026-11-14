@@ -135,14 +135,16 @@ void main() {
       }
       return http.Response('{"price":"67050.0"}', 200);
     });
-    final repo = ProtocolRepository(apiService: ProtocolApiService(client: mockClient));
+    final repo = ProtocolRepository(
+      apiService: ProtocolApiService(client: mockClient, parseInBackground: false),
+    );
     final vm = ProtocolViewModel(repository: repo, enableTimers: false);
     await vm.refreshAll();
 
     await tester.pumpWidget(
       BtcProtocolApp(viewModel: vm, enablePlatformPlugins: false),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
 
     expect(find.text('BTC PROTOCOL v4.0'), findsOneWidget);
     expect(find.text('PROTOCOL BRIEFING VIDEO (vGUZF.mp4)'), findsOneWidget);

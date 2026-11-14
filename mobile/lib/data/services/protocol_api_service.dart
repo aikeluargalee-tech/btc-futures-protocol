@@ -14,9 +14,13 @@ class LiveTicker {
 
 /// Stateless REST client consuming the GitHub Pages protocol snapshot and public BTC spot feeds.
 class ProtocolApiService {
-  ProtocolApiService({http.Client? client}) : _client = client ?? http.Client();
+  ProtocolApiService({
+    http.Client? client,
+    this.parseInBackground = true,
+  }) : _client = client ?? http.Client();
 
   final http.Client _client;
+  final bool parseInBackground;
 
   Future<ProtocolState> fetchProtocolState() async {
     final uri = Uri.parse(
@@ -27,6 +31,9 @@ class ProtocolApiService {
     );
     if (response.statusCode != 200) {
       throw Exception('Failed to load protocol state (HTTP ${response.statusCode})');
+    }
+    if (!parseInBackground) {
+      return parseProtocolState(response.body);
     }
     return compute(parseProtocolState, response.body);
   }

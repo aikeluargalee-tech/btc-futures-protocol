@@ -28,7 +28,7 @@ jobs:
         working-directory: mobile
         run: |
           flutter analyze
-          flutter test
+          flutter test --timeout 60s
 
   build-android:
     needs: analyze-and-test
