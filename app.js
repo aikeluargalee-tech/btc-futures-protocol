@@ -406,21 +406,6 @@ function seedCalcFromState() {
   updateCalc();
 }
 
-function buildAiPacket() {
-  const s = STATE;
-  const reg = s.regime || {};
-  const sig = s.signal || {};
-  const port = s.portfolio || {};
-  return [
-    `# BTC Futures Swing Trading Protocol v${s.protocol_version} Snapshot`,
-    `Updated UTC: ${s.updated_at_utc} | Live Price: ${usd(activePrice(), 1)}`,
-    `Regime Score: ${reg.score}/100 (${reg.bias}) | Dominant: ${(reg.dominant_factors || []).join("; ")}`,
-    `Signal: ${sig.status} | Rejections: ${(sig.rejection_reasons || []).join("; ") || "None"}`,
-    `Portfolio Equity: ${usd(port.equity_usd, 2)} | Heat: ${port.open_heat_pct}%/${port.max_heat_pct}% | Leverage: ${port.current_leverage}x/2.0x`,
-    `Drawdown: ${port.drawdown_pct}% | Daily PnL: ${port.daily_pnl_pct}% | Weekly PnL: ${port.weekly_pnl_pct}%`,
-  ].join("\n");
-}
-
 function bindEvents() {
   $("tabNav").addEventListener("click", (e) => {
     const b = e.target.closest("button[data-tab]");
@@ -436,15 +421,6 @@ function bindEvents() {
     renderChart();
   });
   ["cEq", "cDir", "cRole", "cEntry", "cStop", "cTp"].forEach((id) => $(id).addEventListener("input", updateCalc));
-  $("btnCopyAi").onclick = async () => {
-    try {
-      await navigator.clipboard.writeText(buildAiPacket());
-      $("actionMsg").textContent = "Copied AI packet ✓";
-    } catch {
-      $("actionMsg").textContent = "Copy blocked";
-    }
-    setTimeout(() => ($("actionMsg").textContent = ""), 2500);
-  };
   $("btnDlJson").onclick = () => {
     const u = URL.createObjectURL(new Blob([JSON.stringify(STATE, null, 2)], { type: "application/json" }));
     const a = document.createElement("a");
