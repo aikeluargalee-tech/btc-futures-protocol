@@ -261,6 +261,11 @@ function renderChart() {
   const y = (p) => Tp + ((hi - p) / (hi - lo)) * (H - Tp - Bp);
 
   let svg = `<svg class="chart" viewBox="0 0 ${W} ${H}">`;
+  svg += `<rect x="${Lp}" y="${Tp}" width="${W - Lp - Rp}" height="${H - Tp - Bp}" fill="#ffffff" stroke="var(--line-dark)" stroke-width="1"/>`;
+  for (let g = 1; g < 4; g++) {
+    const gy = Tp + ((H - Tp - Bp) * g) / 4;
+    svg += `<line x1="${Lp}" x2="${W - Rp}" y1="${gy.toFixed(1)}" y2="${gy.toFixed(1)}" stroke="#e0e0da" stroke-width="1"/>`;
+  }
   const levels = (STATE.signal?.structural_levels || []).filter((l) => l.price >= lo && l.price <= hi);
   let lastY = -100;
   for (const l of levels.slice().sort((a, b) => b.price - a.price)) {
@@ -268,8 +273,8 @@ function renderChart() {
     if (yy - lastY < 14) continue;
     lastY = yy;
     const col = l.kind === "resistance" ? "var(--dn)" : l.kind === "support" ? "var(--up)" : "var(--muted)";
-    svg += `<line x1="${Lp}" x2="${W - Rp}" y1="${yy.toFixed(1)}" y2="${yy.toFixed(1)}" stroke="${col}" stroke-dasharray="4 4" opacity="0.5"/>`;
-    svg += `<text x="${W - Rp + 6}" y="${(yy + 4).toFixed(1)}" fill="var(--muted)" font-size="11">${esc(l.label.slice(0, 14))} ${Math.round(l.price).toLocaleString()}</text>`;
+    svg += `<line x1="${Lp}" x2="${W - Rp}" y1="${yy.toFixed(1)}" y2="${yy.toFixed(1)}" stroke="${col}" stroke-dasharray="4 3" opacity="0.72"/>`;
+    svg += `<text x="${W - Rp + 6}" y="${(yy + 4).toFixed(1)}" fill="var(--text)" font-size="11">${esc(l.label.slice(0, 14))} ${Math.round(l.price).toLocaleString()}</text>`;
   }
 
   const path = closes.map((c, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(c).toFixed(1)}`).join(" ");
@@ -426,12 +431,21 @@ function seedCalcFromState() {
   updateCalc();
 }
 
+function activateTab(tabId) {
+  document.querySelectorAll("#tabNav .tab-btn").forEach((x) => x.classList.toggle("active", x.dataset.tab === tabId));
+  document.querySelectorAll(".tab-panel").forEach((p) => p.classList.toggle("active", p.id === `tab-${tabId}`));
+}
+
 function bindEvents() {
   $("tabNav").addEventListener("click", (e) => {
     const b = e.target.closest("button[data-tab]");
-    if (!b) return;
-    document.querySelectorAll("#tabNav .tab-btn").forEach((x) => x.classList.toggle("active", x === b));
-    document.querySelectorAll(".tab-panel").forEach((p) => p.classList.toggle("active", p.id === `tab-${b.dataset.tab}`));
+    if (b) activateTab(b.dataset.tab);
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    if (/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName || "")) return;
+    const map = { "1": "signal", "2": "regime", "3": "ledger", "4": "audit" };
+    if (map[e.key]) activateTab(map[e.key]);
   });
   $("chartSeg").addEventListener("click", (e) => {
     const b = e.target.closest("button[data-tf]");

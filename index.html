@@ -4,12 +4,20 @@
   <meta charset="utf-8">
   <meta http-equiv="Cache-Control" content="no-cache">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#080b0f">
+  <meta name="theme-color" content="#E4E4DF">
   <title>BTC Short-Term Futures + Inventory Protocol v4.0</title>
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
   <div class="wrap">
+    <div class="ibm-titlebar">
+      <span>&#9632; IBM-WORKSTATION // BTC-PROTOCOL REV 4.0</span>
+      <span class="ibm-sysmeta">SYS: 4H-SWING &middot; MAX LEV 1:2 &middot; KEYS [1-4]</span>
+    </div>
+
     <header class="topbar">
       <div class="brand">
         <h1>BTC Short-Term Futures + Inventory Protocol <span class="badge">v4.0 · 4H · MAX 1:2 LEV</span></h1>
@@ -31,10 +39,10 @@
     </div>
 
     <nav class="tabs" id="tabNav">
-      <button class="tab-btn active" data-tab="signal">Signal Tab</button>
-      <button class="tab-btn" data-tab="regime">4H Multi-Factor Regime</button>
-      <button class="tab-btn" data-tab="ledger">Paper Ledger &amp; Risk Calc</button>
-      <button class="tab-btn" data-tab="audit">Audit Log &amp; Config</button>
+      <button class="tab-btn active" data-tab="signal"><kbd>F1</kbd> Signal Tab</button>
+      <button class="tab-btn" data-tab="regime"><kbd>F2</kbd> 4H Multi-Factor Regime</button>
+      <button class="tab-btn" data-tab="ledger"><kbd>F3</kbd> Paper Ledger &amp; Risk Calc</button>
+      <button class="tab-btn" data-tab="audit"><kbd>F4</kbd> Audit Log &amp; Config</button>
     </nav>
 
     <!-- TAB 1: SIGNAL TAB -->
@@ -163,6 +171,6 @@
       </div>
     </section>
   </div>
-  <script src="app.js?v=4"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>
