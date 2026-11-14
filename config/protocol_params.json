@@ -1,0 +1,67 @@
+{
+  "protocol_version": "1.0",
+  "symbol": "BTC-USDT-PERP",
+  "account": {
+    "initial_equity_usd": 100000.0,
+    "margin_mode": "isolated"
+  },
+  "leverage_and_risk": {
+    "max_leverage": 2.0,
+    "risk_per_trade_pct": 0.005,
+    "satellite_risk_pct": 0.0025,
+    "max_portfolio_heat_pct": 0.02,
+    "max_concurrent_primary": 1,
+    "max_concurrent_satellite": 1,
+    "max_stop_distance_pct": 0.04,
+    "min_rr": 1.8,
+    "expected_hold_days_for_funding": 7.0,
+    "macro_blackout_minutes": 30
+  },
+  "regime": {
+    "weights": {
+      "trend_structure": 0.30,
+      "momentum_breadth": 0.25,
+      "volatility_liquidity": 0.25,
+      "macro_external": 0.20
+    },
+    "long_threshold": 65.0,
+    "short_threshold": 35.0,
+    "neutral_low": 36.0,
+    "neutral_high": 64.0,
+    "strong_alignment_long": 75.0,
+    "strong_alignment_short": 25.0,
+    "neutral_continuation_size_mult": 0.5,
+    "neutral_high_conviction_long": 58.0,
+    "neutral_high_conviction_short": 42.0
+  },
+  "qualification": {
+    "level_proximity_atr_mult": 0.75,
+    "level_proximity_max_pct": 0.01,
+    "min_rejection_wick_ratio": 1.5,
+    "min_confirm_volume_ratio": 0.9,
+    "atr_stop_buffer_mult": 1.2,
+    "swing_stop_buffer_pct": 0.002
+  },
+  "trade_management": {
+    "breakeven_trigger_r": 1.0,
+    "scale_out_r_min": 1.5,
+    "scale_out_r_max": 2.0,
+    "scale_out_pct": 0.40,
+    "trail_ema_period_4h": 20,
+    "time_stop_days_min": 7,
+    "time_stop_days_max": 10,
+    "time_stop_reduce_pct": 0.50
+  },
+  "circuit_breakers": {
+    "daily_loss_limit_pct": -0.015,
+    "weekly_loss_limit_pct": -0.03,
+    "drawdown_tier1_pct": -0.08,
+    "drawdown_tier1_risk_pct": 0.0025,
+    "drawdown_tier1_long_threshold": 75.0,
+    "drawdown_tier1_short_threshold": 25.0,
+    "drawdown_tier2_pct": -0.12
+  },
+  "review": {
+    "min_sample_for_weight_adjustment": 30
+  }
+}

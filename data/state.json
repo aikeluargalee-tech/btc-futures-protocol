@@ -1,0 +1,1298 @@
+{
+  "protocol_version": "1.0",
+  "updated_at_utc": "2026-11-14T02:00:55Z",
+  "updated_at_ms": 1794621655864,
+  "ticker": {
+    "price": 68291.9,
+    "high24": 70895.8,
+    "low24": 67445.0,
+    "chg24_pct": -3.64,
+    "source": "OKX BTC-USDT-SWAP"
+  },
+  "derivatives": {
+    "current_rate_pct": 0.00429,
+    "oi_btc": 33470.5,
+    "venues": {
+      "okx": 0.00429,
+      "binance": 0.00372,
+      "bybit": 0.00709
+    }
+  },
+  "extras": {
+    "dvol": 39.92,
+    "fng_value": 13,
+    "fng_label": "Extreme Fear"
+  },
+  "etf": {
+    "latest_date": "13 Nov 2026",
+    "latest_usd_m": -41.9,
+    "sum5_usd_m": -921.8,
+    "last5": [
+      [
+        "09 Nov 2026",
+        -201.0
+      ],
+      [
+        "10 Nov 2026",
+        -95.0
+      ],
+      [
+        "11 Nov 2026",
+        -299.8
+      ],
+      [
+        "12 Nov 2026",
+        -284.1
+      ],
+      [
+        "13 Nov 2026",
+        -41.9
+      ]
+    ]
+  },
+  "stables": {
+    "total_usd_b": 244.41,
+    "chg7d_pct": -1.22
+  },
+  "macro_calendar": [],
+  "regime": {
+    "ok": true,
+    "score": 23.99,
+    "bias": "SHORT_ELIGIBLE",
+    "thresholds": {
+      "long": 65.0,
+      "short": 35.0,
+      "dd_tier1_active": false,
+      "strong_long": 75.0,
+      "strong_short": 25.0
+    },
+    "groups": {
+      "trend_structure": {
+        "weight": 0.3,
+        "score": 13.84,
+        "daily_structure": "BEARISH_LH_LL",
+        "h4_structure": "BEARISH_LH_LL",
+        "ema50_d": 78171.9,
+        "ema200_d": 74758.5,
+        "range_60d_pct": 4.2,
+        "components": {
+          "daily_structure_score": 12.0,
+          "h4_structure_score": 12.0,
+          "ema_alignment_score": 24.0,
+          "swing_anchor_score": 4.2
+        },
+        "summary": "1D=BEARISH_LH_LL, 4H=BEARISH_LH_LL, P=68,292 vs EMA50=78,172, EMA200=74,759"
+      },
+      "momentum_breadth": {
+        "weight": 0.25,
+        "score": 15.56,
+        "rsi_d": 24.41,
+        "rsi_4h": 22.48,
+        "roc10_d_pct": -11.82,
+        "roc20_d_pct": -15.54,
+        "roc10_4h_pct": -7.24,
+        "btc_vs_spx_10d_pct": -11.58,
+        "btc_vs_eth_10d_pct": 3.35,
+        "components": {
+          "oscillator_score": 17.4,
+          "roc_score": 6.0,
+          "relative_strength_score": 28.1
+        },
+        "summary": "RSI(1D/4H)=24.41/22.48, ROC10D=-11.8%"
+      },
+      "volatility_liquidity": {
+        "weight": 0.25,
+        "score": 38.21,
+        "rv20_ann_pct": 43.3,
+        "rv60_ann_pct": 39.2,
+        "rv20_percentile": 75.82,
+        "rv60_percentile": 79.41,
+        "atr14_d_usd": 2452.1,
+        "atr14_d_pct": 3.59,
+        "atr_vs_60d_med": 1.1,
+        "volume_ratio_1d": 2.01,
+        "volume_ratio_4h": 0.52,
+        "funding_rate_pct": 0.00429,
+        "funding_30d_percentile": 17.78,
+        "components": {
+          "rv_percentile_score": 51.8,
+          "atr_regime_score": 75.0,
+          "volume_participation_score": 68.4,
+          "funding_extremity_score": 52.0
+        },
+        "summary": "RV20pct=75.82, ATRx=1.1, Vol=1.26x, Fund=0.00429%",
+        "quality_score": 61.79
+      },
+      "macro_external": {
+        "weight": 0.2,
+        "score": 31.96,
+        "vix": 19.3,
+        "dxy": 103.41,
+        "us10y": 5.15,
+        "spx_vs_20d_pct": -0.68,
+        "etf_5d_usd_m": -921.8,
+        "stables_7d_pct": -1.22,
+        "components": {
+          "risk_on_off_score": 41.5,
+          "yield_dollar_score": 31.0,
+          "etf_stable_flow_score": 20.3
+        },
+        "summary": "VIX=19.3, DXY=103.41, ETF5d=-921.8M"
+      }
+    },
+    "contributions": [
+      {
+        "key": "trend_structure",
+        "label": "Trend Structure",
+        "score": 13.84,
+        "weight": 0.3,
+        "weighted_impact_vs_50": -10.85
+      },
+      {
+        "key": "momentum_breadth",
+        "label": "Momentum & Breadth",
+        "score": 15.56,
+        "weight": 0.25,
+        "weighted_impact_vs_50": -8.61
+      },
+      {
+        "key": "macro_external",
+        "label": "Macro / External Context",
+        "score": 31.96,
+        "weight": 0.2,
+        "weighted_impact_vs_50": -3.61
+      },
+      {
+        "key": "volatility_liquidity",
+        "label": "Volatility & Liquidity",
+        "score": 38.21,
+        "weight": 0.25,
+        "weighted_impact_vs_50": -2.95
+      }
+    ],
+    "dominant_factors": [
+      "Trend Structure (13.8/100, -10.8 pts)",
+      "Momentum & Breadth (15.6/100, -8.6 pts)"
+    ],
+    "recalc_utc_day": "2026-11-14",
+    "recalc_at_utc": "2026-11-14T02:01:04Z",
+    "htf_structural_break": false
+  },
+  "signal": {
+    "status": "FLAT",
+    "direction": null,
+    "price": 68291.9,
+    "atr_4h": 1170.7,
+    "structural_levels": [
+      {
+        "price": 67445.0,
+        "label": "Prior Daily Low",
+        "kind": "support"
+      },
+      {
+        "price": 71428.4,
+        "label": "Daily Open",
+        "kind": "pivot"
+      },
+      {
+        "price": 72688.0,
+        "label": "4H Swing Low #1",
+        "kind": "support"
+      },
+      {
+        "price": 73385.0,
+        "label": "Prior Weekly Low",
+        "kind": "support"
+      },
+      {
+        "price": 74789.0,
+        "label": "4H Swing High #2",
+        "kind": "resistance"
+      },
+      {
+        "price": 75800.0,
+        "label": "30D VAL",
+        "kind": "volume"
+      },
+      {
+        "price": 76160.0,
+        "label": "4H Swing High #1",
+        "kind": "resistance"
+      },
+      {
+        "price": 79168.0,
+        "label": "1D Swing Low #2",
+        "kind": "support"
+      },
+      {
+        "price": 79725.3,
+        "label": "1D Swing Low #1",
+        "kind": "support"
+      },
+      {
+        "price": 80750.0,
+        "label": "30D VPOC",
+        "kind": "volume"
+      },
+      {
+        "price": 81199.9,
+        "label": "Prior Weekly High",
+        "kind": "resistance"
+      },
+      {
+        "price": 81944.4,
+        "label": "1D Swing High #2",
+        "kind": "resistance"
+      },
+      {
+        "price": 83500.0,
+        "label": "30D VAH",
+        "kind": "volume"
+      },
+      {
+        "price": 84876.0,
+        "label": "1D Swing High #1",
+        "kind": "resistance"
+      }
+    ],
+    "checklist": [
+      {
+        "id": 1,
+        "rule": "Regime Score Threshold",
+        "passed": true,
+        "detail": "Score 24.0 meets SHORT threshold"
+      },
+      {
+        "id": 2,
+        "rule": "HTF Structural Level Interaction",
+        "passed": false,
+        "detail": "Nearest level Prior Daily Low (67,445.0) is $847 away (band \u00b1$683)"
+      },
+      {
+        "id": 3,
+        "rule": "4H Execution Confirmation",
+        "passed": false,
+        "detail": "No 4H bearish BOS (< 67445.0) or qualifying rejection candle (vol 0.52x)"
+      },
+      {
+        "id": 4,
+        "rule": "R:R \u2265 1.8:1 & Stop \u2264 4%",
+        "passed": false,
+        "detail": "R:R 0.60:1 to Prior Daily Low (67,445.0) < 1.8:1 minimum"
+      },
+      {
+        "id": 5,
+        "rule": "No Opposing Position & Slot Free",
+        "passed": true,
+        "detail": "No opposing position; primary slot available"
+      },
+      {
+        "id": 6,
+        "rule": "Portfolio Heat \u2264 2.0%",
+        "passed": true,
+        "detail": "Post-trade heat 0.50% <= 2.00% max (open 0.00%)"
+      },
+      {
+        "id": 7,
+        "rule": "Circuit Breakers & Macro Gate",
+        "passed": true,
+        "detail": "All circuit breakers clear"
+      }
+    ],
+    "rejection_reasons": [
+      "Nearest level Prior Daily Low (67,445.0) is $847 away (band \u00b1$683)",
+      "No 4H bearish BOS (< 67445.0) or qualifying rejection candle (vol 0.52x)",
+      "R:R 0.60:1 to Prior Daily Low (67,445.0) < 1.8:1 minimum"
+    ],
+    "proposal": {
+      "direction": "SHORT",
+      "role": "primary",
+      "entry_method": "LIMIT_AT_LEVEL",
+      "entry_price": 68291.9,
+      "stop_price": 69696.7,
+      "target1_price": 67445.0,
+      "target1_label": "Prior Daily Low",
+      "raw_rr": 0.6,
+      "funding_adjusted_rr": 0.6,
+      "funding_drag_pct": 0.0,
+      "level_label": "Prior Daily Low",
+      "level_price": 67445.0,
+      "confirmation_type": null,
+      "macro_halved": false,
+      "neutral_continuation": false,
+      "valid": true,
+      "size_btc": 0.355923,
+      "notional_usd": 24306.63,
+      "leverage": 0.243,
+      "leverage_capped": false,
+      "target_risk_pct": 0.5,
+      "actual_risk_pct": 0.5,
+      "actual_risk_usd": 500.0,
+      "stop_distance_usd": 1404.8,
+      "stop_distance_pct": 2.057
+    },
+    "macro_blackout": {
+      "in_blackout": false,
+      "halve_size": false,
+      "blocked": false,
+      "event": null
+    }
+  },
+  "portfolio": {
+    "equity_usd": 100000.0,
+    "realized_equity_usd": 100000.0,
+    "high_water_mark_usd": 100000.0,
+    "unrealized_pnl_usd": 0,
+    "open_heat_pct": 0,
+    "max_heat_pct": 2.0,
+    "open_notional_usd": 0,
+    "current_leverage": 0.0,
+    "max_leverage": 2.0,
+    "daily_pnl_pct": 0.0,
+    "daily_limit_pct": -1.5,
+    "daily_buffer_pct": 1.5,
+    "weekly_pnl_pct": 0.0,
+    "weekly_limit_pct": -3.0,
+    "weekly_buffer_pct": 3.0,
+    "drawdown_pct": 0.0,
+    "dd_tier1_limit_pct": -8.0,
+    "dd_tier1_buffer_pct": 8.0,
+    "dd_tier2_limit_pct": -12.0,
+    "dd_tier2_buffer_pct": 12.0,
+    "circuit_breakers": {
+      "daily_halted": false,
+      "weekly_halted": false,
+      "dd_tier1_active": false,
+      "dd_tier2_locked": false
+    },
+    "open_positions": [],
+    "closed_trades": [],
+    "review": {
+      "total_trades": 0,
+      "win_rate_pct": null,
+      "avg_r": null,
+      "largest_winner_r": null,
+      "largest_loser_r": null,
+      "net_pnl_usd": 0.0,
+      "min_sample_for_weight_adjustment": 30,
+      "weight_adjustment_unlocked": false
+    }
+  },
+  "charts": {
+    "h4": [
+      [
+        1793750400000,
+        77439.4,
+        77530.1,
+        75690.1,
+        76450.2
+      ],
+      [
+        1793764800000,
+        76450.1,
+        78345.6,
+        76389.1,
+        78105.3
+      ],
+      [
+        1793779200000,
+        78105.4,
+        78690.8,
+        78105.4,
+        78440.5
+      ],
+      [
+        1793793600000,
+        78440.4,
+        81199.9,
+        77976.0,
+        80273.5
+      ],
+      [
+        1793808000000,
+        80273.5,
+        80700.0,
+        79903.1,
+        79951.6
+      ],
+      [
+        1793822400000,
+        79951.6,
+        80941.0,
+        79914.9,
+        80466.1
+      ],
+      [
+        1793836800000,
+        80466.0,
+        80886.4,
+        80215.0,
+        80517.9
+      ],
+      [
+        1793851200000,
+        80517.9,
+        80755.5,
+        80291.9,
+        80363.7
+      ],
+      [
+        1793865600000,
+        80363.8,
+        80624.4,
+        80234.6,
+        80389.3
+      ],
+      [
+        1793880000000,
+        80389.3,
+        80389.3,
+        75511.0,
+        76000.0
+      ],
+      [
+        1793894400000,
+        75999.9,
+        76980.0,
+        75605.8,
+        76322.1
+      ],
+      [
+        1793908800000,
+        76322.1,
+        76363.9,
+        75143.5,
+        76049.5
+      ],
+      [
+        1793923200000,
+        76049.4,
+        76399.9,
+        75730.6,
+        75875.1
+      ],
+      [
+        1793937600000,
+        75875.1,
+        75879.2,
+        75252.9,
+        75566.4
+      ],
+      [
+        1793952000000,
+        75566.4,
+        76263.1,
+        75441.4,
+        76117.8
+      ],
+      [
+        1793966400000,
+        76117.7,
+        76351.0,
+        74800.1,
+        75818.9
+      ],
+      [
+        1793980800000,
+        75818.9,
+        76106.5,
+        75367.8,
+        75859.5
+      ],
+      [
+        1793995200000,
+        75859.5,
+        76192.3,
+        75685.4,
+        75816.3
+      ],
+      [
+        1794009600000,
+        75816.3,
+        76058.9,
+        75750.0,
+        75857.4
+      ],
+      [
+        1794024000000,
+        75857.4,
+        76079.5,
+        75808.7,
+        76056.3
+      ],
+      [
+        1794038400000,
+        76056.3,
+        76216.8,
+        75893.4,
+        75943.9
+      ],
+      [
+        1794052800000,
+        75944.0,
+        75979.4,
+        75571.5,
+        75725.1
+      ],
+      [
+        1794067200000,
+        75725.1,
+        75865.0,
+        75666.1,
+        75772.4
+      ],
+      [
+        1794081600000,
+        75772.4,
+        75898.4,
+        75531.0,
+        75829.9
+      ],
+      [
+        1794096000000,
+        75830.0,
+        75900.0,
+        75625.0,
+        75883.1
+      ],
+      [
+        1794110400000,
+        75883.0,
+        75963.3,
+        75740.6,
+        75936.1
+      ],
+      [
+        1794124800000,
+        75936.1,
+        75988.0,
+        75772.0,
+        75939.1
+      ],
+      [
+        1794139200000,
+        75939.0,
+        76160.0,
+        75856.1,
+        76035.0
+      ],
+      [
+        1794153600000,
+        76035.0,
+        76063.5,
+        75633.0,
+        75893.6
+      ],
+      [
+        1794168000000,
+        75893.7,
+        75912.0,
+        73385.0,
+        74818.1
+      ],
+      [
+        1794182400000,
+        74818.1,
+        75564.0,
+        74443.5,
+        74826.5
+      ],
+      [
+        1794196800000,
+        74826.5,
+        75060.0,
+        73718.1,
+        73837.1
+      ],
+      [
+        1794211200000,
+        73837.2,
+        74785.0,
+        73711.1,
+        74333.4
+      ],
+      [
+        1794225600000,
+        74333.5,
+        75549.4,
+        74302.1,
+        75492.9
+      ],
+      [
+        1794240000000,
+        75492.8,
+        75507.7,
+        74391.7,
+        74851.9
+      ],
+      [
+        1794254400000,
+        74852.0,
+        75347.2,
+        74646.3,
+        75320.0
+      ],
+      [
+        1794268800000,
+        75319.9,
+        75396.0,
+        74347.0,
+        74540.8
+      ],
+      [
+        1794283200000,
+        74540.7,
+        74975.5,
+        74520.0,
+        74801.4
+      ],
+      [
+        1794297600000,
+        74801.4,
+        74852.0,
+        74073.9,
+        74380.0
+      ],
+      [
+        1794312000000,
+        74380.0,
+        74823.9,
+        72809.5,
+        73177.4
+      ],
+      [
+        1794326400000,
+        73177.5,
+        73649.4,
+        72688.0,
+        73440.5
+      ],
+      [
+        1794340800000,
+        73440.5,
+        74024.8,
+        73279.0,
+        73769.4
+      ],
+      [
+        1794355200000,
+        73769.4,
+        74018.3,
+        73178.9,
+        73746.5
+      ],
+      [
+        1794369600000,
+        73746.5,
+        74081.0,
+        73446.4,
+        74055.9
+      ],
+      [
+        1794384000000,
+        74056.0,
+        74147.9,
+        73522.6,
+        73952.7
+      ],
+      [
+        1794398400000,
+        73952.8,
+        74448.0,
+        73355.0,
+        73967.6
+      ],
+      [
+        1794412800000,
+        73967.6,
+        74750.0,
+        73888.8,
+        74376.9
+      ],
+      [
+        1794427200000,
+        74377.0,
+        74789.0,
+        73450.0,
+        73979.9
+      ],
+      [
+        1794441600000,
+        73980.0,
+        74196.9,
+        73559.3,
+        73774.4
+      ],
+      [
+        1794456000000,
+        73774.4,
+        73837.1,
+        73385.6,
+        73617.5
+      ],
+      [
+        1794470400000,
+        73617.4,
+        73657.7,
+        72743.8,
+        72922.2
+      ],
+      [
+        1794484800000,
+        72922.2,
+        73123.0,
+        71200.0,
+        71682.7
+      ],
+      [
+        1794499200000,
+        71682.7,
+        72195.8,
+        71400.1,
+        71666.4
+      ],
+      [
+        1794513600000,
+        71666.4,
+        71677.1,
+        71073.0,
+        71428.4
+      ],
+      [
+        1794528000000,
+        71428.4,
+        71493.6,
+        68450.0,
+        68927.1
+      ],
+      [
+        1794542400000,
+        68927.0,
+        69335.9,
+        67445.0,
+        68550.1
+      ],
+      [
+        1794556800000,
+        68550.0,
+        69548.0,
+        68473.0,
+        69287.7
+      ],
+      [
+        1794571200000,
+        69287.8,
+        70187.7,
+        68076.9,
+        68872.5
+      ],
+      [
+        1794585600000,
+        68872.5,
+        69110.0,
+        68357.0,
+        69032.9
+      ],
+      [
+        1794600000000,
+        69032.8,
+        69094.9,
+        67819.4,
+        68286.7
+      ]
+    ],
+    "d1": [
+      [
+        1789430400000,
+        78158.3,
+        78230.7,
+        74896.6,
+        75611.2
+      ],
+      [
+        1789516800000,
+        75611.2,
+        76543.7,
+        75000.0,
+        76168.1
+      ],
+      [
+        1789603200000,
+        76168.1,
+        77137.0,
+        75982.0,
+        76390.1
+      ],
+      [
+        1789689600000,
+        76390.0,
+        81377.3,
+        76249.6,
+        80876.6
+      ],
+      [
+        1789776000000,
+        80876.5,
+        81930.0,
+        80806.3,
+        81231.2
+      ],
+      [
+        1789862400000,
+        81231.1,
+        81485.9,
+        80100.0,
+        81144.3
+      ],
+      [
+        1789948800000,
+        81144.3,
+        87374.3,
+        80822.4,
+        86589.1
+      ],
+      [
+        1790035200000,
+        86589.1,
+        86736.6,
+        85070.2,
+        86167.5
+      ],
+      [
+        1790121600000,
+        86167.4,
+        87245.0,
+        83439.3,
+        84366.1
+      ],
+      [
+        1790208000000,
+        84366.0,
+        84931.3,
+        82812.5,
+        84369.4
+      ],
+      [
+        1790294400000,
+        84369.4,
+        85242.2,
+        83118.0,
+        84059.9
+      ],
+      [
+        1790380800000,
+        84059.9,
+        84440.1,
+        83748.8,
+        84394.1
+      ],
+      [
+        1790467200000,
+        84394.1,
+        85137.5,
+        84088.3,
+        84440.9
+      ],
+      [
+        1790553600000,
+        84440.8,
+        84973.6,
+        82501.0,
+        83461.0
+      ],
+      [
+        1790640000000,
+        83461.0,
+        84544.9,
+        82726.0,
+        83627.0
+      ],
+      [
+        1790726400000,
+        83627.1,
+        85639.0,
+        82918.9,
+        83579.9
+      ],
+      [
+        1790812800000,
+        83579.8,
+        85236.2,
+        83123.1,
+        84837.7
+      ],
+      [
+        1790899200000,
+        84837.7,
+        87239.0,
+        83826.4,
+        84480.0
+      ],
+      [
+        1790985600000,
+        84480.1,
+        84998.0,
+        84411.6,
+        84719.9
+      ],
+      [
+        1791072000000,
+        84719.9,
+        86777.0,
+        84675.9,
+        86484.8
+      ],
+      [
+        1791158400000,
+        86484.8,
+        86963.7,
+        84937.5,
+        85715.0
+      ],
+      [
+        1791244800000,
+        85715.1,
+        86656.0,
+        85090.0,
+        85512.1
+      ],
+      [
+        1791331200000,
+        85512.0,
+        85564.5,
+        82700.0,
+        83283.9
+      ],
+      [
+        1791417600000,
+        83283.8,
+        83488.0,
+        80351.0,
+        81714.9
+      ],
+      [
+        1791504000000,
+        81714.9,
+        83499.0,
+        81569.2,
+        82586.8
+      ],
+      [
+        1791590400000,
+        82586.8,
+        83129.8,
+        82499.9,
+        82940.4
+      ],
+      [
+        1791676800000,
+        82940.5,
+        84177.5,
+        82752.0,
+        83716.0
+      ],
+      [
+        1791763200000,
+        83715.9,
+        84348.2,
+        81710.6,
+        81808.0
+      ],
+      [
+        1791849600000,
+        81808.0,
+        84130.9,
+        80961.3,
+        83136.6
+      ],
+      [
+        1791936000000,
+        83136.6,
+        84116.3,
+        81400.2,
+        81641.4
+      ],
+      [
+        1792022400000,
+        81641.4,
+        82624.9,
+        79725.3,
+        82193.0
+      ],
+      [
+        1792108800000,
+        82192.9,
+        82898.0,
+        80770.7,
+        81585.8
+      ],
+      [
+        1792195200000,
+        81585.7,
+        81741.3,
+        80754.6,
+        81453.3
+      ],
+      [
+        1792281600000,
+        81453.3,
+        82267.7,
+        80621.4,
+        82069.5
+      ],
+      [
+        1792368000000,
+        82069.6,
+        83149.8,
+        81682.0,
+        81909.6
+      ],
+      [
+        1792454400000,
+        81909.5,
+        83436.9,
+        81166.0,
+        82984.5
+      ],
+      [
+        1792540800000,
+        82984.6,
+        84876.0,
+        82587.5,
+        84049.9
+      ],
+      [
+        1792627200000,
+        84049.9,
+        84320.0,
+        80900.0,
+        81380.9
+      ],
+      [
+        1792713600000,
+        81380.9,
+        82047.6,
+        80456.6,
+        81149.9
+      ],
+      [
+        1792800000000,
+        81149.9,
+        81175.7,
+        79168.0,
+        80850.0
+      ],
+      [
+        1792886400000,
+        80850.1,
+        81008.0,
+        79773.1,
+        80119.1
+      ],
+      [
+        1792972800000,
+        80118.3,
+        80822.6,
+        79322.9,
+        80124.9
+      ],
+      [
+        1793059200000,
+        80124.8,
+        81278.8,
+        79477.9,
+        80881.4
+      ],
+      [
+        1793145600000,
+        80881.3,
+        81786.9,
+        80350.0,
+        81309.9
+      ],
+      [
+        1793232000000,
+        81310.0,
+        81944.4,
+        77896.4,
+        77966.9
+      ],
+      [
+        1793318400000,
+        77966.8,
+        78767.0,
+        76260.0,
+        77286.8
+      ],
+      [
+        1793404800000,
+        77286.8,
+        77734.0,
+        77049.5,
+        77521.0
+      ],
+      [
+        1793491200000,
+        77520.9,
+        78387.9,
+        77465.2,
+        78308.7
+      ],
+      [
+        1793577600000,
+        78308.8,
+        78831.1,
+        76666.8,
+        76795.5
+      ],
+      [
+        1793664000000,
+        76795.6,
+        78049.4,
+        76360.0,
+        77439.4
+      ],
+      [
+        1793750400000,
+        77439.4,
+        81199.9,
+        75690.1,
+        80466.1
+      ],
+      [
+        1793836800000,
+        80466.0,
+        80886.4,
+        75143.5,
+        76049.5
+      ],
+      [
+        1793923200000,
+        76049.4,
+        76399.9,
+        74800.1,
+        75816.3
+      ],
+      [
+        1794009600000,
+        75816.3,
+        76216.8,
+        75531.0,
+        75829.9
+      ],
+      [
+        1794096000000,
+        75830.0,
+        76160.0,
+        73385.0,
+        74818.1
+      ],
+      [
+        1794182400000,
+        74818.1,
+        75564.0,
+        73711.1,
+        75320.0
+      ],
+      [
+        1794268800000,
+        75319.9,
+        75396.0,
+        72688.0,
+        73769.4
+      ],
+      [
+        1794355200000,
+        73769.4,
+        74789.0,
+        73178.9,
+        73979.9
+      ],
+      [
+        1794441600000,
+        73980.0,
+        74196.9,
+        71073.0,
+        71428.4
+      ],
+      [
+        1794528000000,
+        71428.4,
+        71493.6,
+        67445.0,
+        68286.7
+      ]
+    ]
+  },
+  "audit_log_recent": [],
+  "config": {
+    "protocol_version": "1.0",
+    "symbol": "BTC-USDT-PERP",
+    "account": {
+      "initial_equity_usd": 100000.0,
+      "margin_mode": "isolated"
+    },
+    "leverage_and_risk": {
+      "max_leverage": 2.0,
+      "risk_per_trade_pct": 0.005,
+      "satellite_risk_pct": 0.0025,
+      "max_portfolio_heat_pct": 0.02,
+      "max_concurrent_primary": 1,
+      "max_concurrent_satellite": 1,
+      "max_stop_distance_pct": 0.04,
+      "min_rr": 1.8,
+      "expected_hold_days_for_funding": 7.0,
+      "macro_blackout_minutes": 30
+    },
+    "regime": {
+      "weights": {
+        "trend_structure": 0.3,
+        "momentum_breadth": 0.25,
+        "volatility_liquidity": 0.25,
+        "macro_external": 0.2
+      },
+      "long_threshold": 65.0,
+      "short_threshold": 35.0,
+      "neutral_low": 36.0,
+      "neutral_high": 64.0,
+      "strong_alignment_long": 75.0,
+      "strong_alignment_short": 25.0,
+      "neutral_continuation_size_mult": 0.5,
+      "neutral_high_conviction_long": 58.0,
+      "neutral_high_conviction_short": 42.0
+    },
+    "qualification": {
+      "level_proximity_atr_mult": 0.75,
+      "level_proximity_max_pct": 0.01,
+      "min_rejection_wick_ratio": 1.5,
+      "min_confirm_volume_ratio": 0.9,
+      "atr_stop_buffer_mult": 1.2,
+      "swing_stop_buffer_pct": 0.002
+    },
+    "trade_management": {
+      "breakeven_trigger_r": 1.0,
+      "scale_out_r_min": 1.5,
+      "scale_out_r_max": 2.0,
+      "scale_out_pct": 0.4,
+      "trail_ema_period_4h": 20,
+      "time_stop_days_min": 7,
+      "time_stop_days_max": 10,
+      "time_stop_reduce_pct": 0.5
+    },
+    "circuit_breakers": {
+      "daily_loss_limit_pct": -0.015,
+      "weekly_loss_limit_pct": -0.03,
+      "drawdown_tier1_pct": -0.08,
+      "drawdown_tier1_risk_pct": 0.0025,
+      "drawdown_tier1_long_threshold": 75.0,
+      "drawdown_tier1_short_threshold": 25.0,
+      "drawdown_tier2_pct": -0.12
+    },
+    "review": {
+      "min_sample_for_weight_adjustment": 30
+    }
+  },
+  "fetch_errors": [
+    "ForexFactory calendar: HTTPError 429"
+  ]
+}

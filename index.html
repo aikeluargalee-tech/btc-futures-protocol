@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Cache-Control" content="no-cache">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080b0f">
+  <title>BTC Futures Swing Trading Protocol v1.0</title>
+  <link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <div class="brand">
+        <h1>BTC Futures Swing Protocol <span class="badge">v1.0 · MAX 1:2 LEV</span></h1>
+        <div class="sub" id="snapMeta">Loading snapshot…</div>
+      </div>
+      <div class="live-bar">
+        <div>
+          <span class="dot" id="liveDot"></span>
+          <span class="mut" id="liveFeed">connecting…</span>
+        </div>
+        <div class="price-chip" id="livePrice">—</div>
+        <div class="mut" id="liveChg">—</div>
+      </div>
+    </header>
+
+    <div class="actions" style="margin-bottom:12px;">
+      <button class="btn" id="btnCopyAi">Copy AI Audit Packet</button>
+      <button class="btn" id="btnDlJson">Download State JSON</button>
+      <span class="mut" id="actionMsg" style="align-self:center;"></span>
+    </div>
+
+    <nav class="tabs" id="tabNav">
+      <button class="tab-btn active" data-tab="signal">Signal Tab</button>
+      <button class="tab-btn" data-tab="regime">Multi-Factor Regime</button>
+      <button class="tab-btn" data-tab="ledger">Paper Ledger &amp; Risk Calc</button>
+      <button class="tab-btn" data-tab="audit">Audit Log &amp; Config</button>
+    </nav>
+
+    <!-- TAB 1: SIGNAL TAB (Section 11) -->
+    <section class="tab-panel active" id="tab-signal">
+      <div class="grid-2">
+        <div class="card signal-banner" id="signalBanner">
+          <h2>Active Signal Status</h2>
+          <div id="signalSummary">Loading…</div>
+        </div>
+        <div class="card">
+          <h2>Multi-Factor Regime Score (0–100)</h2>
+          <div id="regimeGaugeBox">Loading…</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>7-Point Trade Qualification Checklist (Section 4)</h2>
+        <div id="checklistBox"></div>
+        <div id="rejectionBox"></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h2>Proposed / Active Order Sizing (Section 5 &amp; 7)</h2>
+          <dl class="kv" id="proposalKv"></dl>
+        </div>
+        <div class="card">
+          <h2>Portfolio Heat &amp; Circuit-Breaker Distances (Section 9)</h2>
+          <div id="heatBreakersBox"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: MULTI-FACTOR REGIME -->
+    <section class="tab-panel" id="tab-regime">
+      <div class="grid-2" id="factorCards"></div>
+      <div class="card">
+        <h2>Structural Price Map</h2>
+        <div class="tabs" id="chartSeg" style="margin-bottom:8px;">
+          <button class="tab-btn active" data-tf="h4">4H Execution</button>
+          <button class="tab-btn" data-tf="d1">1D Higher-Timeframe</button>
+        </div>
+        <div id="chartBox"></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h2>Identified HTF Structural Levels</h2>
+          <dl class="kv" id="levelsKv"></dl>
+        </div>
+        <div class="card">
+          <h2>Scheduled USD High-Impact Macro Releases (±30m Gate)</h2>
+          <div id="macroCalBox"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: PAPER LEDGER & RISK CALCULATOR -->
+    <section class="tab-panel" id="tab-ledger">
+      <div class="card">
+        <h2>Interactive Protocol Position Sizing &amp; Risk Calculator</h2>
+        <div class="calc-grid">
+          <label class="field">Account Equity (USD)<input type="number" id="cEq" value="100000" step="500"></label>
+          <label class="field">Direction<select id="cDir"><option value="LONG">LONG</option><option value="SHORT">SHORT</option></select></label>
+          <label class="field">Role<select id="cRole"><option value="primary">Primary (0.50%)</option><option value="satellite">Satellite (0.25%)</option></select></label>
+          <label class="field">Entry Price ($)<input type="number" id="cEntry" step="10"></label>
+          <label class="field">Hard Stop ($)<input type="number" id="cStop" step="10"></label>
+          <label class="field">Target 1 ($)<input type="number" id="cTp" step="10"></label>
+        </div>
+        <dl class="kv" id="calcOutKv"></dl>
+      </div>
+
+      <div class="card">
+        <h2>Open Paper Positions</h2>
+        <div id="openPosBox"></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h2>Weekly Review Metrics (Section 10)</h2>
+          <dl class="kv" id="reviewKv"></dl>
+        </div>
+        <div class="card">
+          <h2>Derivatives &amp; External Snapshot</h2>
+          <dl class="kv" id="derivKv"></dl>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Closed Paper Trades</h2>
+        <div id="closedTradesBox" style="overflow-x:auto;"></div>
+      </div>
+    </section>
+
+    <!-- TAB 4: AUDIT LOG & CONFIG -->
+    <section class="tab-panel" id="tab-audit">
+      <div class="card">
+        <h2>Signal &amp; Management Audit Log</h2>
+        <div id="auditLogBox" style="overflow-x:auto;"></div>
+      </div>
+      <div class="card">
+        <h2>Configurable Protocol Parameters (config/protocol_params.json)</h2>
+        <pre id="configPre" style="margin:0;overflow-x:auto;font-size:12px;color:var(--muted);"></pre>
+      </div>
+      <div class="card">
+        <h2>Data Fetch Diagnostics</h2>
+        <div id="diagBox" class="mut"></div>
+      </div>
+    </section>
+  </div>
+  <script src="app.js?v=1"></script>
+</body>
+</html>

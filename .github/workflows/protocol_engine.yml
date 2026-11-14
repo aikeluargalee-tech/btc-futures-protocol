@@ -1,0 +1,53 @@
+name: BTC Futures Swing Protocol Engine
+
+on:
+  schedule:
+    - cron: "5,20,35,50 * * * *"
+  workflow_dispatch:
+    inputs:
+      reset_review_lock:
+        description: "Clear -12% drawdown manual process review lock and rebase HWM"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: protocol-engine
+  cancel-in-progress: false
+
+jobs:
+  evaluate-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run protocol unit tests
+        run: python -m unittest discover -s tests -p "test_*.py" -v
+
+      - name: Run BTC Futures Protocol Cycle
+        env:
+          RESET_REVIEW_LOCK: ${{ github.event.inputs.reset_review_lock }}
+        run: python -m engine.run_cycle
+
+      - name: Commit updated state and paper ledger
+        run: |
+          git config user.name "protocol-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/state.json data/ledger.json data/audit_log.json
+          if git diff --cached --quiet; then
+            echo "No data changes"
+            exit 0
+          fi
+          git commit -m "data: protocol cycle $(date -u +%FT%TZ)"
+          git pull --rebase -X theirs origin main || true
+          git push
