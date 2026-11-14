@@ -1,27 +1,25 @@
 {
   "protocol_version": "4.0",
   "protocol_name": "BTC Short-Term Futures + Inventory Protocol",
-  "updated_at_utc": "2026-11-14T04:54:55Z",
-  "updated_at_ms": 1794632095643,
+  "updated_at_utc": "2026-11-14T04:55:34Z",
+  "updated_at_ms": 1794632134054,
   "last_4h_close_utc": "2026-11-14T00:00:00Z",
   "ticker": {
-    "price": 67092.6,
+    "price": 67085.1,
     "high24": 70187.7,
     "low24": 66400.1,
-    "chg24_pct": -2.29,
+    "chg24_pct": -2.25,
     "source": "OKX BTC-USDT-SWAP"
   },
   "derivatives": {
-    "current_rate_pct": 0.00193,
-    "oi_btc": 33518.6,
+    "current_rate_pct": 0.00191,
+    "oi_btc": 33515.4,
     "venues": {
-      "okx": 0.00193,
-      "binance": 0.00081,
-      "bybit": -0.00183
+      "okx": 0.00191
     }
   },
   "extras": {
-    "dvol": 42.37,
+    "dvol": 42.35,
     "fng_value": 13,
     "fng_label": "Extreme Fear"
   },
@@ -1376,14 +1374,14 @@
         "atr_4h_pct": 1.83,
         "atr_4h_percentile": 100.0,
         "rel_volume_4h": 1.31,
-        "funding_rate_pct": 0.00193,
+        "funding_rate_pct": 0.00191,
         "funding_30d_percentile": 4.44,
         "components": {
           "atr_4h_percentile_score": 15.0,
           "rel_volume_4h_score": 68.5,
           "funding_score": 34.0
         },
-        "summary": "ATR4Hp=100.0, RelVol4H=1.31x, Fund=0.00193%",
+        "summary": "ATR4Hp=100.0, RelVol4H=1.31x, Fund=0.00191%",
         "score": 62.49
       },
       "session_context": {
@@ -1443,7 +1441,7 @@
     "last_4h_close_ts": 1794614400000,
     "last_4h_close_utc": "2026-11-14T00:00:00Z",
     "recalc_utc_day": "2026-11-14",
-    "recalc_at_utc": "2026-11-14T04:54:55Z",
+    "recalc_at_utc": "2026-11-14T04:55:34Z",
     "is_weekend_utc": true,
     "htf_structural_break": false
   },
@@ -1454,7 +1452,7 @@
       "SELL_INVENTORY"
     ],
     "direction": null,
-    "price": 67092.6,
+    "price": 67085.1,
     "atr_4h": 1219.6,
     "structural_levels": [
       {
@@ -1524,7 +1522,7 @@
         "id": 2,
         "rule": "4H Level Aligned w/ Daily Bias",
         "passed": true,
-        "detail": "At Prior Daily Low (67,445.0, dist $352) aligned w/ Daily BEAR"
+        "detail": "At Prior Daily Low (67,445.0, dist $360) aligned w/ Daily BEAR"
       },
       {
         "id": 3,
@@ -1577,8 +1575,8 @@
     "proposal": {
       "direction": "SHORT",
       "entry_method": "MARKET_AFTER_BOS",
-      "entry_price": 67092.6,
-      "stop_price": 68312.2,
+      "entry_price": 67085.1,
+      "stop_price": 68304.7,
       "target1_price": 66564.9,
       "target1_label": "Prior 4H Low",
       "raw_rr": 0.43,
@@ -1589,7 +1587,7 @@
       "weekend_halved": true,
       "valid": true,
       "size_btc": 0.163988,
-      "notional_usd": 11002.39,
+      "notional_usd": 11001.16,
       "leverage": 0.11,
       "leverage_capped": false,
       "target_risk_pct": 0.2,
@@ -1604,7 +1602,7 @@
       "band_pct": "15\u201325%",
       "spot_inventory_btc": 2.0,
       "sell_btc": 0.4,
-      "sell_usd": 26837.04,
+      "sell_usd": 26834.04,
       "structural_ref": "Prior Daily Low @ 67,445.0",
       "counts_toward_heat": false,
       "reason": "Score 31.8 \u2264 32 w/ 4H ref Prior Daily Low (67,445.0) \u2014 reduce 20% spot inventory"
@@ -1735,5 +1733,8 @@
       "drawdown_tier2_pct": -0.1
     }
   },
-  "fetch_errors": []
+  "fetch_errors": [
+    "Binance funding: HTTPError 451",
+    "Bybit ticker: HTTPError 403"
+  ]
 }
