@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'models/protocol_state.dart';
 
-const String masterQuantPromptTemplate = '''### ROLE & OBJECTIVE
+const String masterQuantPromptTemplate = r'''### ROLE & OBJECTIVE
 Act as an Institutional Quantitative Bitcoin Swing Strategist and Risk Officer. Below is a raw, unopinionated market telemetry packet from the **BTC Short-Term Futures Protocol (v4.0)**. Your job is to analyze the raw data independently from first principles (Auction Market Theory, 4H/1D price structure, Volume Profile, momentum exhaustion vs. impulse, multi-venue derivatives positioning, and institutional ETF/stablecoin flows) and issue an unbiased Long, Short, or Stand-Aside execution verdict.
 
 ---
@@ -160,7 +160,7 @@ Map<String, dynamic> buildRawTelemetryPacket(
     'structural_levels': levels,
     'derivatives': <String, dynamic>{
       if (derivMap.isNotEmpty) ...derivMap else ...{
-        'current_rate_pct': state.derivatives.currentRatePct,
+        'current_rate_pct': state.derivatives.fundingRatePct,
         'oi_btc': state.derivatives.oiBtc,
       },
       'funding_30d_percentile': vl['funding_30d_percentile'],
