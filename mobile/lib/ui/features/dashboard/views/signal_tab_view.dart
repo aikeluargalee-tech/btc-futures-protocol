@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../domain/models/protocol_state.dart';
 import '../../../core/formatters.dart';
 import '../../../core/theme.dart';
 import '../view_models/protocol_view_model.dart';

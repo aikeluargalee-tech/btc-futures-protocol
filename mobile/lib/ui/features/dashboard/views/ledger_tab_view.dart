@@ -94,7 +94,7 @@ class _LedgerTabViewState extends State<LedgerTabView> {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          initialValue: _dir,
+                          value: _dir,
                           decoration: const InputDecoration(labelText: 'Direction', isDense: true, border: OutlineInputBorder()),
                           items: const [
                             DropdownMenuItem(value: 'LONG', child: Text('LONG')),
