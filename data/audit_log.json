@@ -1,1 +1,7 @@
-[]
+[
+  {
+    "ts": "2026-11-14T04:52:59Z",
+    "event": "SELL_INVENTORY_SIGNAL",
+    "detail": "Reduce 20% spot (0.4000 BTC \u2248 $26,806) @ Prior Daily Low @ 67,445.0"
+  }
+]

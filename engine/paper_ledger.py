@@ -1,129 +1,235 @@
-"""Deterministic Paper-Trading Ledger, Trade Management & Circuit Breakers (Sections 7-10)."""
+"""Version 4.0 Paper Trading Ledger, Trade Management (8h/12h/24h/Weekend) & 5-Tier Circuit Breakers."""
 from __future__ import annotations
 
 import datetime as dt
+import uuid
 from typing import Any
 
-from .indicators import ema_series, swing_pivots
+from .indicators import ema_series
 
 
-def init_ledger(cfg: dict[str, Any], now_utc: dt.datetime | None = None) -> dict[str, Any]:
-    """Create initial clean paper-trading ledger."""
-    now = now_utc or dt.datetime.now(dt.timezone.utc)
+def _utc_iso(now: dt.datetime) -> str:
+    return now.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _utc_week_key(now: dt.datetime) -> str:
+    iso = now.isocalendar()
+    return f"{iso.year}-W{iso.week:02d}"
+
+
+def _hours_open(pos: dict[str, Any], now: dt.datetime) -> float:
+    opened_ms = float(pos.get("opened_at_ms", 0.0))
+    if opened_ms <= 0:
+        return 0.0
+    now_ms = now.timestamp() * 1000.0
+    return max(0.0, (now_ms - opened_ms) / 3_600_000.0)
+
+
+def migrate_ledger_schema(ledger: dict[str, Any], cfg: dict[str, Any], now: dt.datetime | None = None) -> dict[str, Any]:
+    """Normalize older v1.0 ledger keys into v4.0 schema without losing history."""
+    now = now or dt.datetime.now(dt.timezone.utc)
     eq = float(cfg["account"]["initial_equity_usd"])
-    iso_year, iso_week, _ = now.isocalendar()
+    ledger["protocol_version"] = cfg["protocol_version"]
+    ledger.setdefault("initial_equity", eq)
+    ledger.setdefault("realized_equity", ledger.get("equity", eq))
+    ledger.setdefault("equity", ledger["realized_equity"])
+    ledger.setdefault("high_water_mark", ledger["equity"])
+    ledger.setdefault("drawdown_pct", 0.0)
+    ledger.setdefault("spot_inventory_btc", float(cfg["account"].get("spot_inventory_btc", 2.0)))
+    ledger.setdefault("day_key", ledger.get("utc_day", now.strftime("%Y-%m-%d")))
+    ledger.setdefault("day_start_equity", ledger["equity"])
+    ledger.setdefault("intraday_peak_equity", ledger["equity"])
+    ledger.setdefault("week_key", ledger.get("utc_week", _utc_week_key(now)))
+    ledger.setdefault("week_start_equity", ledger["equity"])
+    ledger.setdefault("last_sell_inventory_4h_ts", None)
+    ledger.setdefault("open_positions", [])
+    ledger.setdefault("closed_trades", [])
+    ledger.setdefault("audit_log", [])
+    if "breakers" not in ledger:
+        old_cb = ledger.pop("circuit_breakers", {}) or {}
+        ledger["breakers"] = {
+            "intraday_halted": bool(old_cb.get("intraday_halted", False)),
+            "daily_halted": bool(old_cb.get("daily_halted", False)),
+            "weekly_halted": bool(old_cb.get("weekly_halted", False)),
+            "dd_tier1_active": bool(old_cb.get("dd_tier1_active", False)),
+            "dd_tier2_locked": bool(old_cb.get("dd_tier2_locked", False)),
+        }
+    else:
+        for k in ("intraday_halted", "daily_halted", "weekly_halted", "dd_tier1_active", "dd_tier2_locked"):
+            ledger["breakers"].setdefault(k, False)
+    return ledger
+
+
+def init_ledger(cfg: dict[str, Any], now: dt.datetime | None = None) -> dict[str, Any]:
+    now = now or dt.datetime.now(dt.timezone.utc)
+    eq = float(cfg["account"]["initial_equity_usd"])
+    spot_btc = float(cfg["account"].get("spot_inventory_btc", 2.0))
     return {
         "protocol_version": cfg["protocol_version"],
+        "initial_equity": eq,
         "realized_equity": eq,
         "equity": eq,
         "high_water_mark": eq,
         "drawdown_pct": 0.0,
-        "utc_day": now.strftime("%Y-%m-%d"),
+        "spot_inventory_btc": spot_btc,
+        "day_key": now.strftime("%Y-%m-%d"),
         "day_start_equity": eq,
-        "daily_pnl_pct": 0.0,
-        "utc_week": f"{iso_year}-W{iso_week:02d}",
+        "intraday_peak_equity": eq,
+        "week_key": _utc_week_key(now),
         "week_start_equity": eq,
-        "weekly_pnl_pct": 0.0,
-        "circuit_breakers": {
+        "breakers": {
+            "intraday_halted": False,
             "daily_halted": False,
             "weekly_halted": False,
             "dd_tier1_active": False,
             "dd_tier2_locked": False,
         },
+        "last_sell_inventory_4h_ts": None,
         "open_positions": [],
         "closed_trades": [],
-        "last_regime": None,
-        "trade_seq": 0,
+        "audit_log": [
+            {
+                "ts": _utc_iso(now),
+                "event": "LEDGER_INIT_V4",
+                "detail": f"Initialized v{cfg['protocol_version']} paper ledger with ${eq:,.2f} & {spot_btc:.2f} BTC inventory",
+            }
+        ],
     }
 
 
-def _unrealized_pnl(pos: dict[str, Any], price: float) -> float:
-    diff = (price - pos["entry_price"]) if pos["direction"] == "LONG" else (pos["entry_price"] - price)
-    return diff * pos["size_btc"]
-
-
-def _unrealized_r(pos: dict[str, Any], price: float) -> float:
-    risk_per_btc = abs(pos["entry_price"] - pos["initial_stop_price"])
-    if risk_per_btc <= 0:
-        return 0.0
-    diff = (price - pos["entry_price"]) if pos["direction"] == "LONG" else (pos["entry_price"] - price)
-    return diff / risk_per_btc
-
-
-def _recompute_account_metrics(ledger: dict[str, Any], mark_price: float) -> None:
-    unreal = sum(_unrealized_pnl(p, mark_price) for p in ledger["open_positions"])
-    total_eq = ledger["realized_equity"] + unreal
-    ledger["equity"] = round(total_eq, 2)
-    ledger["unrealized_pnl_usd"] = round(unreal, 2)
-    ledger["high_water_mark"] = round(max(ledger["high_water_mark"], total_eq), 2)
-    hwm = ledger["high_water_mark"]
-    ledger["drawdown_pct"] = round(((total_eq - hwm) / hwm) * 100.0, 3) if hwm > 0 else 0.0
-    d0 = ledger["day_start_equity"]
-    w0 = ledger["week_start_equity"]
-    ledger["daily_pnl_pct"] = round(((total_eq - d0) / d0) * 100.0, 3) if d0 > 0 else 0.0
-    ledger["weekly_pnl_pct"] = round(((total_eq - w0) / w0) * 100.0, 3) if w0 > 0 else 0.0
-
-
-def _close_position(
+def _close_fraction(
     ledger: dict[str, Any],
     pos: dict[str, Any],
+    fraction: float,
     exit_price: float,
     reason: str,
-    now_iso: str,
-    audit_events: list[dict[str, Any]],
-    fraction: float = 1.0,
-) -> None:
-    close_btc = pos["size_btc"] * fraction
-    diff = (exit_price - pos["entry_price"]) if pos["direction"] == "LONG" else (pos["entry_price"] - exit_price)
-    pnl_usd = diff * close_btc
-    risk_per_btc = abs(pos["entry_price"] - pos["initial_stop_price"])
-    r_mult = (diff / risk_per_btc) if risk_per_btc > 0 else 0.0
-
+    now: dt.datetime,
+) -> float:
+    close_btc = round(pos["size_btc"] * fraction, 6)
+    if close_btc <= 0:
+        return 0.0
+    sign = 1.0 if pos["direction"] == "LONG" else -1.0
+    pnl_usd = sign * (exit_price - pos["entry_price"]) * close_btc
+    pnl_r = sign * (exit_price - pos["entry_price"]) / max(pos["initial_stop_dist"], 1e-9)
     ledger["realized_equity"] = round(ledger["realized_equity"] + pnl_usd, 2)
-    pos["realized_partial_usd"] = round(pos.get("realized_partial_usd", 0.0) + pnl_usd, 2)
+    pos["size_btc"] = round(pos["size_btc"] - close_btc, 6)
+    pos["realized_pnl_usd"] = round(pos.get("realized_pnl_usd", 0.0) + pnl_usd, 2)
+    pos["risk_pct"] = round(pos["risk_pct"] * max(0.0, 1.0 - fraction), 4)
 
-    action = {
-        "ts_utc": now_iso,
+    record = {
         "trade_id": pos["id"],
-        "event": reason,
         "direction": pos["direction"],
-        "price": round(exit_price, 1),
-        "size_btc": round(close_btc, 6),
+        "entry_price": pos["entry_price"],
+        "exit_price": round(exit_price, 2),
+        "size_btc": close_btc,
         "pnl_usd": round(pnl_usd, 2),
-        "r_multiple": round(r_mult, 2),
+        "r_multiple": round(pnl_r, 3),
+        "reason": reason,
+        "opened_at": pos["opened_at"],
+        "closed_at": _utc_iso(now),
+        "hold_hours": round(_hours_open(pos, now), 2),
+        "partial": fraction < 0.999,
     }
-    pos.setdefault("actions", []).append(action)
-    audit_events.append(action)
+    ledger["closed_trades"].append(record)
+    ledger["audit_log"].append(
+        {
+            "ts": _utc_iso(now),
+            "event": f"CLOSE_{pos['direction']}",
+            "detail": f"{reason} @ {exit_price:,.1f} ({close_btc:.4f} BTC, PnL ${pnl_usd:+,.2f}, {pnl_r:+.2f}R)",
+        }
+    )
+    return pnl_usd
 
-    if fraction >= 0.999:
-        total_pnl = pos["realized_partial_usd"]
-        init_risk_usd = pos["initial_risk_usd"]
-        total_r = (total_pnl / init_risk_usd) if init_risk_usd > 0 else r_mult
-        ledger["closed_trades"].append(
+
+def _update_equity_and_breakers(
+    ledger: dict[str, Any],
+    price: float,
+    cfg: dict[str, Any],
+    now: dt.datetime,
+) -> None:
+    unrealized = 0.0
+    for pos in ledger["open_positions"]:
+        sign = 1.0 if pos["direction"] == "LONG" else -1.0
+        unrealized += sign * (price - pos["entry_price"]) * pos["size_btc"]
+        pos["unrealized_pnl_usd"] = round(sign * (price - pos["entry_price"]) * pos["size_btc"], 2)
+
+    eq = round(ledger["realized_equity"] + unrealized, 2)
+    ledger["equity"] = eq
+    if eq > ledger["high_water_mark"]:
+        ledger["high_water_mark"] = eq
+    if eq > ledger.get("intraday_peak_equity", eq):
+        ledger["intraday_peak_equity"] = eq
+
+    dd = (eq - ledger["high_water_mark"]) / ledger["high_water_mark"] if ledger["high_water_mark"] > 0 else 0.0
+    ledger["drawdown_pct"] = round(dd * 100.0, 3)
+
+    intraday_peak = ledger.get("intraday_peak_equity") or ledger["day_start_equity"] or eq
+    intraday_pnl = (eq - intraday_peak) / intraday_peak if intraday_peak > 0 else 0.0
+    day_pnl = (eq - ledger["day_start_equity"]) / ledger["day_start_equity"] if ledger["day_start_equity"] > 0 else 0.0
+    wk_pnl = (eq - ledger["week_start_equity"]) / ledger["week_start_equity"] if ledger["week_start_equity"] > 0 else 0.0
+
+    cb_cfg = cfg["circuit_breakers"]
+    b = ledger["breakers"]
+
+    if intraday_pnl <= cb_cfg["intraday_loss_limit_pct"] and not b.get("intraday_halted"):
+        b["intraday_halted"] = True
+        ledger["audit_log"].append(
             {
-                "id": pos["id"],
-                "role": pos["role"],
-                "direction": pos["direction"],
-                "opened_at_utc": pos["opened_at_utc"],
-                "closed_at_utc": now_iso,
-                "entry_price": pos["entry_price"],
-                "exit_price": round(exit_price, 1),
-                "initial_stop_price": pos["initial_stop_price"],
-                "initial_size_btc": pos["initial_size_btc"],
-                "initial_risk_usd": pos["initial_risk_usd"],
-                "regime_score_at_entry": pos["regime_score_at_entry"],
-                "dominant_factors": pos["dominant_factors"],
-                "pnl_usd": round(total_pnl, 2),
-                "r_multiple": round(total_r, 2),
-                "exit_reason": reason,
-                "actions": pos["actions"],
+                "ts": _utc_iso(now),
+                "event": "BREAKER_INTRADAY",
+                "detail": f"Intraday loss {intraday_pnl*100:.2f}% breached {cb_cfg['intraday_loss_limit_pct']*100:.1f}% limit",
             }
         )
-        ledger["open_positions"] = [p for p in ledger["open_positions"] if p["id"] != pos["id"]]
+
+    if day_pnl <= cb_cfg["daily_loss_limit_pct"] and not b["daily_halted"]:
+        b["daily_halted"] = True
+        ledger["audit_log"].append(
+            {
+                "ts": _utc_iso(now),
+                "event": "BREAKER_DAILY",
+                "detail": f"Daily loss {day_pnl*100:.2f}% breached {cb_cfg['daily_loss_limit_pct']*100:.1f}% limit",
+            }
+        )
+
+    if wk_pnl <= cb_cfg["weekly_loss_limit_pct"] and not b["weekly_halted"]:
+        b["weekly_halted"] = True
+        for pos in list(ledger["open_positions"]):
+            _close_fraction(ledger, pos, 1.0, price, "WEEKLY_LOSS_FLATTEN", now)
+        ledger["open_positions"] = [p for p in ledger["open_positions"] if p["size_btc"] > 1e-6]
+        ledger["audit_log"].append(
+            {
+                "ts": _utc_iso(now),
+                "event": "BREAKER_WEEKLY",
+                "detail": f"Weekly loss {wk_pnl*100:.2f}% breached {cb_cfg['weekly_loss_limit_pct']*100:.1f}% -> flattened futures (Sell Inventory remains allowed)",
+            }
+        )
+
+    if dd <= cb_cfg["drawdown_tier2_pct"] and not b["dd_tier2_locked"]:
+        b["dd_tier2_locked"] = True
+        b["dd_tier1_active"] = True
+        for pos in list(ledger["open_positions"]):
+            _close_fraction(ledger, pos, 1.0, price, "DD_TIER2_FLATTEN", now)
+        ledger["open_positions"] = [p for p in ledger["open_positions"] if p["size_btc"] > 1e-6]
+        ledger["audit_log"].append(
+            {
+                "ts": _utc_iso(now),
+                "event": "BREAKER_DD_10",
+                "detail": f"Drawdown {dd*100:.2f}% breached -10.0% -> flattened futures & locked pending manual review",
+            }
+        )
+    elif dd <= cb_cfg["drawdown_tier1_pct"]:
+        if not b["dd_tier1_active"]:
+            b["dd_tier1_active"] = True
+            ledger["audit_log"].append(
+                {
+                    "ts": _utc_iso(now),
+                    "event": "BREAKER_DD_6",
+                    "detail": f"Drawdown {dd*100:.2f}% breached -6.0% -> risk 0.2%, thresholds 75/25",
+                }
+            )
     else:
-        pos["size_btc"] = round(pos["size_btc"] - close_btc, 6)
-        pos["risk_usd"] = round(abs(pos["entry_price"] - pos["stop_price"]) * pos["size_btc"], 2)
-        pos["risk_pct"] = round((pos["risk_usd"] / max(ledger["equity"], 1.0)) * 100.0, 4)
+        if not b["dd_tier2_locked"] and dd > cb_cfg["drawdown_tier1_pct"] * 0.5:
+            b["dd_tier1_active"] = False
 
 
 def process_cycle(
@@ -131,279 +237,247 @@ def process_cycle(
     market_data: dict[str, Any],
     regime: dict[str, Any],
     cfg: dict[str, Any],
-    now_utc: dt.datetime | None = None,
-    reset_review_lock: bool = False,
-) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    """Advance ledger state: rollovers, position exits/trails, circuit breakers, and optional entry."""
-    now = now_utc or dt.datetime.now(dt.timezone.utc)
-    now_iso = now.strftime("%Y-%m-%dT%H:%M:%SZ")
-    audit_events: list[dict[str, Any]] = []
+    now: dt.datetime | None = None,
+) -> dict[str, Any]:
+    """Handle UTC rollovers, 4H trade management (stops/1.5R partial/8h-12h/24h/weekend/daily close), and breakers."""
+    now = now or dt.datetime.now(dt.timezone.utc)
+    migrate_ledger_schema(ledger, cfg, now)
 
-    mark_price = float(market_data["ticker"].get("price") or 0.0)
-    if mark_price <= 0:
-        return ledger, audit_events
+    price = float(market_data["ticker"].get("price") or 0.0)
+    if price <= 0:
+        return ledger
 
-    if reset_review_lock:
-        _recompute_account_metrics(ledger, mark_price)
-        ledger["high_water_mark"] = ledger["equity"]
+    # UTC Day & Week rollovers
+    day_key = now.strftime("%Y-%m-%d")
+    wk_key = _utc_week_key(now)
+    if ledger.get("day_key") != day_key:
+        ledger["day_key"] = day_key
         ledger["day_start_equity"] = ledger["equity"]
+        ledger["intraday_peak_equity"] = ledger["equity"]
+        ledger["breakers"]["intraday_halted"] = False
+        ledger["breakers"]["daily_halted"] = False
+    if ledger.get("week_key") != wk_key:
+        ledger["week_key"] = wk_key
         ledger["week_start_equity"] = ledger["equity"]
-        ledger["circuit_breakers"]["dd_tier2_locked"] = False
-        ledger["circuit_breakers"]["dd_tier1_active"] = False
-        ledger["circuit_breakers"]["daily_halted"] = False
-        ledger["circuit_breakers"]["weekly_halted"] = False
-        audit_events.append(
-            {
-                "ts_utc": now_iso,
-                "event": "MANUAL_REVIEW_RESET",
-                "detail": f"Process review completed; HWM rebased to ${ledger['equity']:,.2f}",
-            }
-        )
+        ledger["breakers"]["weekly_halted"] = False
 
-    # 1. UTC day / week rollovers
-    _recompute_account_metrics(ledger, mark_price)
-    cur_day = now.strftime("%Y-%m-%d")
-    iso_year, iso_week, _ = now.isocalendar()
-    cur_week = f"{iso_year}-W{iso_week:02d}"
+    h4 = (market_data.get("klines") or {}).get("4h") or []
+    tm = cfg["trade_management"]
+    th = cfg["timeframe_and_hold"]
+    ema20_vals = ema_series([c["close"] for c in h4], tm["trail_ema_period_4h"]) if len(h4) >= tm["trail_ema_period_4h"] else []
+    trail_ema = ema20_vals[-1] if ema20_vals else None
 
-    if cur_day != ledger["utc_day"]:
-        ledger["utc_day"] = cur_day
-        ledger["day_start_equity"] = ledger["equity"]
-        ledger["circuit_breakers"]["daily_halted"] = False
-
-    if cur_week != ledger["utc_week"]:
-        ledger["utc_week"] = cur_week
-        ledger["week_start_equity"] = ledger["equity"]
-        ledger["circuit_breakers"]["weekly_halted"] = False
-
-    # 2. Manage open positions (Sections 7 & 8)
-    h1 = market_data["klines"].get("1h") or []
-    h4 = market_data["klines"].get("4h") or []
-    recent_h1_lo = h1[-1]["low"] if h1 else mark_price
-    recent_h1_hi = h1[-1]["high"] if h1 else mark_price
-    ema20_4h = ema_series([c["close"] for c in h4], cfg["trade_management"]["trail_ema_period_4h"]) if h4 else []
-    trail_ema = ema20_4h[-1] if ema20_4h else None
-    h4_hi, h4_lo = swing_pivots(h4[-60:], left=2, right=2) if len(h4) >= 10 else ([], [])
+    score = float(regime.get("score", 50.0))
+    long_th = float((regime.get("thresholds") or {}).get("long", cfg["regime"]["long_threshold"]))
+    short_th = float((regime.get("thresholds") or {}).get("short", cfg["regime"]["short_threshold"]))
+    is_weekend = now.weekday() >= 5
+    wk_long = float(th["weekend_extreme_long"])
+    wk_short = float(th["weekend_extreme_short"])
 
     for pos in list(ledger["open_positions"]):
-        d = pos["direction"]
-        stop = pos["stop_price"]
-        cur_r = _unrealized_r(pos, mark_price)
-        pos["max_favorable_r"] = round(max(pos.get("max_favorable_r", 0.0), cur_r), 2)
+        sign = 1.0 if pos["direction"] == "LONG" else -1.0
+        dist = max(pos["initial_stop_dist"], 1e-9)
+        cur_r = sign * (price - pos["entry_price"]) / dist
+        pos["current_r"] = round(cur_r, 3)
+        pos["max_favorable_r"] = round(max(float(pos.get("max_favorable_r", 0.0)), cur_r), 3)
+        hours_open = _hours_open(pos, now)
+        pos["hold_hours"] = round(hours_open, 2)
 
-        # A) Hard stop check (intrabar 1H low/high or current mark)
-        stop_hit = (recent_h1_lo <= stop or mark_price <= stop) if d == "LONG" else (recent_h1_hi >= stop or mark_price >= stop)
-        if stop_hit:
-            fill = min(stop, mark_price) if (d == "LONG" and mark_price < stop) else (max(stop, mark_price) if (d == "SHORT" and mark_price > stop) else stop)
-            _close_position(ledger, pos, fill, "HARD_STOP", now_iso, audit_events, fraction=1.0)
+        # 1. Hard / trailing stop check
+        stopped = (price <= pos["stop_price"]) if pos["direction"] == "LONG" else (price >= pos["stop_price"])
+        if stopped:
+            _close_fraction(ledger, pos, 1.0, pos["stop_price"], "HARD_OR_TRAIL_STOP", now)
             continue
 
-        # B) Opposing regime threshold exit (Section 8)
-        if regime.get("ok"):
-            sc = regime["score"]
-            th_l = regime["thresholds"]["long"]
-            th_s = regime["thresholds"]["short"]
-            if (d == "LONG" and sc <= th_s) or (d == "SHORT" and sc >= th_l):
-                _close_position(ledger, pos, mark_price, "REGIME_FLIP_EXIT", now_iso, audit_events, fraction=1.0)
-                continue
+        # 2. Maximum hold 24h exit (Section 3 & 7)
+        if hours_open >= float(th["max_hold_hours"]):
+            _close_fraction(ledger, pos, 1.0, price, "MAX_HOLD_24H_EXIT", now)
+            continue
 
-        # C) Scale-out 30-50% at 1.5-2R (Section 7)
-        if not pos.get("scale_out_done") and cur_r >= cfg["trade_management"]["scale_out_r_min"]:
-            pos["scale_out_done"] = True
-            _close_position(
-                ledger,
-                pos,
-                mark_price,
-                "SCALE_OUT_PARTIAL",
-                now_iso,
-                audit_events,
-                fraction=cfg["trade_management"]["scale_out_pct"],
+        # 3. Weekend rule (Section 3): weekend hold only if extreme >= 80 / <= 20 and size halved
+        if is_weekend:
+            extreme_ok = (pos["direction"] == "LONG" and score >= wk_long) or (
+                pos["direction"] == "SHORT" and score <= wk_short
+            )
+            if not extreme_ok:
+                _close_fraction(ledger, pos, 1.0, price, "WEEKEND_NON_EXTREME_EXIT", now)
+                continue
+            if not pos.get("weekend_halved"):
+                _close_fraction(ledger, pos, 0.50, price, "WEEKEND_EXTREME_HALF_REDUCE", now)
+                pos["weekend_halved"] = True
+
+        # 4. Daily close rule (Section 3): any futures still open at next daily close is reduced/closed unless score moved further in favor
+        opened_day = pos.get("opened_utc_day") or (pos.get("opened_at", "")[:10])
+        if opened_day and day_key > opened_day and pos.get("daily_close_checked_day") != day_key:
+            pos["daily_close_checked_day"] = day_key
+            entry_score = float(pos.get("entry_regime_score", score))
+            improved = (score > entry_score) if pos["direction"] == "LONG" else (score < entry_score)
+            if not improved:
+                _close_fraction(ledger, pos, 0.50, price, "DAILY_CLOSE_NO_IMPROVEMENT_REDUCE", now)
+                if pos["size_btc"] <= 1e-6:
+                    continue
+
+        # 5. Opposing regime threshold exit (<= 32 for Long, >= 68 for Short)
+        if pos["direction"] == "LONG" and score <= short_th:
+            _close_fraction(ledger, pos, 1.0, price, "REGIME_OPPOSING_SHORT_EXIT", now)
+            continue
+        if pos["direction"] == "SHORT" and score >= long_th:
+            _close_fraction(ledger, pos, 1.0, price, "REGIME_OPPOSING_LONG_EXIT", now)
+            continue
+
+        # 6. Time stops (Section 7): 8h reduce 50% if < +1R; 12h full exit if < +1R
+        best_r = float(pos.get("max_favorable_r", cur_r))
+        if hours_open >= float(tm["time_stop_exit_hours"]) and best_r < 1.0:
+            _close_fraction(ledger, pos, 1.0, price, "TIME_STOP_12H_EXIT", now)
+            continue
+        if (
+            hours_open >= float(tm["time_stop_reduce_hours"])
+            and best_r < 1.0
+            and not pos.get("time_stop_8h_reduced")
+        ):
+            _close_fraction(ledger, pos, float(tm["time_stop_reduce_pct"]), price, "TIME_STOP_8H_REDUCE", now)
+            pos["time_stop_8h_reduced"] = True
+
+        # 7. Move to breakeven at +1R & trail stop thereafter
+        if cur_r >= tm["breakeven_trigger_r"] and not pos.get("breakeven_moved"):
+            pos["stop_price"] = pos["entry_price"]
+            pos["breakeven_moved"] = True
+            ledger["audit_log"].append(
+                {
+                    "ts": _utc_iso(now),
+                    "event": "STOP_TO_BREAKEVEN",
+                    "detail": f"{pos['direction']} reached +1.0R -> stop moved to {pos['entry_price']:,.1f}",
+                }
             )
 
-        # D) Move to breakeven & trail once >= 1R (never widen!)
-        if cur_r >= cfg["trade_management"]["breakeven_trigger_r"]:
-            new_stop = stop
-            if d == "LONG":
-                new_stop = max(new_stop, pos["entry_price"])
-                if trail_ema and trail_ema < mark_price:
-                    new_stop = max(new_stop, round(trail_ema, 1))
-                if h4_lo and h4_lo[-1]["price"] < mark_price:
-                    new_stop = max(new_stop, round(h4_lo[-1]["price"], 1))
-                if new_stop > pos["stop_price"] and new_stop < mark_price:
-                    pos["stop_price"] = round(new_stop, 1)
-                    pos["be_moved"] = True
-                    ev = {"ts_utc": now_iso, "trade_id": pos["id"], "event": "TRAIL_STOP_UPDATE", "new_stop": pos["stop_price"]}
-                    pos.setdefault("actions", []).append(ev)
-                    audit_events.append(ev)
-            else:
-                new_stop = min(new_stop, pos["entry_price"])
-                if trail_ema and trail_ema > mark_price:
-                    new_stop = min(new_stop, round(trail_ema, 1))
-                if h4_hi and h4_hi[-1]["price"] > mark_price:
-                    new_stop = min(new_stop, round(h4_hi[-1]["price"], 1))
-                if new_stop < pos["stop_price"] and new_stop > mark_price:
-                    pos["stop_price"] = round(new_stop, 1)
-                    pos["be_moved"] = True
-                    ev = {"ts_utc": now_iso, "trade_id": pos["id"], "event": "TRAIL_STOP_UPDATE", "new_stop": pos["stop_price"]}
-                    pos.setdefault("actions", []).append(ev)
-                    audit_events.append(ev)
+        if pos.get("breakeven_moved") and trail_ema:
+            if pos["direction"] == "LONG" and trail_ema > pos["stop_price"] and trail_ema < price:
+                pos["stop_price"] = round(trail_ema, 1)
+            elif pos["direction"] == "SHORT" and trail_ema < pos["stop_price"] and trail_ema > price:
+                pos["stop_price"] = round(trail_ema, 1)
 
-        # Update dynamic risk for current stop
-        pos["risk_usd"] = round(max(0.0, (pos["entry_price"] - pos["stop_price"]) * pos["size_btc"] if d == "LONG" else (pos["stop_price"] - pos["entry_price"]) * pos["size_btc"]), 2)
-        pos["risk_pct"] = round((pos["risk_usd"] / max(ledger["equity"], 1.0)) * 100.0, 4)
-        pos["unrealized_pnl_usd"] = round(_unrealized_pnl(pos, mark_price), 2)
-        pos["unrealized_r"] = round(cur_r, 2)
+        # 8. Partial profit 45% at 1.5R
+        if cur_r >= tm["partial_tp_r"] and not pos.get("partial_taken"):
+            _close_fraction(ledger, pos, tm["partial_tp_pct"], price, "PARTIAL_TP_1.5R", now)
+            pos["partial_taken"] = True
 
-        # E) Time-based review (7-10 days without 1R and no regime improvement)
-        opened_dt = dt.datetime.fromisoformat(pos["opened_at_utc"].replace("Z", "+00:00"))
-        age_days = (now - opened_dt).total_seconds() / 86400.0
-        regime_improved = (
-            (d == "LONG" and regime.get("score", 50) > pos["regime_score_at_entry"])
-            or (d == "SHORT" and regime.get("score", 50) < pos["regime_score_at_entry"])
-        )
-        if pos.get("max_favorable_r", 0.0) < 1.0 and not regime_improved:
-            if age_days >= cfg["trade_management"]["time_stop_days_max"]:
-                _close_position(ledger, pos, mark_price, "TIME_STOP_EXIT", now_iso, audit_events, fraction=1.0)
-                continue
-            if age_days >= cfg["trade_management"]["time_stop_days_min"] and not pos.get("time_reduced"):
-                pos["time_reduced"] = True
-                _close_position(
-                    ledger,
-                    pos,
-                    mark_price,
-                    "TIME_STOP_REDUCE",
-                    now_iso,
-                    audit_events,
-                    fraction=cfg["trade_management"]["time_stop_reduce_pct"],
-                )
-
-    # 3. Recompute metrics & evaluate portfolio circuit breakers (Section 9)
-    _recompute_account_metrics(ledger, mark_price)
-    cb_cfg = cfg["circuit_breakers"]
-    cb = ledger["circuit_breakers"]
-
-    if ledger["daily_pnl_pct"] <= cb_cfg["daily_loss_limit_pct"] * 100.0:
-        if not cb["daily_halted"]:
-            audit_events.append({"ts_utc": now_iso, "event": "CB_DAILY_HALT", "daily_pnl_pct": ledger["daily_pnl_pct"]})
-        cb["daily_halted"] = True
-
-    if ledger["weekly_pnl_pct"] <= cb_cfg["weekly_loss_limit_pct"] * 100.0:
-        if not cb["weekly_halted"]:
-            audit_events.append({"ts_utc": now_iso, "event": "CB_WEEKLY_FLAT", "weekly_pnl_pct": ledger["weekly_pnl_pct"]})
-        cb["weekly_halted"] = True
-        for pos in list(ledger["open_positions"]):
-            _close_position(ledger, pos, mark_price, "CIRCUIT_BREAKER_WEEKLY", now_iso, audit_events, fraction=1.0)
-
-    if ledger["drawdown_pct"] <= cb_cfg["drawdown_tier2_pct"] * 100.0:
-        if not cb["dd_tier2_locked"]:
-            audit_events.append({"ts_utc": now_iso, "event": "CB_DD_12_LOCK", "drawdown_pct": ledger["drawdown_pct"]})
-        cb["dd_tier2_locked"] = True
-        cb["dd_tier1_active"] = True
-        for pos in list(ledger["open_positions"]):
-            _close_position(ledger, pos, mark_price, "CIRCUIT_BREAKER_DD12", now_iso, audit_events, fraction=1.0)
-    elif ledger["drawdown_pct"] <= cb_cfg["drawdown_tier1_pct"] * 100.0:
-        if not cb["dd_tier1_active"]:
-            audit_events.append({"ts_utc": now_iso, "event": "CB_DD_8_THROTTLE", "drawdown_pct": ledger["drawdown_pct"]})
-        cb["dd_tier1_active"] = True
-    else:
-        cb["dd_tier1_active"] = False
-
-    _recompute_account_metrics(ledger, mark_price)
-    return ledger, audit_events
+    ledger["open_positions"] = [p for p in ledger["open_positions"] if p["size_btc"] > 1e-6]
+    _update_equity_and_breakers(ledger, price, cfg, now)
+    ledger["audit_log"] = ledger["audit_log"][-100:]
+    return ledger
 
 
 def execute_signal_entry(
     ledger: dict[str, Any],
     signal: dict[str, Any],
-    regime: dict[str, Any],
-    now_utc: dt.datetime | None = None,
-) -> dict[str, Any] | None:
-    """Open a paper position when signal status is LONG or SHORT and constraints hold."""
-    if signal.get("status") not in ("LONG", "SHORT"):
-        return None
-    prop = signal.get("proposal") or {}
+    regime: dict[str, Any] | None = None,
+    now: dt.datetime | None = None,
+) -> dict[str, Any]:
+    """Open a paper futures trade if signal status is LONG or SHORT."""
+    now = now or dt.datetime.now(dt.timezone.utc)
+    status = signal.get("status")
+    if status not in ("LONG", "SHORT"):
+        return ledger
+    prop = signal["proposal"]
     if not prop.get("valid") or prop.get("size_btc", 0) <= 0:
-        return None
-
-    now = now_utc or dt.datetime.now(dt.timezone.utc)
-    now_iso = now.strftime("%Y-%m-%dT%H:%M:%SZ")
-    ledger["trade_seq"] = ledger.get("trade_seq", 0) + 1
-    tid = f"BTC-{ledger['trade_seq']:04d}"
+        return ledger
 
     pos = {
-        "id": tid,
-        "role": prop["role"],
-        "direction": signal["status"],
-        "entry_method": prop["entry_method"],
-        "opened_at_utc": now_iso,
-        "entry_price": prop["entry_price"],
-        "stop_price": prop["stop_price"],
-        "initial_stop_price": prop["stop_price"],
-        "target1_price": prop["target1_price"],
-        "target1_label": prop["target1_label"],
-        "size_btc": prop["size_btc"],
-        "initial_size_btc": prop["size_btc"],
-        "notional_usd": prop["notional_usd"],
-        "leverage": prop["leverage"],
-        "risk_usd": prop["actual_risk_usd"],
-        "initial_risk_usd": prop["actual_risk_usd"],
-        "risk_pct": prop["actual_risk_pct"],
-        "initial_rr": prop["raw_rr"],
-        "funding_adjusted_rr": prop["funding_adjusted_rr"],
-        "regime_score_at_entry": regime["score"],
-        "dominant_factors": regime["dominant_factors"],
-        "scale_out_done": False,
-        "be_moved": False,
-        "time_reduced": False,
+        "id": f"V4-{now.strftime('%Y%m%d%H%M')}-{uuid.uuid4().hex[:4].upper()}",
+        "direction": status,
+        "entry_price": float(prop["entry_price"]),
+        "stop_price": float(prop["stop_price"]),
+        "initial_stop_price": float(prop["stop_price"]),
+        "initial_stop_dist": abs(float(prop["entry_price"]) - float(prop["stop_price"])),
+        "target1_price": float(prop["target1_price"]),
+        "size_btc": float(prop["size_btc"]),
+        "initial_size_btc": float(prop["size_btc"]),
+        "notional_usd": float(prop["notional_usd"]),
+        "leverage": float(prop["leverage"]),
+        "risk_pct": float(prop["actual_risk_pct"]),
+        "opened_at": _utc_iso(now),
+        "opened_at_ms": int(now.timestamp() * 1000),
+        "opened_utc_day": now.strftime("%Y-%m-%d"),
+        "entry_regime_score": float((regime or {}).get("score", 50.0)),
+        "weekend_halved": bool(prop.get("weekend_halved", False)),
+        "breakeven_moved": False,
+        "partial_taken": False,
+        "time_stop_8h_reduced": False,
+        "current_r": 0.0,
         "max_favorable_r": 0.0,
-        "realized_partial_usd": 0.0,
+        "hold_hours": 0.0,
         "unrealized_pnl_usd": 0.0,
-        "unrealized_r": 0.0,
-        "actions": [
-            {
-                "ts_utc": now_iso,
-                "trade_id": tid,
-                "event": "OPEN_POSITION",
-                "direction": signal["status"],
-                "price": prop["entry_price"],
-                "stop": prop["stop_price"],
-                "size_btc": prop["size_btc"],
-                "notional_usd": prop["notional_usd"],
-                "regime_score": regime["score"],
-            }
-        ],
+        "realized_pnl_usd": 0.0,
     }
     ledger["open_positions"].append(pos)
-    return pos
-
-
-def compute_review_metrics(ledger: dict[str, Any], cfg: dict[str, Any]) -> dict[str, Any]:
-    """Section 10 fixed weekly review metrics + 30-trade sample gate."""
-    closed = ledger.get("closed_trades") or []
-    n = len(closed)
-    min_sample = cfg["review"]["min_sample_for_weight_adjustment"]
-    if n == 0:
-        return {
-            "total_trades": 0,
-            "win_rate_pct": None,
-            "avg_r": None,
-            "largest_winner_r": None,
-            "largest_loser_r": None,
-            "net_pnl_usd": 0.0,
-            "min_sample_for_weight_adjustment": min_sample,
-            "weight_adjustment_unlocked": False,
+    ledger["audit_log"].append(
+        {
+            "ts": _utc_iso(now),
+            "event": f"OPEN_{status}",
+            "detail": f"{prop['size_btc']:.4f} BTC @ {prop['entry_price']:,.1f} | Stop {prop['stop_price']:,.1f} | Target {prop['target1_price']:,.1f} | Lev {prop['leverage']:.2f}x | Risk {prop['actual_risk_pct']:.2f}%",
         }
-    wins = [t for t in closed if t["pnl_usd"] > 0]
-    rs = [t["r_multiple"] for t in closed]
+    )
+    ledger["audit_log"] = ledger["audit_log"][-100:]
+    return ledger
+
+
+def record_sell_inventory_if_new(
+    ledger: dict[str, Any],
+    signal: dict[str, Any],
+    regime: dict[str, Any],
+    now: dt.datetime | None = None,
+) -> dict[str, Any]:
+    """Audit-log a Sell Inventory recommendation at most once per 4H bar."""
+    now = now or dt.datetime.now(dt.timezone.utc)
+    inv = signal.get("sell_inventory") or {}
+    bar_ts = regime.get("last_4h_close_ts")
+    if inv.get("active") and bar_ts and ledger.get("last_sell_inventory_4h_ts") != bar_ts:
+        ledger["last_sell_inventory_4h_ts"] = bar_ts
+        ledger["audit_log"].append(
+            {
+                "ts": _utc_iso(now),
+                "event": "SELL_INVENTORY_SIGNAL",
+                "detail": f"Reduce {inv['recommended_pct']:.0f}% spot ({inv['sell_btc']:.4f} BTC ≈ ${inv['sell_usd']:,.0f}) @ {inv.get('structural_ref') or '4H ref'}",
+            }
+        )
+        ledger["audit_log"] = ledger["audit_log"][-100:]
+    return ledger
+
+
+def compute_review_metrics(ledger: dict[str, Any]) -> dict[str, Any]:
+    trades = ledger.get("closed_trades") or []
+    wins = [t for t in trades if t["pnl_usd"] > 0]
+    losses = [t for t in trades if t["pnl_usd"] < 0]
+    gross_win = sum(t["pnl_usd"] for t in wins)
+    gross_loss = abs(sum(t["pnl_usd"] for t in losses))
+    pf = round(gross_win / gross_loss, 2) if gross_loss > 0 else (99.0 if gross_win > 0 else 0.0)
+    win_rate = round(len(wins) / len(trades) * 100.0, 1) if trades else 0.0
+    exp_r = round(sum(t["r_multiple"] for t in trades) / len(trades), 3) if trades else 0.0
     return {
-        "total_trades": n,
-        "wins": len(wins),
-        "losses": n - len(wins),
-        "win_rate_pct": round(len(wins) / n * 100.0, 1),
-        "avg_r": round(sum(rs) / n, 2),
-        "largest_winner_r": round(max(rs), 2),
-        "largest_loser_r": round(min(rs), 2),
-        "net_pnl_usd": round(sum(t["pnl_usd"] for t in closed), 2),
-        "min_sample_for_weight_adjustment": min_sample,
-        "weight_adjustment_unlocked": n >= min_sample,
+        "total_closed_legs": len(trades),
+        "win_rate_pct": win_rate,
+        "profit_factor": pf,
+        "expectancy_r": exp_r,
+        "total_realized_pnl_usd": round(ledger["realized_equity"] - ledger["initial_equity"], 2),
     }
+
+
+def reset_review_lock(ledger: dict[str, Any], cfg: dict[str, Any], now: dt.datetime | None = None) -> dict[str, Any]:
+    """Manual operator reset after -10% DD lock."""
+    now = now or dt.datetime.now(dt.timezone.utc)
+    ledger["breakers"]["dd_tier2_locked"] = False
+    ledger["breakers"]["dd_tier1_active"] = False
+    ledger["high_water_mark"] = ledger["equity"]
+    ledger["drawdown_pct"] = 0.0
+    ledger["day_start_equity"] = ledger["equity"]
+    ledger["intraday_peak_equity"] = ledger["equity"]
+    ledger["week_start_equity"] = ledger["equity"]
+    ledger["audit_log"].append(
+        {
+            "ts": _utc_iso(now),
+            "event": "MANUAL_REVIEW_UNLOCK",
+            "detail": f"Operator unlocked -10% drawdown halt at equity ${ledger['equity']:,.2f}",
+        }
+    )
+    ledger["audit_log"] = ledger["audit_log"][-100:]
+    return ledger

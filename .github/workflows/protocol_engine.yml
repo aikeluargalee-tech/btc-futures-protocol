@@ -1,4 +1,4 @@
-name: BTC Futures Swing Protocol Engine
+name: BTC Short-Term Futures + Inventory Protocol v4.0
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       reset_review_lock:
-        description: "Clear -12% drawdown manual process review lock and rebase HWM"
+        description: "Clear -10% drawdown manual review lock and rebase HWM"
         required: false
         default: false
         type: boolean

@@ -1,5 +1,5 @@
 {
-  "protocol_version": "1.0",
+  "protocol_version": "4.0",
   "realized_equity": 100000.0,
   "equity": 100000.0,
   "high_water_mark": 100000.0,
@@ -10,12 +10,6 @@
   "utc_week": "2026-W46",
   "week_start_equity": 100000.0,
   "weekly_pnl_pct": 0.0,
-  "circuit_breakers": {
-    "daily_halted": false,
-    "weekly_halted": false,
-    "dd_tier1_active": false,
-    "dd_tier2_locked": false
-  },
   "open_positions": [],
   "closed_trades": [],
   "last_regime": {
@@ -30,5 +24,25 @@
     }
   },
   "trade_seq": 0,
-  "unrealized_pnl_usd": 0
+  "unrealized_pnl_usd": 0,
+  "initial_equity": 100000.0,
+  "spot_inventory_btc": 2.0,
+  "day_key": "2026-11-14",
+  "intraday_peak_equity": 100000.0,
+  "week_key": "2026-W46",
+  "last_sell_inventory_4h_ts": 1794614400000,
+  "audit_log": [
+    {
+      "ts": "2026-11-14T04:52:59Z",
+      "event": "SELL_INVENTORY_SIGNAL",
+      "detail": "Reduce 20% spot (0.4000 BTC \u2248 $26,806) @ Prior Daily Low @ 67,445.0"
+    }
+  ],
+  "breakers": {
+    "intraday_halted": false,
+    "daily_halted": false,
+    "weekly_halted": false,
+    "dd_tier1_active": false,
+    "dd_tier2_locked": false
+  }
 }

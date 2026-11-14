@@ -1,4 +1,4 @@
-"""Multi-Factor Regime Analysis Engine (Section 3 of BTC Futures Swing Protocol v1.0)."""
+"""4H Multi-Factor Regime Engine (Section 4 of BTC Short-Term Futures + Inventory Protocol v4.0)."""
 from __future__ import annotations
 
 import datetime as dt
@@ -11,9 +11,7 @@ from .indicators import (
     atr_series,
     ema_series,
     percentile_rank,
-    realized_vol_annualized,
     roc,
-    rolling_rv_series,
     rsi,
     sma,
 )
@@ -31,305 +29,256 @@ def _map_linear(val: float, low_in: float, high_in: float, low_out: float = 0.0,
 
 
 def _score_trend_structure(d1: list[dict[str, float]], h4: list[dict[str, float]], price: float) -> dict[str, Any]:
-    """Group 1 (30%): Daily & 4H HH/HL structure, 50/200 EMA alignment, swing anchor location."""
+    """Group 1 (30%): 4H swing structure + alignment with daily bias (1D structure + 50/200 EMA)."""
     d_closes = [c["close"] for c in d1]
     h4_closes = [c["close"] for c in h4]
 
-    d_struct = analyze_structure(d1[-90:], left=3, right=3)
     h4_struct = analyze_structure(h4[-120:], left=3, right=3)
+    d_struct = analyze_structure(d1[-90:], left=3, right=3)
 
     ema50_d = ema_series(d_closes, 50)
     ema200_d = ema_series(d_closes, 200)
-    e50 = ema50_d[-1] if ema50_d else None
-    e200 = ema200_d[-1] if ema200_d else None
+    ema20_4h = ema_series(h4_closes, 20)
+    ema50_4h = ema_series(h4_closes, 50)
 
-    ema_score = 50.0
-    ema_detail = "Insufficient daily bars for 50/200 EMA"
-    if e50 is not None and e200 is not None:
+    e50_d = ema50_d[-1] if ema50_d else None
+    e200_d = ema200_d[-1] if ema200_d else None
+    e20_4h = ema20_4h[-1] if ema20_4h else None
+    e50_4h = ema50_4h[-1] if ema50_4h else None
+
+    daily_ema_score = 50.0
+    if e50_d is not None and e200_d is not None:
         pts = 50.0
-        pts += 15.0 if price > e50 else -15.0
-        pts += 15.0 if price > e200 else -15.0
-        pts += 12.0 if e50 > e200 else -12.0
-        if len(ema50_d) >= 6:
-            pts += 8.0 if ema50_d[-1] > ema50_d[-6] else -8.0
-        ema_score = _clamp(pts)
-        ema_detail = f"P={price:,.0f} vs EMA50={e50:,.0f}, EMA200={e200:,.0f}"
-    elif e50 is not None:
-        pts = 50.0 + (20.0 if price > e50 else -20.0)
-        ema_score = _clamp(pts)
-        ema_detail = f"P={price:,.0f} vs EMA50={e50:,.0f} (EMA200 unavailable)"
+        pts += 16.0 if price > e50_d else -16.0
+        pts += 14.0 if price > e200_d else -14.0
+        pts += 12.0 if e50_d > e200_d else -12.0
+        if len(ema50_d) >= 5:
+            pts += 8.0 if ema50_d[-1] > ema50_d[-5] else -8.0
+        daily_ema_score = _clamp(pts)
+    elif e50_d is not None:
+        daily_ema_score = _clamp(50.0 + (22.0 if price > e50_d else -22.0))
 
-    # Location relative to key swing anchors (60d range + weekly open)
-    anchor_score = 50.0
-    recent_d = d1[-60:] if len(d1) >= 60 else d1
-    hi60 = max(c["high"] for c in recent_d)
-    lo60 = min(c["low"] for c in recent_d)
-    rng_pos = (price - lo60) / (hi60 - lo60) if hi60 > lo60 else 0.5
-    anchor_score = _clamp(rng_pos * 100.0)
+    h4_ema_score = 50.0
+    if e20_4h is not None and e50_4h is not None:
+        pts4 = 50.0
+        pts4 += 18.0 if price > e20_4h else -18.0
+        pts4 += 16.0 if price > e50_4h else -16.0
+        pts4 += 16.0 if e20_4h > e50_4h else -16.0
+        h4_ema_score = _clamp(pts4)
 
-    # Combine: Daily structure (35%), 4H structure (25%), 50/200 EMA alignment (25%), Swing anchor location (15%)
+    daily_bias_score = round(0.50 * d_struct["score"] + 0.50 * daily_ema_score, 2)
+    daily_bias = "BULL" if daily_bias_score >= 58.0 else ("BEAR" if daily_bias_score <= 42.0 else "NEUTRAL")
+
+    # 4H swing structure (40%), 4H EMA alignment (25%), Daily bias & EMA alignment (35%)
     score = round(
-        0.35 * d_struct["score"]
-        + 0.25 * h4_struct["score"]
-        + 0.25 * ema_score
-        + 0.15 * anchor_score,
+        0.40 * h4_struct["score"] + 0.25 * h4_ema_score + 0.35 * daily_bias_score,
         2,
     )
     return {
         "score": score,
+        "daily_bias": daily_bias,
+        "daily_bias_score": daily_bias_score,
         "daily_structure": d_struct["state"],
         "h4_structure": h4_struct["state"],
-        "ema50_d": round(e50, 1) if e50 else None,
-        "ema200_d": round(e200, 1) if e200 else None,
-        "range_60d_pct": round(rng_pos * 100.0, 1),
+        "ema20_4h": round(e20_4h, 1) if e20_4h else None,
+        "ema50_4h": round(e50_4h, 1) if e50_4h else None,
+        "ema50_d": round(e50_d, 1) if e50_d else None,
+        "ema200_d": round(e200_d, 1) if e200_d else None,
         "components": {
-            "daily_structure_score": d_struct["score"],
             "h4_structure_score": h4_struct["score"],
-            "ema_alignment_score": round(ema_score, 1),
-            "swing_anchor_score": round(anchor_score, 1),
+            "h4_ema_score": round(h4_ema_score, 1),
+            "daily_structure_score": d_struct["score"],
+            "daily_ema_score": round(daily_ema_score, 1),
         },
-        "summary": f"1D={d_struct['state']}, 4H={h4_struct['state']}, {ema_detail}",
+        "summary": f"4H={h4_struct['state']}, 1D={d_struct['state']} ({daily_bias})",
     }
 
 
-def _score_rsi_regime(val: float | None) -> float:
-    """Oscillator in regime (healthy trend zone scores higher than extreme overbought/oversold)."""
+def _score_rsi_4h(val: float | None) -> float:
     if val is None:
         return 50.0
-    if 55.0 <= val <= 72.0:
-        return _map_linear(val, 55.0, 72.0, 68.0, 88.0)
+    if 54.0 <= val <= 72.0:
+        return _map_linear(val, 54.0, 72.0, 68.0, 90.0)
     if val > 72.0:
-        # Overbought tempering (still bullish, capped from overheating)
-        return _map_linear(val, 72.0, 90.0, 88.0, 66.0)
-    if 28.0 <= val < 45.0:
-        return _map_linear(val, 28.0, 45.0, 12.0, 32.0)
+        return _map_linear(val, 72.0, 90.0, 90.0, 68.0)
+    if 28.0 <= val < 46.0:
+        return _map_linear(val, 28.0, 46.0, 10.0, 32.0)
     if val < 28.0:
-        return _map_linear(val, 10.0, 28.0, 34.0, 12.0)
-    return _map_linear(val, 45.0, 55.0, 32.0, 68.0)
+        return _map_linear(val, 10.0, 28.0, 32.0, 10.0)
+    return _map_linear(val, 46.0, 54.0, 32.0, 68.0)
 
 
-def _score_momentum_breadth(
-    d1: list[dict[str, float]],
-    h4: list[dict[str, float]],
-    eth_d1: list[dict[str, float]],
-    macro: dict[str, Any],
-) -> dict[str, Any]:
-    """Group 2 (25%): Daily & 4H oscillators, 10-20p ROC, relative strength vs SPX/NDX & ETH."""
-    d_closes = [c["close"] for c in d1]
+def _score_momentum_4h(h4: list[dict[str, float]], d1: list[dict[str, float]]) -> dict[str, Any]:
+    """Group 2 (25%): 4H momentum regime (RSI 14) and 4H rate-of-change (6p/12p/20p)."""
     h4_closes = [c["close"] for c in h4]
+    d_closes = [c["close"] for c in d1]
 
-    rsi_d = rsi(d_closes, 14)
     rsi_4h = rsi(h4_closes, 14)
-    osc_score = 0.55 * _score_rsi_regime(rsi_d) + 0.45 * _score_rsi_regime(rsi_4h)
+    rsi_d = rsi(d_closes, 14)
+    osc_score = 0.70 * _score_rsi_4h(rsi_4h) + 0.30 * _score_rsi_4h(rsi_d)
 
-    roc10_d = roc(d_closes, 10)
-    roc20_d = roc(d_closes, 20)
-    roc10_4h = roc(h4_closes, 10)
-    roc20_4h = roc(h4_closes, 20)
+    roc6_4h = roc(h4_closes, 6)    # 24h
+    roc12_4h = roc(h4_closes, 12)  # 48h
+    roc20_4h = roc(h4_closes, 20)  # ~3.3d
 
-    roc_scores: list[float] = []
-    if roc10_d is not None:
-        roc_scores.append(_map_linear(roc10_d, -12.0, 12.0))
-    if roc20_d is not None:
-        roc_scores.append(_map_linear(roc20_d, -18.0, 18.0))
-    if roc10_4h is not None:
-        roc_scores.append(_map_linear(roc10_4h, -6.0, 6.0))
+    roc_parts: list[float] = []
+    if roc6_4h is not None:
+        roc_parts.append(_map_linear(roc6_4h, -4.5, 4.5))
+    if roc12_4h is not None:
+        roc_parts.append(_map_linear(roc12_4h, -6.5, 6.5))
     if roc20_4h is not None:
-        roc_scores.append(_map_linear(roc20_4h, -10.0, 10.0))
-    roc_score = sum(roc_scores) / len(roc_scores) if roc_scores else 50.0
+        roc_parts.append(_map_linear(roc20_4h, -9.0, 9.0))
+    roc_score = sum(roc_parts) / len(roc_parts) if roc_parts else 50.0
 
-    # Relative strength vs risk assets (SPX/NDX) and BTC dominance proxy (BTC vs ETH)
-    rs_parts: list[float] = []
-    btc_vs_spx = None
-    if roc10_d is not None and (macro.get("spx") or {}).get("roc10_pct") is not None:
-        btc_vs_spx = round(roc10_d - macro["spx"]["roc10_pct"], 2)
-        rs_parts.append(_map_linear(btc_vs_spx, -10.0, 10.0))
-    btc_vs_eth = None
-    if roc10_d is not None and len(eth_d1) > 12:
-        eth_roc10 = roc([c["close"] for c in eth_d1], 10)
-        if eth_roc10 is not None:
-            btc_vs_eth = round(roc10_d - eth_roc10, 2)
-            # Outperforming ETH adds resilience; mild weight
-            rs_parts.append(_map_linear(btc_vs_eth, -8.0, 8.0, 35.0, 65.0))
-    rs_score = sum(rs_parts) / len(rs_parts) if rs_parts else 50.0
-
-    score = round(0.35 * osc_score + 0.40 * roc_score + 0.25 * rs_score, 2)
+    score = round(0.45 * osc_score + 0.55 * roc_score, 2)
     return {
         "score": score,
-        "rsi_d": rsi_d,
         "rsi_4h": rsi_4h,
-        "roc10_d_pct": round(roc10_d, 2) if roc10_d is not None else None,
-        "roc20_d_pct": round(roc20_d, 2) if roc20_d is not None else None,
-        "roc10_4h_pct": round(roc10_4h, 2) if roc10_4h is not None else None,
-        "btc_vs_spx_10d_pct": btc_vs_spx,
-        "btc_vs_eth_10d_pct": btc_vs_eth,
+        "rsi_d": rsi_d,
+        "roc6_4h_pct": round(roc6_4h, 2) if roc6_4h is not None else None,
+        "roc12_4h_pct": round(roc12_4h, 2) if roc12_4h is not None else None,
+        "roc20_4h_pct": round(roc20_4h, 2) if roc20_4h is not None else None,
         "components": {
-            "oscillator_score": round(osc_score, 1),
-            "roc_score": round(roc_score, 1),
-            "relative_strength_score": round(rs_score, 1),
+            "h4_oscillator_score": round(osc_score, 1),
+            "h4_roc_score": round(roc_score, 1),
         },
-        "summary": f"RSI(1D/4H)={rsi_d}/{rsi_4h}, ROC10D={roc10_d:.1f}%" if roc10_d is not None else "Momentum partial",
+        "summary": f"RSI4H={rsi_4h}, ROC6(24h)={roc6_4h:.2f}%" if roc6_4h is not None else "4H Momentum partial",
     }
 
 
-def _score_volatility_liquidity(
-    d1: list[dict[str, float]],
-    h4: list[dict[str, float]],
-    derivatives: dict[str, Any],
-) -> dict[str, Any]:
-    """Group 3 (25%): 20/60p RV percentile, ATR regime, volume participation, funding extremity."""
-    d_closes = [c["close"] for c in d1]
+def _score_volatility_liquidity_4h(h4: list[dict[str, float]], derivatives: dict[str, Any]) -> dict[str, Any]:
+    """Group 3 (25%): 4H ATR percentile, 4H relative volume, and perpetual funding."""
+    h4_atrs = atr_series(h4, 14)
+    atr_cur = h4_atrs[-1] if h4_atrs else atr(h4, 14)
+    price = h4[-1]["close"] if h4 else 1.0
+    atr_pct = (atr_cur / price * 100.0) if (atr_cur and price) else None
+    atr_pct_series = (
+        [a / max(c["close"], 1.0) * 100.0 for c, a in zip(h4[-len(h4_atrs):], h4_atrs)]
+        if h4_atrs
+        else []
+    )
+    atr_pctile = percentile_rank(atr_pct, atr_pct_series[-120:]) if (atr_pct is not None and atr_pct_series) else None
 
-    rv20_series = rolling_rv_series(d_closes, 20, 365.0)
-    rv60_series = rolling_rv_series(d_closes, 60, 365.0)
-    rv20 = rv20_series[-1] if rv20_series else realized_vol_annualized(d_closes, 20, 365.0)
-    rv60 = rv60_series[-1] if rv60_series else realized_vol_annualized(d_closes, 60, 365.0)
-    rv20_pct = percentile_rank(rv20, rv20_series[-252:]) if (rv20 is not None and rv20_series) else None
-    rv60_pct = percentile_rank(rv60, rv60_series[-252:]) if (rv60 is not None and rv60_series) else None
-
-    # Contained volatility (20th-60th percentile) scores high (70-85); extreme expansion (>85th) or drought (<10th) scores low
-    def _rv_score(p: float | None) -> float:
-        if p is None:
-            return 50.0
-        if 20.0 <= p <= 60.0:
-            return 78.0
-        if p < 20.0:
-            # Compression / low liquidity drought
-            return _map_linear(p, 0.0, 20.0, 35.0, 72.0)
-        if p <= 80.0:
-            return _map_linear(p, 60.0, 80.0, 78.0, 48.0)
-        return _map_linear(p, 80.0, 100.0, 48.0, 12.0)
-
-    rv_score = 0.55 * _rv_score(rv20_pct) + 0.45 * _rv_score(rv60_pct)
-
-    # ATR regime: current ATR(14) vs 60d median ATR
-    atrs = atr_series(d1, 14)
-    atr_cur = atrs[-1] if atrs else atr(d1, 14)
-    atr_pct_price = (atr_cur / d_closes[-1] * 100.0) if (atr_cur and d_closes) else None
-    atr_ratio = None
+    # Contained-to-healthy 4H ATR (20th-65th pctile) scores high; extreme expansion (>85th) or dead chop (<10th) scores low
     atr_score = 50.0
-    if len(atrs) >= 30 and atr_cur:
-        med_atr = statistics.median(atrs[-60:])
-        atr_ratio = round(atr_cur / med_atr, 2) if med_atr > 0 else 1.0
-        if 0.75 <= atr_ratio <= 1.20:
-            atr_score = 75.0
-        elif atr_ratio < 0.75:
-            atr_score = _map_linear(atr_ratio, 0.4, 0.75, 42.0, 72.0)
+    if atr_pctile is not None:
+        if 20.0 <= atr_pctile <= 65.0:
+            atr_score = 78.0
+        elif atr_pctile < 20.0:
+            atr_score = _map_linear(atr_pctile, 0.0, 20.0, 35.0, 74.0)
+        elif atr_pctile <= 85.0:
+            atr_score = _map_linear(atr_pctile, 65.0, 85.0, 78.0, 48.0)
         else:
-            atr_score = _map_linear(atr_ratio, 1.20, 2.0, 72.0, 18.0)
+            atr_score = _map_linear(atr_pctile, 85.0, 100.0, 48.0, 15.0)
 
-    # Volume participation on 1D & 4H vs 20-period SMA
-    d_vols = [c["volume"] for c in d1]
-    h4_vols = [c["volume"] for c in h4]
-    d_vol_sma = sma(d_vols[:-1], 20)
-    h4_vol_sma = sma(h4_vols[:-1], 20)
-    d_vol_ratio = (d_vols[-1] / d_vol_sma) if (d_vols and d_vol_sma) else None
-    h4_vol_ratio = (h4_vols[-1] / h4_vol_sma) if (h4_vols and h4_vol_sma) else None
-    vol_ratios = [x for x in (d_vol_ratio, h4_vol_ratio) if x is not None]
-    vol_avg_ratio = sum(vol_ratios) / len(vol_ratios) if vol_ratios else 1.0
-    if 0.85 <= vol_avg_ratio <= 1.80:
-        vol_score = _map_linear(vol_avg_ratio, 0.85, 1.80, 58.0, 82.0)
-    elif vol_avg_ratio < 0.85:
-        vol_score = _map_linear(vol_avg_ratio, 0.30, 0.85, 22.0, 58.0)
+    # Relative 4H volume vs 20-bar SMA
+    vols = [c["volume"] for c in h4]
+    vol_sma = sma(vols[:-1], 20)
+    vol_ratio = (vols[-1] / vol_sma) if (vols and vol_sma) else 1.0
+    if 0.85 <= vol_ratio <= 2.0:
+        vol_score = _map_linear(vol_ratio, 0.85, 2.0, 58.0, 84.0)
+    elif vol_ratio < 0.85:
+        vol_score = _map_linear(vol_ratio, 0.30, 0.85, 22.0, 58.0)
     else:
-        # Blow-off / climax volume
-        vol_score = _map_linear(vol_avg_ratio, 1.80, 3.50, 75.0, 38.0)
+        vol_score = _map_linear(vol_ratio, 2.0, 4.0, 76.0, 36.0)
 
-    # Funding rate extremity relative to 30d history (90 x 8h periods)
+    # Funding rate extremity relative to 30d history
     cur_fund = derivatives.get("current_rate_pct")
     fund_hist = derivatives.get("history_pct") or []
-    fund_pct_rank = percentile_rank(cur_fund, fund_hist) if (cur_fund is not None and fund_hist) else None
-    fund_score = 50.0
+    fund_pctile = percentile_rank(cur_fund, fund_hist) if (cur_fund is not None and fund_hist) else None
+    fund_score = 55.0
     if cur_fund is not None:
-        if fund_pct_rank is not None:
-            # Neutral-to-mildly positive balanced funding (25th-75th pct) = healthy
-            if 25.0 <= fund_pct_rank <= 75.0:
-                fund_score = 68.0
-            elif fund_pct_rank > 90.0 or cur_fund >= 0.03:
-                fund_score = 22.0  # Overheated crowded longs
-            elif fund_pct_rank < 10.0 or cur_fund <= -0.02:
-                fund_score = 35.0  # Crowded shorts / cascade stress
+        if fund_pctile is not None:
+            if 20.0 <= fund_pctile <= 80.0:
+                fund_score = 72.0
+            elif fund_pctile > 90.0 or cur_fund >= 0.03:
+                fund_score = 22.0
+            elif fund_pctile < 10.0 or cur_fund <= -0.02:
+                fund_score = 34.0
             else:
-                fund_score = 52.0
+                fund_score = 54.0
         else:
-            fund_score = 65.0 if -0.005 <= cur_fund <= 0.015 else 35.0
+            fund_score = 68.0 if -0.005 <= cur_fund <= 0.015 else 35.0
 
-    score = round(0.35 * rv_score + 0.25 * atr_score + 0.25 * vol_score + 0.15 * fund_score, 2)
+    quality_score = round(0.45 * atr_score + 0.35 * vol_score + 0.20 * fund_score, 2)
     return {
-        "score": score,
-        "rv20_ann_pct": round(rv20, 1) if rv20 is not None else None,
-        "rv60_ann_pct": round(rv60, 1) if rv60 is not None else None,
-        "rv20_percentile": rv20_pct,
-        "rv60_percentile": rv60_pct,
-        "atr14_d_usd": round(atr_cur, 1) if atr_cur else None,
-        "atr14_d_pct": round(atr_pct_price, 2) if atr_pct_price else None,
-        "atr_vs_60d_med": atr_ratio,
-        "volume_ratio_1d": round(d_vol_ratio, 2) if d_vol_ratio is not None else None,
-        "volume_ratio_4h": round(h4_vol_ratio, 2) if h4_vol_ratio is not None else None,
+        "quality_score": quality_score,
+        "atr_4h_usd": round(atr_cur, 1) if atr_cur else None,
+        "atr_4h_pct": round(atr_pct, 2) if atr_pct else None,
+        "atr_4h_percentile": atr_pctile,
+        "rel_volume_4h": round(vol_ratio, 2),
         "funding_rate_pct": cur_fund,
-        "funding_30d_percentile": fund_pct_rank,
+        "funding_30d_percentile": fund_pctile,
         "components": {
-            "rv_percentile_score": round(rv_score, 1),
-            "atr_regime_score": round(atr_score, 1),
-            "volume_participation_score": round(vol_score, 1),
-            "funding_extremity_score": round(fund_score, 1),
+            "atr_4h_percentile_score": round(atr_score, 1),
+            "rel_volume_4h_score": round(vol_score, 1),
+            "funding_score": round(fund_score, 1),
         },
-        "summary": f"RV20pct={rv20_pct}, ATRx={atr_ratio}, Vol={vol_avg_ratio:.2f}x, Fund={cur_fund}%",
+        "summary": f"ATR4Hp={atr_pctile}, RelVol4H={vol_ratio:.2f}x, Fund={cur_fund}%",
     }
 
 
-def _score_macro_external(
+def _score_session_context(
+    now_utc: dt.datetime,
+    calendar: list[dict[str, Any]],
     macro: dict[str, Any],
     etf: dict[str, Any] | None,
-    stables: dict[str, Any] | None,
 ) -> dict[str, Any]:
-    """Group 4 (20%): Risk-on/risk-off backdrop, DXY & US10Y trend, ETF & stablecoin flows."""
-    # Equities & VIX
-    eq_parts: list[float] = []
-    for k in ("spx", "ndx"):
-        item = macro.get(k)
-        if item and item.get("vs_sma20_pct") is not None:
-            eq_parts.append(_map_linear(item["vs_sma20_pct"], -4.0, 4.0))
-    vix = (macro.get("vix") or {}).get("value")
-    if vix is not None:
-        # Low VIX (<16) risk-on -> ~75; elevated VIX (>28) risk-off -> ~20
-        eq_parts.append(_map_linear(vix, 30.0, 14.0, 15.0, 82.0))
-    risk_score = sum(eq_parts) / len(eq_parts) if eq_parts else 50.0
+    """Group 4 (20%): Session quality (London/NY liquidity vs weekend) + event proximity + macro context."""
+    hr = now_utc.hour + now_utc.minute / 60.0
+    is_weekend = now_utc.weekday() >= 5
 
-    # Dollar (DXY) & US 10Y yield trend (falling = supportive for BTC)
-    rates_parts: list[float] = []
-    dxy = macro.get("dxy")
-    if dxy and dxy.get("roc10_pct") is not None:
-        rates_parts.append(_map_linear(dxy["roc10_pct"], 2.5, -2.5, 15.0, 85.0))
-    us10y = macro.get("us10y")
-    if us10y and us10y.get("roc10_pct") is not None:
-        rates_parts.append(_map_linear(us10y["roc10_pct"], 8.0, -8.0, 20.0, 80.0))
-    rates_score = sum(rates_parts) / len(rates_parts) if rates_parts else 50.0
+    # Active sessions in UTC: Asia 00-08, London 08-16, NY 13-21, overlap 13-16
+    if is_weekend:
+        session_name = "WEEKEND"
+        session_q = 38.0
+    elif 13.0 <= hr < 17.0:
+        session_name = "LONDON_NY_OVERLAP"
+        session_q = 82.0
+    elif 8.0 <= hr < 13.0 or 17.0 <= hr < 21.0:
+        session_name = "LONDON_OR_NY"
+        session_q = 72.0
+    else:
+        session_name = "ASIA_OR_OFFHOURS"
+        session_q = 58.0
 
-    # ETF & Stablecoin flows
-    flow_parts: list[float] = []
+    # Event proximity (60m blackout window, 180m caution)
+    next_ev = min(calendar, key=lambda e: abs(e.get("minutes_away", 9999))) if calendar else None
+    ev_min = next_ev["minutes_away"] if next_ev else None
+    if ev_min is not None and 0.0 <= ev_min <= 60.0:
+        event_q = 15.0
+    elif ev_min is not None and 60.0 < ev_min <= 180.0:
+        event_q = 45.0
+    else:
+        event_q = 72.0
+
+    # Directional external context (VIX, SPX, DXY, ETF 5d)
+    ext_parts: list[float] = []
+    if (macro.get("spx") or {}).get("vs_sma20_pct") is not None:
+        ext_parts.append(_map_linear(macro["spx"]["vs_sma20_pct"], -3.5, 3.5))
+    if (macro.get("dxy") or {}).get("roc10_pct") is not None:
+        ext_parts.append(_map_linear(macro["dxy"]["roc10_pct"], 2.0, -2.0, 20.0, 80.0))
     if etf and etf.get("sum5_usd_m") is not None:
-        flow_parts.append(_map_linear(etf["sum5_usd_m"], -1000.0, 1000.0, 12.0, 88.0))
-    if stables and stables.get("chg7d_pct") is not None:
-        flow_parts.append(_map_linear(stables["chg7d_pct"], -1.5, 1.5, 20.0, 80.0))
-    flow_score = sum(flow_parts) / len(flow_parts) if flow_parts else 50.0
+        ext_parts.append(_map_linear(etf["sum5_usd_m"], -900.0, 900.0, 15.0, 85.0))
+    ext_score = sum(ext_parts) / len(ext_parts) if ext_parts else 50.0
 
-    # Weighted blend within Macro/External
-    score = round(0.40 * risk_score + 0.30 * rates_score + 0.30 * flow_score, 2)
+    quality_score = round(0.55 * session_q + 0.45 * event_q, 2)
     return {
-        "score": score,
-        "vix": vix,
-        "dxy": (dxy or {}).get("value"),
-        "us10y": (us10y or {}).get("value"),
-        "spx_vs_20d_pct": (macro.get("spx") or {}).get("vs_sma20_pct"),
+        "quality_score": quality_score,
+        "external_context_score": round(ext_score, 1),
+        "session_name": session_name,
+        "is_weekend_utc": is_weekend,
+        "next_macro_event": next_ev["title"] if next_ev else None,
+        "next_macro_minutes": ev_min,
+        "vix": (macro.get("vix") or {}).get("value"),
+        "dxy": (macro.get("dxy") or {}).get("value"),
         "etf_5d_usd_m": etf.get("sum5_usd_m") if etf else None,
-        "stables_7d_pct": stables.get("chg7d_pct") if stables else None,
         "components": {
-            "risk_on_off_score": round(risk_score, 1),
-            "yield_dollar_score": round(rates_score, 1),
-            "etf_stable_flow_score": round(flow_score, 1),
+            "session_quality": round(session_q, 1),
+            "event_proximity": round(event_q, 1),
+            "external_context": round(ext_score, 1),
         },
-        "summary": f"VIX={vix}, DXY={(dxy or {}).get('value')}, ETF5d={etf.get('sum5_usd_m') if etf else 'n/a'}M",
+        "summary": f"{session_name}, NextEv={f'{ev_min:.0f}m' if ev_min is not None else 'none'}",
     }
 
 
@@ -338,50 +287,57 @@ def compute_regime(
     cfg: dict[str, Any],
     dd_tier1_active: bool = False,
     prev_regime: dict[str, Any] | None = None,
+    now_utc: dt.datetime | None = None,
 ) -> dict[str, Any]:
-    """Compute continuous 0-100 multi-factor regime score and dominant factors."""
+    """Compute 4H Multi-Factor Regime score (0-100) per Version 4.0."""
+    now = now_utc or dt.datetime.now(dt.timezone.utc)
     d1 = market_data["klines"]["1d"]
     h4 = market_data["klines"]["4h"]
-    eth_d1 = market_data["klines"].get("eth_1d") or []
-    price = market_data["ticker"].get("price") or (d1[-1]["close"] if d1 else 0.0)
+    price = market_data["ticker"].get("price") or (h4[-1]["close"] if h4 else 0.0)
 
     if len(d1) < 30 or len(h4) < 30 or not price:
         return {
             "ok": False,
             "score": 50.0,
-            "bias": "NEUTRAL",
-            "reason": "Insufficient OHLCV history",
+            "bias": "FLAT",
+            "reason": "Insufficient 1D/4H OHLCV history",
             "groups": {},
             "dominant_factors": [],
         }
 
     g1 = _score_trend_structure(d1, h4, price)
-    g2 = _score_momentum_breadth(d1, h4, eth_d1, market_data.get("macro") or {})
-    g3_raw = _score_volatility_liquidity(d1, h4, market_data.get("derivatives") or {})
-    g4 = _score_macro_external(
+    g2 = _score_momentum_4h(h4, d1)
+    g3_raw = _score_volatility_liquidity_4h(h4, market_data.get("derivatives") or {})
+    g4_raw = _score_session_context(
+        now,
+        market_data.get("macro_calendar") or [],
         market_data.get("macro") or {},
         market_data.get("etf"),
-        market_data.get("stables"),
     )
 
     weights = cfg["regime"]["weights"]
-    dir_weight_sum = weights["trend_structure"] + weights["momentum_breadth"] + weights["macro_external"]
-    dir_mean = (
+    # Directional anchor from Trend (30%) + Momentum (25%) + External context lean
+    dir_core = (
         weights["trend_structure"] * g1["score"]
-        + weights["momentum_breadth"] * g2["score"]
-        + weights["macro_external"] * g4["score"]
-    ) / max(dir_weight_sum, 1e-6)
-    # Volatility & Liquidity quality (0-100): high quality reinforces directional bias; extreme vol/drought dampens toward 50
-    lean = max(-1.0, min(1.0, (dir_mean - 50.0) / 15.0))
-    vol_quality = g3_raw["score"]
-    vol_directional = round(50.0 + lean * (vol_quality - 50.0), 2)
-    g3 = {**g3_raw, "quality_score": vol_quality, "score": vol_directional}
+        + weights["momentum"] * g2["score"]
+        + 0.10 * g4_raw["external_context_score"]
+    ) / (weights["trend_structure"] + weights["momentum"] + 0.10)
+    lean = max(-1.0, min(1.0, (dir_core - 50.0) / 14.0))
+
+    # Quality modulators (Volatility & Liquidity 25%, Session/Context 20%) reinforce clean directional trends & damp poor conditions toward 50
+    vol_dir_score = round(50.0 + lean * (g3_raw["quality_score"] - 50.0), 2)
+    sess_blend = 0.65 * g4_raw["quality_score"] + 0.35 * g4_raw["external_context_score"]
+    sess_dir_score = round(50.0 + lean * (sess_blend - 50.0) * 0.8 + 0.2 * (g4_raw["external_context_score"] - 50.0), 2)
+    sess_dir_score = _clamp(sess_dir_score)
+
+    g3 = {**g3_raw, "score": vol_dir_score}
+    g4 = {**g4_raw, "score": sess_dir_score}
 
     total = round(
         weights["trend_structure"] * g1["score"]
-        + weights["momentum_breadth"] * g2["score"]
+        + weights["momentum"] * g2["score"]
         + weights["volatility_liquidity"] * g3["score"]
-        + weights["macro_external"] * g4["score"],
+        + weights["session_context"] * g4["score"],
         2,
     )
 
@@ -397,27 +353,26 @@ def compute_regime(
     )
 
     if total >= long_th:
-        bias = "LONG_ELIGIBLE"
+        bias = "LONG"
     elif total <= short_th:
-        bias = "SHORT_ELIGIBLE"
+        bias = "SHORT"
     else:
-        bias = "NEUTRAL"
+        bias = "FLAT"
 
     groups = {
         "trend_structure": {"weight": weights["trend_structure"], **g1},
-        "momentum_breadth": {"weight": weights["momentum_breadth"], **g2},
+        "momentum": {"weight": weights["momentum"], **g2},
         "volatility_liquidity": {"weight": weights["volatility_liquidity"], **g3},
-        "macro_external": {"weight": weights["macro_external"], **g4},
+        "session_context": {"weight": weights["session_context"], **g4},
     }
 
-    # Dominant factors driving the score away from 50
-    contributions = []
     labels = {
         "trend_structure": "Trend Structure",
-        "momentum_breadth": "Momentum & Breadth",
+        "momentum": "Momentum",
         "volatility_liquidity": "Volatility & Liquidity",
-        "macro_external": "Macro / External Context",
+        "session_context": "Session / Context",
     }
+    contributions = []
     for k, g in groups.items():
         impact = round(g["weight"] * (g["score"] - 50.0), 2)
         contributions.append(
@@ -435,31 +390,33 @@ def compute_regime(
         for c in contributions[:2]
     ]
 
-    # Track UTC daily recalculation + HTF structural break
-    now_utc = dt.datetime.now(dt.timezone.utc)
-    utc_day = now_utc.strftime("%Y-%m-%d")
+    last_4h_ts = h4[-1]["ts"]
+    last_4h_iso = dt.datetime.fromtimestamp(last_4h_ts / 1000.0, tz=dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     htf_break = False
     if prev_regime:
-        prev_ds = ((prev_regime.get("groups") or {}).get("trend_structure") or {}).get("daily_structure")
         prev_h4 = ((prev_regime.get("groups") or {}).get("trend_structure") or {}).get("h4_structure")
-        if (prev_ds and prev_ds != g1["daily_structure"]) or (prev_h4 and prev_h4 != g1["h4_structure"]):
+        if prev_h4 and prev_h4 != g1["h4_structure"]:
             htf_break = True
 
     return {
         "ok": True,
         "score": total,
         "bias": bias,
+        "daily_bias": g1["daily_bias"],
         "thresholds": {
             "long": long_th,
             "short": short_th,
             "dd_tier1_active": dd_tier1_active,
-            "strong_long": cfg["regime"]["strong_alignment_long"],
-            "strong_short": cfg["regime"]["strong_alignment_short"],
+            "weekend_long": cfg["timeframe_and_hold"]["weekend_extreme_long"],
+            "weekend_short": cfg["timeframe_and_hold"]["weekend_extreme_short"],
         },
         "groups": groups,
         "contributions": contributions,
         "dominant_factors": dominant,
-        "recalc_utc_day": utc_day,
-        "recalc_at_utc": now_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "last_4h_close_ts": last_4h_ts,
+        "last_4h_close_utc": last_4h_iso,
+        "recalc_utc_day": now.strftime("%Y-%m-%d"),
+        "recalc_at_utc": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "is_weekend_utc": g4_raw["is_weekend_utc"],
         "htf_structural_break": htf_break,
     }

@@ -59,39 +59,52 @@ function renderSignalTab() {
   const reg = STATE.regime || {};
   const port = STATE.portfolio || {};
   const prop = sig.proposal || {};
+  const inv = sig.sell_inventory || {};
   const status = sig.status || "FLAT";
+  const activeSignals = sig.active_signals || [status];
 
   const banner = $("signalBanner");
   banner.className = "card signal-banner " + status;
-  const stBadge = status === "LONG" ? "up" : status === "SHORT" ? "dn" : "warn";
-  const biasBadge = reg.bias === "LONG_ELIGIBLE" ? "up" : reg.bias === "SHORT_ELIGIBLE" ? "dn" : "warn";
+  const stBadge = status === "LONG" ? "up" : status === "SHORT" ? "dn" : inv.active ? "dn" : "warn";
+  const biasBadge = reg.bias === "LONG" ? "up" : reg.bias === "SHORT" ? "dn" : "warn";
 
   $("signalSummary").innerHTML = `
     <div class="signal-head">
-      <div class="big-num ${status === "LONG" ? "up" : status === "SHORT" ? "dn" : "warn"}">${esc(status)}</div>
-      <span class="badge ${stBadge}">${status === "FLAT" ? "NO QUALIFIED ENTRY" : esc(prop.entry_method || "SIGNAL ACTIVE")}</span>
+      <div class="big-num ${status === "LONG" ? "up" : status === "SHORT" ? "dn" : "warn"}">${esc(activeSignals.join(" + "))}</div>
+      <span class="badge ${stBadge}">${status === "FLAT" ? (inv.active ? "INVENTORY REDUCTION" : "NO FUTURES ENTRY") : esc(prop.entry_method || "FUTURES ACTIVE")}</span>
     </div>
-    <p class="mut" style="margin:8px 0 4px;">Dominant drivers: <b>${esc((reg.dominant_factors || []).join(" · ") || "—")}</b></p>
-    <p class="mut" style="margin:0;">Open positions: <b>${(port.open_positions || []).length}</b> · Portfolio equity: <b>${usd(port.equity_usd, 2)}</b></p>
+    <p class="mut" style="margin:8px 0 4px;">Dominant 4H drivers: <b>${esc((reg.dominant_factors || []).join(" · ") || "—")}</b></p>
+    <p class="mut" style="margin:0;">1D Bias: <b>${esc(reg.daily_bias || "—")}</b> · Open Futures: <b>${(port.open_positions || []).length}/1</b> · Equity: <b>${usd(port.equity_usd, 2)}</b></p>
   `;
 
   const sc = typeof reg.score === "number" ? reg.score : 50;
-  const th = reg.thresholds || { long: 65, short: 35, dd_tier1_active: false };
+  const th = reg.thresholds || { long: 68, short: 32, dd_tier1_active: false, weekend_long: 80, weekend_short: 20 };
   $("regimeGaugeBox").innerHTML = `
     <div class="signal-head">
       <div class="big-num">${num(sc, 1)} <span class="mut">/ 100</span></div>
-      <span class="badge ${biasBadge}">${esc(reg.bias || "NEUTRAL")}</span>
+      <span class="badge ${biasBadge}">${esc(reg.bias || "FLAT")}</span>
     </div>
     <div class="gauge-track"><div class="gauge-marker" style="left:${Math.max(0, Math.min(100, sc))}%"></div></div>
     <div class="mut" style="display:flex;justify-content:space-between;">
       <span>Short ≤ ${th.short}</span>
-      <span>Neutral ${th.short + 1}–${th.long - 1}</span>
+      <span>Flat ${th.short + 1}–${th.long - 1}</span>
       <span>Long ≥ ${th.long}</span>
     </div>
     <p class="mut" style="margin:6px 0 0;">
-      UTC Day: ${esc(reg.recalc_utc_day)} · HTF Break: ${reg.htf_structural_break ? '<b class="warn">YES</b>' : "No"}
-      ${th.dd_tier1_active ? ' · <b class="dn">-8% DD Tier 1 Thresholds Active (75/25)</b>' : ""}
+      Last 4H Close: ${esc(reg.last_4h_close_utc || "—")} · Weekend: ${reg.is_weekend_utc ? `<b class="warn">YES (${th.weekend_long}/${th.weekend_short} 0.5x)</b>` : "No"}
+      ${th.dd_tier1_active ? ' · <b class="dn">-6% DD Tier 1 Active (0.2% risk, 75/25)</b>' : ""}
     </p>
+  `;
+
+  $("sellInventoryBox").innerHTML = `
+    <div class="signal-head" style="margin-bottom:6px;">
+      <div>
+        <b class="${inv.active ? "dn" : "mut"}" style="font-size:15px;">${inv.active ? "SELL INVENTORY ACTIVE" : "HOLD SPOT INVENTORY"}</b>
+        <span class="mut"> · Ref: ${esc(inv.structural_ref || "—")}</span>
+      </div>
+      <span class="badge ${inv.active ? "dn" : ""}">${inv.active ? `REDUCE ${num(inv.recommended_pct, 0)}% (${inv.sell_btc} BTC ≈ ${usd(inv.sell_usd, 0)})` : `Band ${esc(inv.band_pct || "15–25%")}`}</span>
+    </div>
+    <p class="mut" style="margin:0;">${esc(inv.reason || "—")} · Spot Inventory: <b>${num(inv.spot_inventory_btc, 2)} BTC</b> · Counts toward Futures Heat: <b>No</b> · Exempt from Futures Halts: <b>Yes</b></p>
   `;
 
   const checks = sig.checklist || [];
@@ -110,17 +123,17 @@ function renderSignalTab() {
 
   const rej = sig.rejection_reasons || [];
   $("rejectionBox").innerHTML = rej.length
-    ? `<div class="reject-box"><b class="dn">Setup Rejected (${rej.length})</b><ul>${rej.map((r) => `<li>${esc(r)}</li>`).join("")}</ul></div>`
-    : `<div class="mut" style="margin-top:8px;color:var(--up);">All 7 protocol qualification criteria satisfied.</div>`;
+    ? `<div class="reject-box"><b class="dn">Futures Setup Rejected (${rej.length})</b><ul>${rej.map((r) => `<li>${esc(r)}</li>`).join("")}</ul></div>`
+    : `<div class="mut" style="margin-top:8px;color:var(--up);">All 9 Version 4.0 futures qualification criteria satisfied.</div>`;
 
   if (prop && prop.entry_price) {
     $("proposalKv").innerHTML = kv([
-      ["Proposed Direction", `${prop.direction} (${prop.role})`],
-      ["Nearest HTF Level", prop.level_label ? `${prop.level_label} @ ${usd(prop.level_price, 1)}` : "—"],
+      ["Evaluated Direction", `${prop.direction}${prop.weekend_halved ? " (Weekend 0.5x Size)" : ""}`],
+      ["Nearest 4H Level", prop.level_label ? `${prop.level_label} @ ${usd(prop.level_price, 1)}` : "—"],
       ["Proposed Entry", `${usd(prop.entry_price, 1)} (${prop.entry_method})`],
-      ["Hard Stop", `${usd(prop.stop_price, 1)} (${num(prop.stop_distance_pct, 2)}% ≤ 4.0%)`],
-      ["Target 1", `${usd(prop.target1_price, 1)} (${prop.target1_label})`],
-      ["Raw / Funding-Adj R:R", `${num(prop.raw_rr, 2)}:1 / ${num(prop.funding_adjusted_rr, 2)}:1`],
+      ["Hard Stop", `${usd(prop.stop_price, 1)} (${num(prop.stop_distance_pct, 2)}% ≤ 2.2% max)`],
+      ["Target 1 (45% Partial @ 1.5R)", `${usd(prop.target1_price, 1)} (${prop.target1_label})`],
+      ["Raw / Funding-Adj R:R", `${num(prop.raw_rr, 2)}:1 / ${num(prop.funding_adjusted_rr, 2)}:1 (min 1.60:1)`],
       ["Calculated Size", `${prop.size_btc ?? "—"} BTC (${usd(prop.notional_usd, 0)})`],
       ["Effective Leverage", `${num(prop.leverage, 2)}x / 2.00x max${prop.leverage_capped ? " (CLAMPED)" : ""}`],
       ["Risk Allocation", `${num(prop.actual_risk_pct, 3)}% (${usd(prop.actual_risk_usd, 2)})`],
@@ -130,12 +143,13 @@ function renderSignalTab() {
   }
 
   const cb = port.circuit_breakers || {};
-  const heatPct = Math.min(100, ((port.open_heat_pct || 0) / (port.max_heat_pct || 2)) * 100);
+  const heatPct = Math.min(100, ((port.open_heat_pct || 0) / (port.max_heat_pct || 1.5)) * 100);
   const activeCBs = [
-    cb.daily_halted && "DAILY -1.5% HALT",
-    cb.weekly_halted && "WEEKLY -3.0% FLAT",
-    cb.dd_tier1_active && "DD -8.0% THROTTLE",
-    cb.dd_tier2_locked && "DD -12.0% LOCKED",
+    cb.intraday_halted && "INTRADAY -1.2% HALT",
+    cb.daily_halted && "DAILY -2.0% PAUSE",
+    cb.weekly_halted && "WEEKLY -4.0% FLAT",
+    cb.dd_tier1_active && "DD -6.0% THROTTLE (0.2%, 75/25)",
+    cb.dd_tier2_locked && "DD -10.0% LOCKED",
   ].filter(Boolean);
 
   $("heatBreakersBox").innerHTML = `
@@ -149,11 +163,12 @@ function renderSignalTab() {
     <dl class="kv">
       ${kv([
         ["Leverage Used", `${num(port.current_leverage, 2)}x / ${num(port.max_leverage, 2)}x max (${usd(port.open_notional_usd, 0)})`],
-        ["Daily PnL / Limit", `${pct(port.daily_pnl_pct, 2)} (buffer ${num(port.daily_buffer_pct, 2)}% to -1.50%)`],
-        ["Weekly PnL / Limit", `${pct(port.weekly_pnl_pct, 2)} (buffer ${num(port.weekly_buffer_pct, 2)}% to -3.00%)`],
+        ["Intraday PnL / Limit", `${pct(port.intraday_pnl_pct, 2)} (buf ${num(port.intraday_buffer_pct, 2)}% to -1.20%)`],
+        ["Daily PnL / Limit", `${pct(port.daily_pnl_pct, 2)} (buf ${num(port.daily_buffer_pct, 2)}% to -2.00%)`],
+        ["Weekly PnL / Limit", `${pct(port.weekly_pnl_pct, 2)} (buf ${num(port.weekly_buffer_pct, 2)}% to -4.00%)`],
         ["HWM Drawdown", `${pct(port.drawdown_pct, 2)} (HWM ${usd(port.high_water_mark_usd, 0)})`],
-        ["Dist to -8% / -12% DD", `${num(port.dd_tier1_buffer_pct, 2)}% / ${num(port.dd_tier2_buffer_pct, 2)}%`],
-        ["Circuit Breakers", activeCBs.length ? activeCBs.join(", ") : "CLEAR"],
+        ["Dist to -6% / -10% DD", `${num(port.dd_tier1_buffer_pct, 2)}% / ${num(port.dd_tier2_buffer_pct, 2)}%`],
+        ["Circuit Breakers", activeCBs.length ? activeCBs.join(", ") : "ALL CLEAR"],
       ])}
     </dl>
   `;
@@ -163,9 +178,9 @@ function renderRegimeTab() {
   const groups = STATE.regime?.groups || {};
   const meta = [
     ["trend_structure", "1. Trend Structure (30%)"],
-    ["momentum_breadth", "2. Momentum & Breadth (25%)"],
-    ["volatility_liquidity", "3. Volatility & Liquidity (25%)"],
-    ["macro_external", "4. Macro / External Context (20%)"],
+    ["momentum", "2. Momentum 4H (25%)"],
+    ["volatility_liquidity", "3. Volatility & Liquidity 4H (25%)"],
+    ["session_context", "4. Session / Context (20%)"],
   ];
 
   $("factorCards").innerHTML = meta
@@ -175,20 +190,20 @@ function renderRegimeTab() {
       const comps = Object.entries(g.components || {}).map(([ck, cv]) => [ck.replace(/_/g, " "), `${cv}/100`]);
       const extraRows = [];
       if (k === "trend_structure") {
-        extraRows.push(["1D / 4H Structure", `${g.daily_structure} / ${g.h4_structure}`]);
-        extraRows.push(["EMA50 / EMA200 (1D)", `${usd(g.ema50_d, 0)} / ${usd(g.ema200_d, 0)}`]);
-      } else if (k === "momentum_breadth") {
-        extraRows.push(["RSI(14) 1D / 4H", `${g.rsi_d ?? "—"} / ${g.rsi_4h ?? "—"}`]);
-        extraRows.push(["ROC 10D / 20D", `${pct(g.roc10_d_pct, 1)} / ${pct(g.roc20_d_pct, 1)}`]);
-        extraRows.push(["RS vs SPX / ETH (10D)", `${pct(g.btc_vs_spx_10d_pct, 1)} / ${pct(g.btc_vs_eth_10d_pct, 1)}`]);
+        extraRows.push(["4H / 1D Structure", `${g.h4_structure} / ${g.daily_structure} (${g.daily_bias})`]);
+        extraRows.push(["4H EMA20 / EMA50", `${usd(g.ema20_4h, 0)} / ${usd(g.ema50_4h, 0)}`]);
+        extraRows.push(["1D EMA50 / EMA200", `${usd(g.ema50_d, 0)} / ${usd(g.ema200_d, 0)}`]);
+      } else if (k === "momentum") {
+        extraRows.push(["RSI(14) 4H / 1D", `${g.rsi_4h ?? "—"} / ${g.rsi_d ?? "—"}`]);
+        extraRows.push(["4H ROC 6 / 12 / 20p", `${pct(g.roc6_4h_pct, 2)} / ${pct(g.roc12_4h_pct, 2)} / ${pct(g.roc20_4h_pct, 2)}`]);
       } else if (k === "volatility_liquidity") {
         extraRows.push(["Quality Score (raw)", `${g.quality_score ?? g.score}/100`]);
-        extraRows.push(["RV20 / RV60 Pctile", `${g.rv20_percentile ?? "—"}% / ${g.rv60_percentile ?? "—"}%`]);
-        extraRows.push(["ATR(14) 1D", `${usd(g.atr14_d_usd, 0)} (${g.atr14_d_pct ?? "—"}%, ${g.atr_vs_60d_med ?? "—"}x 60d med)`]);
-        extraRows.push(["Funding / 30d Pctile", `${pct(g.funding_rate_pct, 4)} (${g.funding_30d_percentile ?? "—"}%)`]);
-      } else if (k === "macro_external") {
-        extraRows.push(["VIX / DXY / US10Y", `${g.vix ?? "—"} / ${g.dxy ?? "—"} / ${g.us10y ?? "—"}%`]);
-        extraRows.push(["ETF 5D / Stables 7D", `${g.etf_5d_usd_m != null ? "$" + g.etf_5d_usd_m + "M" : "—"} / ${pct(g.stables_7d_pct, 2)}`]);
+        extraRows.push(["4H ATR(14) / Pctile", `${usd(g.atr_4h_usd, 0)} (${g.atr_4h_pct ?? "—"}%, ${g.atr_4h_percentile ?? "—"}th)`]);
+        extraRows.push(["Rel 4H Vol / Funding", `${g.rel_volume_4h ?? "—"}x / ${pct(g.funding_rate_pct, 4)}`]);
+      } else if (k === "session_context") {
+        extraRows.push(["Session / Weekend", `${g.session_name || "—"} (${g.is_weekend_utc ? "Weekend" : "Weekday"})`]);
+        extraRows.push(["Next Release", g.next_macro_event ? `${g.next_macro_event} (${Math.round(g.next_macro_minutes)}m)` : "None nearby"]);
+        extraRows.push(["VIX / DXY / ETF 5D", `${g.vix ?? "—"} / ${g.dxy ?? "—"} / ${g.etf_5d_usd_m != null ? "$" + g.etf_5d_usd_m + "M" : "—"}`]);
       }
       return `
         <div class="card">
@@ -220,11 +235,11 @@ function renderRegimeTab() {
   $("macroCalBox").innerHTML = cal.length
     ? cal
         .map((e) => {
-          const near = Math.abs(e.minutes_away) <= 30;
+          const near = e.minutes_away >= 0 && e.minutes_away <= 60;
           return `<div class="row"><div><div class="title">${near ? "⚠️ " : ""}${esc(e.title)}</div><div class="mut">${esc(e.time_utc)}</div></div><span class="badge ${near ? "dn" : ""}">${e.minutes_away >= 0 ? `in ${Math.round(e.minutes_away)}m` : `${Math.round(e.minutes_away)}m ago`}</span></div>`;
         })
         .join("")
-    : `<p class="mut">No USD High-Impact events in upcoming window.</p>`;
+    : `<p class="mut">No USD High-Impact events inside the upcoming window.</p>`;
 }
 
 function renderChart() {
@@ -257,11 +272,9 @@ function renderChart() {
     svg += `<text x="${W - Rp + 6}" y="${(yy + 4).toFixed(1)}" fill="var(--muted)" font-size="11">${esc(l.label.slice(0, 14))} ${Math.round(l.price).toLocaleString()}</text>`;
   }
 
-  // Price line
   const path = closes.map((c, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(c).toFixed(1)}`).join(" ");
   svg += `<path d="${path}" fill="none" stroke="var(--acc)" stroke-width="2.2"/>`;
 
-  // Proposal Entry/Stop/Target lines
   const prop = STATE.signal?.proposal;
   if (prop && prop.entry_price) {
     for (const [val, lbl, col] of [
@@ -282,15 +295,16 @@ function renderChart() {
 
 function updateCalc() {
   const eq = +$("cEq").value || 0;
+  const invBtc = +$("cInv").value || 0;
   const dir = $("cDir").value;
-  const role = $("cRole").value;
+  const isWk = $("cWeekend").value === "yes";
   const entry = +$("cEntry").value || 0;
   const stop = +$("cStop").value || 0;
   const tp = +$("cTp").value || 0;
-  const cfg = STATE?.config || {};
   const ddTier1 = STATE?.portfolio?.circuit_breakers?.dd_tier1_active;
 
-  let riskPct = role === "satellite" ? 0.0025 : ddTier1 ? 0.0025 : 0.005;
+  let riskPct = ddTier1 ? 0.002 : 0.004;
+  if (isWk) riskPct *= 0.5;
   const stopDist = Math.abs(entry - stop);
   const stopPct = entry > 0 ? (stopDist / entry) * 100 : 0;
   const validStopSide = dir === "LONG" ? stop < entry : stop > entry;
@@ -307,18 +321,22 @@ function updateCalc() {
   const actualRiskUsd = sizeBtc * stopDist;
   const actualRiskPct = eq > 0 ? (actualRiskUsd / eq) * 100 : 0;
 
+  const sell20Btc = invBtc * 0.2;
+  const sell20Usd = sell20Btc * entry;
+
   const issues = [];
   if (!validStopSide) issues.push("Stop on wrong side of entry");
-  if (stopPct > 4.0) issues.push(`Stop ${stopPct.toFixed(2)}% > 4.00% max`);
-  if (rawRR < 1.8) issues.push(`R:R ${rawRR.toFixed(2)}:1 < 1.80:1 min`);
+  if (stopPct > 2.2) issues.push(`Stop ${stopPct.toFixed(2)}% > 2.20% max`);
+  if (rawRR < 1.6) issues.push(`R:R ${rawRR.toFixed(2)}:1 < 1.60:1 min`);
 
   $("calcOutKv").innerHTML = kv([
-    ["Protocol Status", issues.length ? `INVALID (${issues.join("; ")})` : "VALID SIZING"],
+    ["Protocol Status", issues.length ? `INVALID (${issues.join("; ")})` : "VALID v4.0 FUTURES SIZING"],
     ["Risk Budget", `${(riskPct * 100).toFixed(2)}% (${usd(targetRiskUsd, 2)} target)`],
-    ["Position Size", `${sizeBtc.toFixed(6)} BTC (${usd(notional, 2)} notional)`],
-    ["Leverage", `${lev.toFixed(2)}x / 2.00x max${clamped ? " (2x LEVERAGE CLAMPED)" : ""}`],
+    ["Futures Size", `${sizeBtc.toFixed(6)} BTC (${usd(notional, 2)} notional)`],
+    ["Effective Leverage", `${lev.toFixed(2)}x / 2.00x max${clamped ? " (2x LEVERAGE CLAMPED)" : ""}`],
     ["Actual Risk", `${actualRiskPct.toFixed(3)}% (${usd(actualRiskUsd, 2)})`],
-    ["Stop Distance / R:R", `${stopPct.toFixed(2)}% / ${rawRR.toFixed(2)}:1`],
+    ["Stop Distance / R:R", `${stopPct.toFixed(2)}% (≤2.2%) / ${rawRR.toFixed(2)}:1 (≥1.6:1)`],
+    ["Sell Inventory (20% Short Opt)", `${sell20Btc.toFixed(4)} BTC (≈ ${usd(sell20Usd, 0)}) · 15–25% band`],
   ]);
 }
 
@@ -331,27 +349,27 @@ function renderLedgerTab() {
           (p) => `
       <div class="row">
         <div>
-          <div class="title">${esc(p.id)} · <span class="${p.direction === "LONG" ? "up" : "dn"}">${esc(p.direction)}</span> (${esc(p.role)})</div>
+          <div class="title">${esc(p.id)} · <span class="${p.direction === "LONG" ? "up" : "dn"}">${esc(p.direction)}</span>${p.weekend_halved ? " (Weekend 0.5x)" : ""}</div>
           <div class="mut">Entry ${usd(p.entry_price, 1)} · Stop ${usd(p.stop_price, 1)} · TP1 ${usd(p.target1_price, 1)} · Size ${p.size_btc} BTC (${num(p.leverage, 2)}x)</div>
-          <div class="mut">Regime@${p.regime_score_at_entry} · BE moved: ${p.be_moved ? "Yes" : "No"} · Scale-out: ${p.scale_out_done ? "Yes" : "No"}</div>
+          <div class="mut">Hold ${num(p.hold_hours, 1)}h/24h · BE: ${p.breakeven_moved ? "Yes" : "No"} · 1.5R Partial: ${p.partial_taken ? "Yes" : "No"} · 8h Cut: ${p.time_stop_8h_reduced ? "Yes" : "No"}</div>
         </div>
         <div style="text-align:right;">
-          <div class="${p.unrealized_pnl_usd >= 0 ? "up" : "dn"}" style="font-weight:700;">${usd(p.unrealized_pnl_usd, 2)} (${num(p.unrealized_r, 2)}R)</div>
+          <div class="${p.unrealized_pnl_usd >= 0 ? "up" : "dn"}" style="font-weight:700;">${usd(p.unrealized_pnl_usd, 2)} (${num(p.current_r, 2)}R)</div>
           <div class="mut">Risk ${num(p.risk_pct, 3)}%</div>
         </div>
       </div>`
         )
         .join("")
-    : `<p class="mut">No open paper positions (Flat).</p>`;
+    : `<p class="mut">No open paper futures positions (Flat).</p>`;
 
   const rev = port.review || {};
   $("reviewKv").innerHTML = kv([
-    ["Completed Trades", `${rev.total_trades ?? 0} (min ${rev.min_sample_for_weight_adjustment ?? 30} to tune weights)`],
-    ["Win Rate", rev.win_rate_pct != null ? `${rev.win_rate_pct}% (${rev.wins}W / ${rev.losses}L)` : "n/a (0 trades)"],
-    ["Average R-Multiple", rev.avg_r != null ? `${rev.avg_r}R` : "n/a"],
-    ["Largest Win / Loss", rev.largest_winner_r != null ? `${rev.largest_winner_r}R / ${rev.largest_loser_r}R` : "n/a"],
-    ["Net Realized PnL", usd(rev.net_pnl_usd, 2)],
-    ["Weight Adjustment Gate", rev.weight_adjustment_unlocked ? "UNLOCKED (≥ 30 trades)" : `LOCKED (${rev.total_trades ?? 0}/30)`],
+    ["Completed Closed Legs", `${rev.total_closed_legs ?? 0}`],
+    ["Win Rate", `${rev.win_rate_pct ?? 0}%`],
+    ["Profit Factor", `${rev.profit_factor ?? 0}`],
+    ["Expectancy (R)", `${rev.expectancy_r ?? 0}R`],
+    ["Net Realized PnL", usd(rev.total_realized_pnl_usd, 2)],
+    ["Spot Inventory Tracked", `${num(port.spot_inventory_btc, 2)} BTC`],
   ]);
 
   const drv = STATE.derivatives || {};
@@ -367,24 +385,24 @@ function renderLedgerTab() {
 
   const closed = port.closed_trades || [];
   $("closedTradesBox").innerHTML = closed.length
-    ? `<table><thead><tr><th>ID</th><th>Dir</th><th>Entry</th><th>Exit</th><th>R</th><th>PnL</th><th>Reason</th></tr></thead><tbody>${closed
+    ? `<table><thead><tr><th>ID</th><th>Dir</th><th>Entry</th><th>Exit</th><th>Hold</th><th>R</th><th>PnL</th><th>Reason</th></tr></thead><tbody>${closed
         .slice()
         .reverse()
         .map(
           (t) =>
-            `<tr><td>${esc(t.id)}</td><td class="${t.direction === "LONG" ? "up" : "dn"}">${esc(t.direction)}</td><td>${usd(t.entry_price, 1)}</td><td>${usd(t.exit_price, 1)}</td><td class="${t.r_multiple >= 0 ? "up" : "dn"}">${num(t.r_multiple, 2)}R</td><td class="${t.pnl_usd >= 0 ? "up" : "dn"}">${usd(t.pnl_usd, 2)}</td><td>${esc(t.exit_reason)}</td></tr>`
+            `<tr><td>${esc(t.trade_id)}</td><td class="${t.direction === "LONG" ? "up" : "dn"}">${esc(t.direction)}</td><td>${usd(t.entry_price, 1)}</td><td>${usd(t.exit_price, 1)}</td><td>${num(t.hold_hours, 1)}h</td><td class="${t.r_multiple >= 0 ? "up" : "dn"}">${num(t.r_multiple, 2)}R</td><td class="${t.pnl_usd >= 0 ? "up" : "dn"}">${usd(t.pnl_usd, 2)}</td><td>${esc(t.reason)}</td></tr>`
         )
         .join("")}</tbody></table>`
-    : `<p class="mut">No closed paper trades yet. Trades are logged automatically when signals qualify and resolve.</p>`;
+    : `<p class="mut">No closed paper trades yet. Trades are logged automatically when v4.0 signals qualify and resolve.</p>`;
 }
 
 function renderAuditTab() {
   const logs = STATE.audit_log_recent || [];
   $("auditLogBox").innerHTML = logs.length
-    ? `<table><thead><tr><th>UTC Time</th><th>Trade</th><th>Event</th><th>Details</th></tr></thead><tbody>${logs
+    ? `<table><thead><tr><th>UTC Time</th><th>Event</th><th>Details</th></tr></thead><tbody>${logs
         .map(
           (e) =>
-            `<tr><td>${esc(e.ts_utc)}</td><td>${esc(e.trade_id || "SYSTEM")}</td><td><b>${esc(e.event)}</b></td><td class="mut">${esc(JSON.stringify(e))}</td></tr>`
+            `<tr><td>${esc(e.ts || e.ts_utc)}</td><td><b>${esc(e.event)}</b></td><td class="mut">${esc(e.detail || JSON.stringify(e))}</td></tr>`
         )
         .join("")}</tbody></table>`
     : `<p class="mut">No audit events recorded yet.</p>`;
@@ -402,6 +420,8 @@ function seedCalcFromState() {
     $("cTp").value = prop.target1_price;
     $("cDir").value = prop.direction || "LONG";
     $("cEq").value = Math.round(STATE?.portfolio?.equity_usd || 100000);
+    $("cInv").value = STATE?.portfolio?.spot_inventory_btc ?? 2.0;
+    $("cWeekend").value = STATE?.regime?.is_weekend_utc ? "yes" : "no";
   }
   updateCalc();
 }
@@ -420,12 +440,12 @@ function bindEvents() {
     document.querySelectorAll("#chartSeg .tab-btn").forEach((x) => x.classList.toggle("active", x === b));
     renderChart();
   });
-  ["cEq", "cDir", "cRole", "cEntry", "cStop", "cTp"].forEach((id) => $(id).addEventListener("input", updateCalc));
+  ["cEq", "cInv", "cDir", "cWeekend", "cEntry", "cStop", "cTp"].forEach((id) => $(id).addEventListener("input", updateCalc));
   $("btnDlJson").onclick = () => {
     const u = URL.createObjectURL(new Blob([JSON.stringify(STATE, null, 2)], { type: "application/json" }));
     const a = document.createElement("a");
     a.href = u;
-    a.download = `btc-protocol-state-${Date.now()}.json`;
+    a.download = `btc-protocol-v4-state-${Date.now()}.json`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(u), 2000);
   };
@@ -434,7 +454,7 @@ function bindEvents() {
 async function init() {
   bindEvents();
   STATE = await fetchJson("data/state.json?t=" + Date.now());
-  $("snapMeta").textContent = `Updated ${STATE.updated_at_utc} · Source ${STATE.ticker?.source || "—"} · Refreshed every 15m by GitHub Actions`;
+  $("snapMeta").textContent = `v${STATE.protocol_version || "4.0"} · Updated ${STATE.updated_at_utc} · 4H Close ${STATE.last_4h_close_utc || "—"} · Source ${STATE.ticker?.source || "—"}`;
   renderHeaderLive();
   renderSignalTab();
   renderRegimeTab();

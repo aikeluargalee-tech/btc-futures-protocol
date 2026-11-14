@@ -1,20 +1,19 @@
-# BTC Futures Swing Trading Protocol (v1.0)
+# BTC Short-Term Futures + Inventory Protocol v4.0
 
-Deterministic signal generation, multi-factor regime analysis, and paper-ledger risk control for BTC perpetual futures, automated via **GitHub Actions** and published to **GitHub Pages**.
+**4H / Day-Trade Only · Long & Short Futures at ≤ 1:2 · Sell Inventory Option · Multi-Factor Regime · Rigorous Risk Management**
 
-## Implemented Architecture
+Automated protocol evaluation engine running every 15 minutes via GitHub Actions and serving a live Signal Tab HUD on GitHub Pages:
+https://aikeluargalee-tech.github.io/btc-futures-protocol/
 
-- **Configurable Constants** (`config/protocol_params.json`): All factor weights (30/25/25/20), regime thresholds (≥ 65 Long / ≤ 35 Short / 36–64 Neutral), 1:2 max leverage, 0.5% risk per trade, 2% max portfolio heat, 4% max stop distance, 1.8:1 min R:R, and circuit breakers (-1.5% daily, -3% weekly, -8% DD tier 1, -12% DD tier 2).
-- **Multi-Factor Regime Engine** (`engine/regime_engine.py`): Continuous 0–100 score across Trend Structure (30%), Momentum & Breadth (25%), Volatility & Liquidity (25%), and Macro / External Context (20%).
-- **Qualification & Sizing Engine** (`engine/signal_engine.py`): Enforces all 7 qualification rules, HTF structural level interaction, 4H execution confirmation (BOS or volume-backed rejection), funding-adjusted R:R ≥ 1.8:1, ±30m macro release gate, and hard 2× leverage clamp.
-- **Paper Ledger & Trade Management** (`engine/paper_ledger.py`): Tracks open/closed positions in `data/ledger.json`, executes breakeven moves & trailing stops (≥ 1R), 40% scale-outs (≥ 1.5R), 7–10 day time stops, circuit breakers, and weekly review metrics (`30`-trade sample gate).
-- **GitHub Actions** (`.github/workflows/protocol_engine.yml`): Runs tests + `python -m engine.run_cycle` every 15 minutes and commits updated `data/*.json`.
-- **GitHub Pages Dashboard** (`index.html`, `style.css`, `app.js`): 4-tab live UI (Signal Tab, Multi-Factor Regime, Paper Ledger & Interactive Risk Calculator, Audit Log & Config) with 5s live BTC price polling.
+## Core Rules (Version 4.0)
+- **Actions**:
+  - `LONG`: score `≥ 68` + all 9 futures checks pass (≤ 1:2 leverage)
+  - `SHORT`: score `≤ 32` + all 9 futures checks pass (≤ 1:2 leverage)
+  - `SELL INVENTORY`: score `≤ 32` + valid 4H structural reference (15–25%, default 20% spot BTC trim; exempt from futures checks 3–9 & futures halts; counts as 0% futures heat)
+  - `FLAT`: score `33–67` (strict, no exceptions) or any failed futures check
+- **4H Multi-Factor Regime (0–100)**: Trend Structure (30%), Momentum 4H (25%), Volatility & Liquidity 4H (25%), Session / Context (20%).
+- **Position Sizing & Risk**: `0.4%` equity risk per trade, hard `1:2` leverage cap, `≤ 1.5%` portfolio heat, max 1 concurrent futures position, `≤ 2.2%` max stop distance, `≥ 1.6 : 1` R:R, `±60m` macro release blackout.
+- **Hold & Time Management**: 4–24h intended hold, `45%` partial at `+1.5R`, BE + 4H EMA20 trail at `+1R`, `8h` 50% cut / `12h` exit if `< +1R`, `24h` max hold, UTC daily-close reduction unless regime improves, weekend holds only if score `≥ 80` or `≤ 20` at `0.5x` size.
+- **5-Tier Circuit Breakers**: `-1.2%` intraday halt, `-2.0%` daily pause, `-4.0%` weekly flatten, `-6.0%` DD Tier 1 (`0.2%` risk, `75/25` thresholds), `-10.0%` DD Tier 2 flatten + manual unlock via `workflow_dispatch`.
 
-## Local Usage
-
-```bash
-python -m pytest -v
-python -m engine.run_cycle
-python -m http.server 8000
-```
+All parameters are configurable in `config/protocol_params.json`.
