@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
   <div class="wrap">
@@ -34,10 +34,8 @@
     </header>
 
     <div class="actions" style="margin-bottom:12px;">
-      <button class="btn" id="btnCopyRaw">[Copy Raw JSON]</button>
       <button class="btn btn-primary" id="btnCopyAi">[Copy AI Analysis Prompt + JSON]</button>
-      <button class="btn" id="btnDlJson">[Download .JSON]</button>
-      <span class="mut" id="actionMsg" style="align-self:center;">4H Close Eval · 4–24h Hold · 0.4% Risk · ≤1.5% Heat</span>
+      <span class="mut" id="actionMsg" style="align-self:center;">Paste into ChatGPT, Gemini, Claude, Grok, DeepSeek, Kimi, or any AI for direct verdict &amp; Q&amp;A.</span>
     </div>
 
     <nav class="tabs" id="tabNav">
@@ -159,6 +157,11 @@
       </div>
       <div class="card">
         <h2>Configurable Protocol Parameters (config/protocol_params.json)</h2>
+        <div class="actions" style="margin-bottom:8px;">
+          <button class="btn" id="btnCopyRaw">[Copy Raw JSON Only]</button>
+          <button class="btn" id="btnDlJson">[Download .JSON]</button>
+          <span class="mut" id="auditExportMsg" style="align-self:center;">Offline / script export utilities</span>
+        </div>
         <pre id="configPre" style="margin:0;overflow-x:auto;font-size:10.5px;color:var(--muted);"></pre>
       </div>
       <div class="card">
@@ -167,6 +170,6 @@
       </div>
     </section>
   </div>
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>

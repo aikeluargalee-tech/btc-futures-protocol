@@ -474,6 +474,8 @@ State clearly whether an immediate **4H Close Long**, **4H Close Short**, or **F
 - **Recommended Risk %:** \`0.40%\` (or \`0.20%\` if Weekend)
 - **What Invalidates Waiting for This Setup:** Exact price level or candle close that cancels the plan.
 
+After issuing your structured verdict above, remain grounded strictly in the telemetry packet below and answer any follow-up Q&A (alternative entry levels, invalidation distance, funding/slippage sensitivity, or custom equity sizing) without inventing external prices.
+
 ---
 
 ### LIVE RAW TELEMETRY PACKET (JSON)
@@ -579,21 +581,42 @@ function buildRawTelemetryPacket(fullState) {
   };
 }
 
-async function copyTextWithFeedback(text, label) {
-  const msgEl = $("actionMsg");
+function serializeTelemetryCompact(raw) {
+  return JSON.stringify(raw, null, 2).replace(
+    /\[\s*(-?\d+(?:\.\d+)?(?:\s*,\s*-?\d+(?:\.\d+)?){4,5})\s*\]/g,
+    (_, inner) => `[${inner.replace(/\s+/g, " ")}]`
+  );
+}
+
+async function copyTextWithFeedback(text, label, msgId = "actionMsg") {
+  const msgEl = $(msgId);
   const prev = msgEl.textContent;
+  let copied = false;
   try {
-    await navigator.clipboard.writeText(text);
-    msgEl.textContent = label;
-    msgEl.style.color = "var(--up)";
-  } catch {
-    msgEl.textContent = "Clipboard blocked — use Download .JSON instead.";
-    msgEl.style.color = "var(--dn)";
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      copied = true;
+    }
+  } catch {}
+  if (!copied) {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.top = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      copied = document.execCommand("copy");
+      document.body.removeChild(ta);
+    } catch {}
   }
+  msgEl.textContent = copied ? label : "Clipboard blocked — open F4 Audit tab to Download .JSON.";
+  msgEl.style.color = copied ? "var(--up)" : "var(--dn)";
   setTimeout(() => {
     msgEl.textContent = prev;
     msgEl.style.color = "";
-  }, 3000);
+  }, 3200);
 }
 
 function bindEvents() {
@@ -618,13 +641,13 @@ function bindEvents() {
   $("btnCopyRaw").onclick = () => {
     const raw = buildRawTelemetryPacket(STATE);
     if (!raw) return;
-    copyTextWithFeedback(JSON.stringify(raw, null, 2), "Copied clean Raw Telemetry JSON (no pre-computed verdicts).");
+    copyTextWithFeedback(serializeTelemetryCompact(raw), "Copied compact Raw JSON (no pre-computed verdicts).", "auditExportMsg");
   };
   $("btnCopyAi").onclick = () => {
     const raw = buildRawTelemetryPacket(STATE);
     if (!raw) return;
-    const promptText = MASTER_QUANT_PROMPT_TEMPLATE.replace("{{RAW_JSON_PAYLOAD}}", JSON.stringify(raw, null, 2));
-    copyTextWithFeedback(promptText, "Copied Master AI Prompt + unbiased Raw JSON (ready for Gemini/Claude/Grok).");
+    const promptText = MASTER_QUANT_PROMPT_TEMPLATE.replace("{{RAW_JSON_PAYLOAD}}", serializeTelemetryCompact(raw));
+    copyTextWithFeedback(promptText, "Copied! Paste into ChatGPT, Gemini, Claude, Grok, DeepSeek, or Kimi.");
   };
   $("btnDlJson").onclick = () => {
     const u = URL.createObjectURL(new Blob([JSON.stringify(STATE, null, 2)], { type: "application/json" }));
