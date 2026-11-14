@@ -36,6 +36,18 @@ def patch_android_manifest() -> None:
 
 
 def patch_android_gradle() -> None:
+    for sf in ("settings.gradle.kts", "settings.gradle"):
+        sp = ROOT / "android" / sf
+        if not sp.exists():
+            continue
+        stxt = sp.read_text(encoding="utf-8")
+        stxt = re.sub(
+            r'(id\s*(?:\(\s*|\s+)["\']com\.android\.application["\']\s*\)?\s+version\s+["\'])8\.(?:0\.\d+|1\.0)(["\'])',
+            r"\g<1>8.1.4\g<2>",
+            stxt,
+        )
+        sp.write_text(stxt, encoding="utf-8")
+
     for fname in ("build.gradle.kts", "build.gradle"):
         gp = ROOT / "android" / "app" / fname
         if not gp.exists():
