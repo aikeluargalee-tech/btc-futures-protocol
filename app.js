@@ -99,7 +99,7 @@ function renderSignalTab() {
   $("sellInventoryBox").innerHTML = `
     <div class="signal-head" style="margin-bottom:6px;">
       <div>
-        <b class="${inv.active ? "dn" : "mut"}" style="font-size:15px;">${inv.active ? "SELL INVENTORY ACTIVE" : "HOLD SPOT INVENTORY"}</b>
+        <b class="${inv.active ? "dn" : "mut"}" style="font-size:11.5px;">${inv.active ? "SELL INVENTORY ACTIVE" : "HOLD SPOT INVENTORY"}</b>
         <span class="mut"> · Ref: ${esc(inv.structural_ref || "—")}</span>
       </div>
       <span class="badge ${inv.active ? "dn" : ""}">${inv.active ? `REDUCE ${num(inv.recommended_pct, 0)}% (${inv.sell_btc} BTC ≈ ${usd(inv.sell_usd, 0)})` : `Band ${esc(inv.band_pct || "15–25%")}`}</span>
@@ -274,7 +274,7 @@ function renderChart() {
     lastY = yy;
     const col = l.kind === "resistance" ? "var(--dn)" : l.kind === "support" ? "var(--up)" : "var(--muted)";
     svg += `<line x1="${Lp}" x2="${W - Rp}" y1="${yy.toFixed(1)}" y2="${yy.toFixed(1)}" stroke="${col}" stroke-dasharray="4 3" opacity="0.72"/>`;
-    svg += `<text x="${W - Rp + 6}" y="${(yy + 4).toFixed(1)}" fill="var(--text)" font-size="11">${esc(l.label.slice(0, 14))} ${Math.round(l.price).toLocaleString()}</text>`;
+    svg += `<text x="${W - Rp + 6}" y="${(yy + 4).toFixed(1)}" fill="var(--text)" font-size="9.5">${esc(l.label.slice(0, 14))} ${Math.round(l.price).toLocaleString()}</text>`;
   }
 
   const path = closes.map((c, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(c).toFixed(1)}`).join(" ");
@@ -290,7 +290,7 @@ function renderChart() {
       if (val >= lo && val <= hi) {
         const yy = y(val);
         svg += `<line x1="${Lp}" x2="${W - Rp}" y1="${yy.toFixed(1)}" y2="${yy.toFixed(1)}" stroke="${col}" stroke-width="1.4"/>`;
-        svg += `<text x="${Lp + 4}" y="${(yy - 4).toFixed(1)}" fill="${col}" font-size="11">${lbl} ${Math.round(val).toLocaleString()}</text>`;
+        svg += `<text x="${Lp + 4}" y="${(yy - 4).toFixed(1)}" fill="${col}" font-size="9.5">${lbl} ${Math.round(val).toLocaleString()}</text>`;
       }
     }
   }
