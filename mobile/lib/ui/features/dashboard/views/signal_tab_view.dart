@@ -453,6 +453,7 @@ class _AiCopilotHeroCardState extends State<_AiCopilotHeroCard> {
 
   @override
   Widget build(BuildContext context) {
+    final liveFresh = widget.vm.isLiveFeedFresh;
     final stale = widget.vm.isSnapshotStale;
     final rawLen = widget.vm.buildCompactRawJson().length;
     final kStr = (rawLen / 1000.0).toStringAsFixed(1);
@@ -463,8 +464,8 @@ class _AiCopilotHeroCardState extends State<_AiCopilotHeroCard> {
       headerTextColor: Colors.white,
       borderWidth: 1.5,
       trailing: IbmBadge(
-        label: stale ? 'STALE >60M' : 'READY',
-        color: stale ? TerminalColors.warn : TerminalColors.up,
+        label: liveFresh || !stale ? 'LIVE · READY' : 'CACHED · SYNC',
+        color: liveFresh || !stale ? TerminalColors.up : TerminalColors.accent,
       ),
       child: Padding(
         padding: const EdgeInsets.all(10),

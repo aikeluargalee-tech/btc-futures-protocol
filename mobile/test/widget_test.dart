@@ -149,6 +149,9 @@ void main() {
     await tester.pump();
 
     expect(find.text('BTC DESK v4'), findsOneWidget);
+    expect(find.textContaining('Live BinanceVision ·'), findsOneWidget);
+    expect(find.text('LIVE · READY'), findsOneWidget);
+    expect(find.textContaining('STALE'), findsNothing);
     expect(find.textContaining('PURPOSE // SPOT & FUTURES DECISION DESK'), findsOneWidget);
     expect(find.textContaining('Supports Spot or Futures'), findsOneWidget);
     expect(find.text('[HIDE]'), findsOneWidget);

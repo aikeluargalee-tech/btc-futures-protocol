@@ -168,7 +168,7 @@ class HomeShell extends StatelessWidget {
                               const SizedBox(height: 4),
                               Text(
                                 s != null
-                                    ? 'Updated ${s.updatedAtUtc} · 4H Close ${s.last4hCloseUtc} · ${s.tickerSource}'
+                                    ? 'Updated ${s.updatedAtUtc}${age != null ? " ($age)" : ""} · 4H Close ${s.last4hCloseUtc} · ${s.tickerSource}'
                                     : 'Connecting to live protocol feed…',
                                 style: const TextStyle(fontSize: 9.0, color: TerminalColors.muted),
                               ),
@@ -194,21 +194,26 @@ class HomeShell extends StatelessWidget {
                                         Container(
                                           width: 7,
                                           height: 7,
-                                          color: vm.isSnapshotStale
-                                              ? TerminalColors.warn
-                                              : TerminalColors.up,
+                                          color: vm.isLiveFeedFresh
+                                              ? TerminalColors.up
+                                              : (vm.isSnapshotStale
+                                                  ? TerminalColors.warn
+                                                  : TerminalColors.accent),
                                         ),
                                         const SizedBox(width: 6),
                                         Text(
                                           s != null
-                                              ? '${vm.liveFeedLabel}${age != null ? " · $age" : ""}'
+                                              ? vm.liveFeedDisplay
                                               : 'Connecting…',
                                           style: TextStyle(
                                             fontSize: 9.5,
-                                            color: vm.isSnapshotStale
-                                                ? TerminalColors.warn
-                                                : TerminalColors.muted,
-                                            fontWeight: vm.isSnapshotStale
+                                            color: vm.isLiveFeedFresh
+                                                ? TerminalColors.up
+                                                : (vm.isSnapshotStale
+                                                    ? TerminalColors.warn
+                                                    : TerminalColors.muted),
+                                            fontWeight: vm.isLiveFeedFresh ||
+                                                    vm.isSnapshotStale
                                                 ? FontWeight.w700
                                                 : FontWeight.w400,
                                           ),

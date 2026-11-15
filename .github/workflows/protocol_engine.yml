@@ -2,7 +2,7 @@ name: BTC Short-Term Futures + Inventory Protocol v4.0
 
 on:
   schedule:
-    - cron: "5,20,35,50 * * * *"
+    - cron: "7 * * * *"
   workflow_dispatch:
     inputs:
       reset_review_lock:

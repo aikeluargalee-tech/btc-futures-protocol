@@ -50,9 +50,29 @@ class ProtocolViewModel extends ChangeNotifier {
 
   double? _livePrice;
   String? _liveSource;
+  DateTime? _liveUpdatedAt;
   double? get activePrice => _livePrice ?? _state?.price;
   String get liveFeedLabel =>
       _liveSource != null ? 'Live $_liveSource' : 'Snapshot';
+
+  bool get isLiveFeedFresh {
+    if (_liveSource == null || _liveUpdatedAt == null) return false;
+    final secs = DateTime.now().toUtc().difference(_liveUpdatedAt!).inSeconds;
+    return secs >= -5 && secs < 60;
+  }
+
+  String get liveFeedDisplay {
+    if (_liveSource != null && _liveUpdatedAt != null) {
+      final secs = DateTime.now()
+          .toUtc()
+          .difference(_liveUpdatedAt!)
+          .inSeconds
+          .clamp(0, 999);
+      return 'Live $_liveSource · ${secs}s';
+    }
+    final age = snapshotAgeLabel;
+    return age != null ? 'Snapshot ($age)' : 'Snapshot';
+  }
 
   String? get snapshotAgeLabel {
     final tsStr = _state?.updatedAtUtc;
@@ -71,7 +91,8 @@ class ProtocolViewModel extends ChangeNotifier {
     if (tsStr == null || tsStr.isEmpty) return false;
     final parsed = DateTime.tryParse(tsStr);
     if (parsed == null) return false;
-    return DateTime.now().toUtc().difference(parsed.toUtc()).inMinutes > 60;
+    // 4H candle protocol + hourly cron jitter: warn only after 5 hours.
+    return DateTime.now().toUtc().difference(parsed.toUtc()).inMinutes > 300;
   }
 
   String buildCompactRawJson() {
@@ -167,6 +188,7 @@ class ProtocolViewModel extends ChangeNotifier {
     if (tick != null) {
       _livePrice = tick.price;
       _liveSource = tick.source;
+      _liveUpdatedAt = DateTime.now().toUtc();
       if (notify) notifyListeners();
     }
   }
