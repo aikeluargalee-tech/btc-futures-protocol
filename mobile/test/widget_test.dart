@@ -139,6 +139,8 @@ void main() {
     );
     final vm = ProtocolViewModel(repository: repo, enableTimers: false);
     await vm.refreshAll();
+    expect(vm.error, isNull, reason: 'refreshAll error: ${vm.error}');
+    expect(vm.state, isNotNull, reason: 'refreshAll left state null');
 
     await tester.pumpWidget(
       BtcProtocolApp(viewModel: vm, enablePlatformPlugins: false),
@@ -146,7 +148,15 @@ void main() {
     await tester.pump();
 
     expect(find.text('BTC DESK v4'), findsOneWidget);
-    expect(find.textContaining('AI ANALYSIS ENGINE (CORE WORKFLOW)'), findsOneWidget);
+    final renderedTexts = tester
+        .widgetList<Text>(find.byType(Text))
+        .map((t) => t.data ?? t.textSpan?.toPlainText() ?? '')
+        .toList();
+    expect(
+      find.textContaining('AI ANALYSIS ENGINE (CORE WORKFLOW)'),
+      findsOneWidget,
+      reason: 'Rendered Text widgets: $renderedTexts',
+    );
     expect(find.text('[COPY AI ANALYSIS PROMPT + JSON]'), findsOneWidget);
     expect(find.text('[PREVIEW]'), findsOneWidget);
     expect(
