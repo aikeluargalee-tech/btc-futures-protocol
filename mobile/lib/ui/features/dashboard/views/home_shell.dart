@@ -19,7 +19,7 @@ class HomeShell extends StatelessWidget {
   final bool enablePlatformPlugins;
 
   static const _tabLabels = <String>[
-    'F1 SIGNAL',
+    'F1 MONITOR',
     'F2 REGIME',
     'F3 CALC',
     'F4 AUDIT',
@@ -85,7 +85,7 @@ class HomeShell extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              'SYS: 4H-SWING · MAX LEV 1:2',
+                              'SYS: 4H-CYCLE · PAPER MODEL',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 9.0,
@@ -123,7 +123,7 @@ class HomeShell extends StatelessWidget {
                                       border: Border.all(color: TerminalColors.borderDark),
                                     ),
                                     child: const Text(
-                                      'V4.0 · 4H · MAX 1:2 LEV',
+                                      'V4.0 · 4H · TELEMETRY',
                                       style: TextStyle(
                                         fontSize: 9,
                                         fontWeight: FontWeight.w700,

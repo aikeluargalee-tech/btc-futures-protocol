@@ -149,11 +149,14 @@ void main() {
     await tester.pump();
 
     expect(find.text('BTC DESK v4'), findsOneWidget);
+    expect(find.text('F1 MONITOR'), findsOneWidget);
     expect(find.textContaining('Live BinanceVision ·'), findsOneWidget);
     expect(find.text('LIVE · READY'), findsOneWidget);
     expect(find.textContaining('STALE'), findsNothing);
-    expect(find.textContaining('PURPOSE // SPOT & FUTURES DECISION DESK'), findsOneWidget);
-    expect(find.textContaining('Supports Spot or Futures'), findsOneWidget);
+    expect(find.textContaining('MAX LEV'), findsNothing);
+    expect(find.textContaining('NO FUTURES ENTRY'), findsNothing);
+    expect(find.textContaining('PURPOSE // READ-ONLY TELEMETRY & RESEARCH DESK'), findsOneWidget);
+    expect(find.textContaining('Spot & Paper Risk Modeling'), findsOneWidget);
     expect(find.text('[HIDE]'), findsOneWidget);
     expect(find.textContaining('AI ANALYSIS ENGINE (CORE WORKFLOW)'), findsOneWidget);
     expect(find.text('[COPY AI ANALYSIS PROMPT + JSON]'), findsOneWidget);
@@ -162,10 +165,10 @@ void main() {
     await tester.tap(find.text('[HIDE]'));
     await tester.pump();
     expect(find.text('[SHOW]'), findsOneWidget);
-    expect(find.textContaining('Supports Spot or Futures'), findsNothing);
+    expect(find.textContaining('Spot & Paper Risk Modeling'), findsNothing);
     await tester.tap(find.text('[SHOW]'));
     await tester.pump();
-    expect(find.textContaining('Supports Spot or Futures'), findsOneWidget);
+    expect(find.textContaining('Spot & Paper Risk Modeling'), findsOneWidget);
     expect(
       find.text('Paste into ChatGPT, Gemini, Claude, Grok, DeepSeek, Kimi, or any AI for direct verdict & follow-up Q&A.'),
       findsOneWidget,

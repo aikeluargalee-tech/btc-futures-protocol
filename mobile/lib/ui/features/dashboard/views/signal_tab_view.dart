@@ -49,9 +49,9 @@ class SignalTabView extends StatelessWidget {
           _AiCopilotHeroCard(vm: vm),
           const SizedBox(height: 10),
 
-          // 2. Active Signal Status Window
+          // 2. Model Regime Status Window
           IbmWindowCard(
-            title: 'ACTIVE SIGNAL STATUS',
+            title: 'MODEL REGIME STATUS',
             child: Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
@@ -62,7 +62,7 @@ class SignalTabView extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          sig.status,
+                          sig.status == 'FLAT' ? 'STANDBY (NEUTRAL)' : sig.status,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
@@ -72,7 +72,7 @@ class SignalTabView extends StatelessWidget {
                       ),
                       IbmBadge(
                         label: sig.status == 'FLAT'
-                            ? 'NO FUTURES ENTRY'
+                            ? 'CONDITIONS UNMET'
                             : (prop?.entryMethod ?? 'ACTIVE'),
                         color: statusColor,
                       ),
@@ -80,7 +80,7 @@ class SignalTabView extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '1D Bias: ${reg.dailyBias}  ·  Open Futures: ${port.openPositions.length}/1  ·  Eq: ${fmtUsd(port.equityUsd, decimals: 2)}',
+                    '1D Bias: ${reg.dailyBias}  ·  Paper Pos: ${port.openPositions.length}/1  ·  Sim Eq: ${fmtUsd(port.equityUsd, decimals: 2)}',
                     style: const TextStyle(color: TerminalColors.muted, fontSize: 10),
                   ),
                   if (reg.dominantFactors.isNotEmpty) ...[
@@ -165,7 +165,7 @@ class SignalTabView extends StatelessWidget {
 
           // 4. 9-Point Checklist Window
           IbmWindowCard(
-            title: '9-POINT FUTURES QUALIFICATION CHECKLIST',
+            title: '9-POINT MODEL REGIME CHECKLIST',
             child: Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
@@ -212,17 +212,17 @@ class SignalTabView extends StatelessWidget {
           // 5. Sizing & 5-Tier Circuit Breakers Window
           if (prop != null && prop.entryPrice > 0) ...[
             IbmWindowCard(
-              title: 'PROPOSED SIZING & 5-TIER BREAKERS',
+              title: 'MODEL RISK SIZING (SIMULATION) & BREAKERS',
               child: Padding(
                 padding: const EdgeInsets.all(10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _kv('Direction / Entry', '${prop.direction} @ ${fmtUsd(prop.entryPrice, decimals: 1)}'),
-                    _kv('Hard Stop', '${fmtUsd(prop.stopPrice, decimals: 1)} (${prop.stopDistancePct.toStringAsFixed(2)}% ≤ 2.2%)'),
+                    _kv('Scenario / Reference', '${prop.direction} @ ${fmtUsd(prop.entryPrice, decimals: 1)}'),
+                    _kv('Invalidation Ref', '${fmtUsd(prop.stopPrice, decimals: 1)} (${prop.stopDistancePct.toStringAsFixed(2)}% ≤ 2.2%)'),
                     _kv('Target 1 (45% @ 1.5R)', '${fmtUsd(prop.target1Price, decimals: 1)} (${prop.target1Label})'),
                     _kv('R:R (Raw / Adj)', '${prop.rawRr.toStringAsFixed(2)}:1 / ${prop.fundingAdjustedRr.toStringAsFixed(2)}:1'),
-                    _kv('Size / Leverage', '${prop.sizeBtc} BTC (${prop.leverage.toStringAsFixed(2)}x / 2.00x)'),
+                    _kv('Sim Size / Ratio', '${prop.sizeBtc} BTC (${prop.leverage.toStringAsFixed(2)}x / 2.00x)'),
                     _kv('Open Heat / Max', '${port.openHeatPct.toStringAsFixed(2)}% / ${port.maxHeatPct.toStringAsFixed(1)}%'),
                     _kv('Intraday / Daily / Wk', '${fmtSignedPct(port.intradayPnlPct)} / ${fmtSignedPct(port.dailyPnlPct)} / ${fmtSignedPct(port.weeklyPnlPct)}'),
                     _kv(
@@ -274,7 +274,7 @@ class SignalTabView extends StatelessWidget {
       );
 }
 
-/// Compact collapsible Purpose card clarifying Spot & Futures decision support + read-only scope.
+/// Compact collapsible Purpose card clarifying read-only research scope & paper simulation framing.
 class _PurposeOverviewCard extends StatelessWidget {
   const _PurposeOverviewCard({required this.vm});
 
@@ -284,7 +284,7 @@ class _PurposeOverviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final expanded = vm.purposeExpanded;
     return IbmWindowCard(
-      title: 'PURPOSE // SPOT & FUTURES DECISION DESK',
+      title: 'PURPOSE // READ-ONLY TELEMETRY & RESEARCH DESK',
       trailing: InkWell(
         onTap: vm.togglePurposeExpanded,
         child: Container(
@@ -310,17 +310,17 @@ class _PurposeOverviewCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '• Read-Only Quant Telemetry: No exchange login, wallet, or live order execution.',
+                    '• Read-Only Market Telemetry: No exchange login, wallet, order execution, or financial advice.',
                     style: TextStyle(fontSize: 9.5, color: TerminalColors.text, height: 1.35),
                   ),
                   SizedBox(height: 3),
                   Text(
-                    '• Supports Spot or Futures: Use the 4H regime score, key levels & sizer for Spot timing (1.0x) or Futures leverage (max 1:2 isolated).',
+                    '• Spot & Paper Risk Modeling: Uses 4H regime metrics, key levels & \$100K paper simulation (max 2.0x model cap) for research.',
                     style: TextStyle(fontSize: 9.5, color: TerminalColors.text, height: 1.35),
                   ),
                   SizedBox(height: 3),
                   Text(
-                    '• Workflow: Copy the AI prompt below and paste into any AI for analysis & Q&A.',
+                    '• AI Workflow: Copy the raw telemetry packet below into any AI assistant for objective research & Q&A.',
                     style: TextStyle(fontSize: 9.0, color: TerminalColors.muted, height: 1.35),
                   ),
                 ],

@@ -93,7 +93,7 @@ class _AuditTabViewState extends State<AuditTabView> {
           ),
           const SizedBox(height: 10),
           IbmWindowCard(
-            title: 'SIGNAL & MANAGEMENT AUDIT LOG',
+            title: 'MODEL & TELEMETRY AUDIT LOG',
             child: Padding(
               padding: const EdgeInsets.all(10),
               child: Column(

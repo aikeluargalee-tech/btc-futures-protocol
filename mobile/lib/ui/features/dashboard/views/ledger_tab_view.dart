@@ -114,7 +114,7 @@ class _LedgerTabViewState extends State<LedgerTabView> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    calc.valid ? 'VALID v4.0 FUTURES SIZING' : 'INVALID: ${calc.issues.join("; ")}',
+                    calc.valid ? 'VALID v4.0 PAPER SIZING (MAX 2.0x CAP)' : 'INVALID: ${calc.issues.join("; ")}',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       color: calc.valid ? TerminalColors.up : TerminalColors.down,
@@ -136,7 +136,7 @@ class _LedgerTabViewState extends State<LedgerTabView> {
           ),
           const SizedBox(height: 10),
           IbmWindowCard(
-            title: 'PAPER LEDGER SUMMARY',
+            title: 'PAPER LEDGER SUMMARY (SIMULATED)',
             child: Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
