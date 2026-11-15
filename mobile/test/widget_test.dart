@@ -158,6 +158,16 @@ void main() {
     final sigSize = sigMatches.isNotEmpty
         ? (sigMatches.first.renderObject as RenderBox?)?.size
         : null;
+    final idxMatches = find.byType(IndexedStack, skipOffstage: false).evaluate();
+    final idxSize = idxMatches.isNotEmpty
+        ? (idxMatches.first.renderObject as RenderBox?)?.size
+        : null;
+    final scfMatches = find.byType(Scaffold).evaluate();
+    final scfSize = scfMatches.isNotEmpty
+        ? (scfMatches.first.renderObject as RenderBox?)?.size
+        : null;
+    final lstMatches = find.byType(ListView, skipOffstage: false).evaluate();
+    final lstSizes = lstMatches.map((e) => (e.renderObject as RenderBox?)?.size).toList();
     final allTexts = tester
         .widgetList<Text>(find.byType(Text, skipOffstage: false))
         .map((t) => t.data ?? t.textSpan?.toPlainText() ?? '')
@@ -166,7 +176,7 @@ void main() {
     expect(
       find.textContaining('AI ANALYSIS ENGINE (CORE WORKFLOW)'),
       findsOneWidget,
-      reason: 'err=$pendingErr sigSize=$sigSize onstage=$renderedTexts allTexts=$allTexts',
+      reason: 'err=$pendingErr scf=$scfSize idx=$idxSize sig=$sigSize lsts=$lstSizes onstage=$renderedTexts allTexts=$allTexts',
     );
     expect(find.text('[COPY AI ANALYSIS PROMPT + JSON]'), findsOneWidget);
     expect(find.text('[PREVIEW]'), findsOneWidget);
