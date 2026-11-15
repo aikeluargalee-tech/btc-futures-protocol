@@ -28,7 +28,7 @@ class TerminalColors {
 }
 
 ThemeData buildTerminalTheme() {
-  const monoFont = 'monospace';
+  const monoFont = 'IBMPlexMono';
 
   return ThemeData(
     useMaterial3: true,
@@ -63,9 +63,9 @@ ThemeData buildTerminalTheme() {
       space: 1,
     ),
     textTheme: const TextTheme(
-      bodyLarge: TextStyle(color: TerminalColors.text, fontSize: 11.5, height: 1.35),
-      bodyMedium: TextStyle(color: TerminalColors.text, fontSize: 11.0, height: 1.35),
-      bodySmall: TextStyle(color: TerminalColors.muted, fontSize: 10.0, height: 1.3),
+      bodyLarge: TextStyle(color: TerminalColors.text, fontSize: 11.5, height: 1.38),
+      bodyMedium: TextStyle(color: TerminalColors.text, fontSize: 10.5, height: 1.38),
+      bodySmall: TextStyle(color: TerminalColors.muted, fontSize: 9.5, height: 1.35),
       labelSmall: TextStyle(color: TerminalColors.muted, fontSize: 9.5, fontWeight: FontWeight.w700),
     ),
     inputDecorationTheme: const InputDecorationTheme(
@@ -90,29 +90,97 @@ ThemeData buildTerminalTheme() {
   );
 }
 
-/// Shared sharp-corner section header used inside IBM panels.
+/// Crisp IBM workstation hardware window with hard 3px pixel drop shadow matching web CSS.
+class IbmWindowCard extends StatelessWidget {
+  const IbmWindowCard({
+    super.key,
+    required this.child,
+    this.title,
+    this.headerColor = TerminalColors.panelAlt,
+    this.headerTextColor = TerminalColors.text,
+    this.trailing,
+    this.borderColor = TerminalColors.borderDark,
+    this.borderWidth = 1.0,
+  });
+
+  final Widget child;
+  final String? title;
+  final Color headerColor;
+  final Color headerTextColor;
+  final Widget? trailing;
+  final Color borderColor;
+  final double borderWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: TerminalColors.panel,
+        border: Border.all(color: borderColor, width: borderWidth),
+        boxShadow: const [
+          BoxShadow(
+            color: TerminalColors.shadow,
+            offset: Offset(3, 3),
+            blurRadius: 0,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (title != null)
+            IbmSectionTitle(
+              title!,
+              backgroundColor: headerColor,
+              textColor: headerTextColor,
+              trailing: trailing,
+            ),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+/// Shared sharp-corner section header used inside IBM windows.
 class IbmSectionTitle extends StatelessWidget {
-  const IbmSectionTitle(this.text, {super.key});
+  const IbmSectionTitle(
+    this.text, {
+    super.key,
+    this.backgroundColor = TerminalColors.panelAlt,
+    this.textColor = TerminalColors.text,
+    this.trailing,
+  });
 
   final String text;
+  final Color backgroundColor;
+  final Color textColor;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: const BoxDecoration(
-        color: TerminalColors.panelAlt,
-        border: Border(bottom: BorderSide(color: TerminalColors.border)),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        border: const Border(bottom: BorderSide(color: TerminalColors.border)),
       ),
-      child: Text(
-        '▪ $text',
-        style: const TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.6,
-          color: TerminalColors.text,
-        ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              '▪ $text',
+              style: TextStyle(
+                fontSize: 9.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+                color: textColor,
+              ),
+            ),
+          ),
+          if (trailing != null) trailing!,
+        ],
       ),
     );
   }
@@ -152,7 +220,7 @@ class IbmBadge extends StatelessWidget {
         style: TextStyle(
           fontSize: 9.5,
           fontWeight: FontWeight.w700,
-          letterSpacing: 0.4,
+          letterSpacing: 0.3,
           color: color,
         ),
       ),

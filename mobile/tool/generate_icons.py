@@ -1,4 +1,4 @@
-"""Generate crisp whitish-grey IBM Retro app launcher icons for Android & iOS stores."""
+"""Generate a bold, minimalist IBM Retro emblem for BTC Desk v4 (Android & iOS stores)."""
 from __future__ import annotations
 
 import pathlib
@@ -6,6 +6,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "assets" / "store_icons"
+FONT_BOLD = ROOT / "assets" / "fonts" / "IBMPlexMono-Bold.ttf"
 
 ANDROID_SIZES = {
     "mipmap-mdpi": 48,
@@ -34,73 +35,59 @@ IOS_SIZES = {
 }
 
 
-def load_mono_font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
-    candidates = [
-        "C:/Windows/Fonts/consolab.ttf",
-        "C:/Windows/Fonts/courbd.ttf",
-        "C:/Windows/Fonts/lucon.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf",
-    ]
-    for path in candidates:
-        if pathlib.Path(path).exists():
-            return ImageFont.truetype(path, size=size)
+def load_font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+    if FONT_BOLD.exists():
+        return ImageFont.truetype(str(FONT_BOLD), size=size)
     return ImageFont.load_default()
 
 
 def render_master_1024() -> Image.Image:
     s = 1024
-    # Opaque RGB (required by Apple App Store for AppIcon)
+    # Opaque RGB required for iOS App Store icons
     img = Image.new("RGB", (s, s), "#E4E4DF")
     draw = ImageDraw.Draw(img)
 
-    # Subtle workstation dot grid
-    for y in range(64, s, 64):
-        for x in range(64, s, 64):
-            draw.rectangle([x - 3, y - 3, x + 3, y + 3], fill="#C7C7BE")
+    # Outer square hardware badge with hard retro shadow
+    pad = 128
+    draw.rectangle([pad + 34, pad + 34, s - pad + 34, s - pad + 34], fill="#B6B6AE")
+    draw.rectangle([pad, pad, s - pad, s - pad], fill="#0043CE", outline="#1B2026", width=22)
 
-    # Outer retro window drop shadow & panel frame
-    pad = 112
-    draw.rectangle([pad + 26, pad + 26, s - pad + 26, s - pad + 26], fill="#B6B6AE")
-    draw.rectangle([pad, pad, s - pad, s - pad], fill="#F5F5F1", outline="#1B2026", width=18)
+    # Bold geometric 'B' + 4H bullish step motif in pure white / mint accent
+    # Crisp 2-bar IBM scan-line accent at top inside cobalt square
+    draw.line([pad + 34, pad + 42, s - pad - 34, pad + 42], fill="#6CA0FF", width=10)
 
-    # IBM Cobalt titlebar inside the window
-    bar_h = 152
-    draw.rectangle([pad, pad, s - pad, pad + bar_h], fill="#0043CE", outline="#1B2026", width=18)
+    # Bold geometric 'B' monogram (drawn cleanly with overlapping crisp rectangles)
+    bx = 276
+    by = 236
+    # Vertical spine & BTC prongs
+    draw.rectangle([bx + 54, by - 46, bx + 98, by + 356], fill="#FFFFFF")
+    draw.rectangle([bx + 146, by - 46, bx + 192, by + 356], fill="#FFFFFF")
+    draw.rectangle([bx, by, bx + 54, by + 310], fill="#FFFFFF")
+    # Upper loop
+    draw.rectangle([bx, by, bx + 230, by + 54], fill="#FFFFFF")
+    draw.rectangle([bx + 172, by + 44, bx + 230, by + 144], fill="#FFFFFF")
+    # Mid crossbar
+    draw.rectangle([bx, by + 132, bx + 252, by + 184], fill="#FFFFFF")
+    # Lower loop (overlaps cleanly with right prong)
+    draw.rectangle([bx + 184, by + 174, bx + 252, by + 276], fill="#FFFFFF")
+    draw.rectangle([bx, by + 258, bx + 252, by + 310], fill="#FFFFFF")
 
-    # Inner bevel accent in titlebar
-    draw.line([pad + 20, pad + 20, s - pad - 20, pad + 20], fill="#6CA0FF", width=8)
+    # Sharp emerald-mint + crimson 4H step bars on right side of emblem
+    px = 602
+    draw.rectangle([px, 415, px + 54, 546], fill="#FF8389", outline="#1B2026", width=8)
+    draw.rectangle([px + 78, 300, px + 132, 546], fill="#42BE65", outline="#1B2026", width=8)
 
-    # Titlebar label "BTC // v4.0"
-    f_bar = load_mono_font(72)
-    draw.text((pad + 44, pad + 38), "BTC // v4", fill="#FFFFFF", font=f_bar)
-
-    # Subtle horizontal grid inside chart pane
-    pane_top = pad + bar_h + 44
-    pane_bot = s - pad - 150
-    for gy in range(pane_top + 40, pane_bot, 90):
-        draw.line([pad + 44, gy, s - pad - 44, gy], fill="#E0E0D8", width=4)
-
-    # Crisp 4H Candlesticks (Long/Short protocol motif)
-    candles = [
-        # (cx, wick_top, wick_bot, body_top, body_bot, color)
-        (284, 340, 560, 410, 515, "#A2191F"),
-        (414, 415, 655, 480, 595, "#A2191F"),
-        (544, 430, 675, 470, 560, "#0E6027"),
-        (674, 325, 535, 365, 495, "#0E6027"),
-        (784, 295, 465, 320, 405, "#0043CE"),
-    ]
-    for cx, wt, wb, bt, bb, col in candles:
-        draw.line([cx, wt, cx, wb], fill="#1B2026", width=12)
-        draw.rectangle([cx - 34, bt, cx + 34, bb], fill=col, outline="#1B2026", width=10)
-
-    # Footer badge "4H · 1:2" centered cleanly
-    f_sub = load_mono_font(62)
-    badge_text = "4H · 1:2"
-    badge_y0 = s - pad - 122
-    draw.rectangle([pad + 44, badge_y0, s - pad - 44, s - pad - 36], fill="#DCDCD5", outline="#1B2026", width=10)
-    tb = draw.textbbox((0, 0), badge_text, font=f_sub)
+    # Crisp ivory footer bar inside icon with centered "DESK v4"
+    foot_top = s - pad - 186
+    draw.rectangle([pad, foot_top, s - pad, s - pad], fill="#F5F5F1", outline="#1B2026", width=22)
+    f_lbl = load_font(104)
+    lbl = "DESK v4"
+    tb = draw.textbbox((0, 0), lbl, font=f_lbl)
     tw = tb[2] - tb[0]
-    draw.text(((s - tw) // 2 - tb[0], badge_y0 + 12), badge_text, fill="#14181D", font=f_sub)
+    th = tb[3] - tb[1]
+    tx = (s - tw) // 2 - tb[0]
+    ty = foot_top + ((s - pad - foot_top) - th) // 2 - tb[1] - 4
+    draw.text((tx, ty), lbl, fill="#14181D", font=f_lbl)
 
     return img
 
@@ -122,7 +109,7 @@ def main() -> None:
     for fname, px in IOS_SIZES.items():
         master.resize((px, px), Image.Resampling.LANCZOS).save(ios_root / fname, format="PNG")
 
-    print(f"[OK] Generated {len(ANDROID_SIZES)} Android + {len(IOS_SIZES)} iOS icons + store masters.")
+    print(f"[OK] Generated {len(ANDROID_SIZES)} Android + {len(IOS_SIZES)} iOS BTC Desk v4 icons.")
 
 
 if __name__ == "__main__":

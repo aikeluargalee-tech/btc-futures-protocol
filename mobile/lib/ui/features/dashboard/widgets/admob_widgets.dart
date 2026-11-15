@@ -59,30 +59,31 @@ class _AdMobBannerStripState extends State<AdMobBannerStrip> {
   @override
   Widget build(BuildContext context) {
     if (_loaded && _bannerAd != null) {
-      return Container(
-        color: TerminalColors.bg,
-        width: double.infinity,
-        height: _bannerAd!.size.height.toDouble(),
-        alignment: Alignment.center,
-        child: SizedBox(
-          width: _bannerAd!.size.width.toDouble(),
+      return IbmWindowCard(
+        title: 'SPONSORED BANNER',
+        child: Container(
+          color: TerminalColors.panel,
+          width: double.infinity,
           height: _bannerAd!.size.height.toDouble(),
-          child: AdWidget(ad: _bannerAd!),
+          alignment: Alignment.center,
+          child: SizedBox(
+            width: _bannerAd!.size.width.toDouble(),
+            height: _bannerAd!.size.height.toDouble(),
+            child: AdWidget(ad: _bannerAd!),
+          ),
         ),
       );
     }
 
-    return Container(
-      height: 50,
-      width: double.infinity,
-      alignment: Alignment.center,
-      decoration: const BoxDecoration(
-        color: TerminalColors.panelAlt,
-        border: Border(top: BorderSide(color: TerminalColors.borderDark)),
-      ),
-      child: const Text(
-        'AdMob Banner Slot (320x50 · Test Mode)',
-        style: TextStyle(color: TerminalColors.muted, fontSize: 10),
+    return const IbmWindowCard(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        child: Center(
+          child: Text(
+            'AdMob Banner Slot (320x50 · Test Mode)',
+            style: TextStyle(color: TerminalColors.muted, fontSize: 9.5),
+          ),
+        ),
       ),
     );
   }
@@ -171,14 +172,15 @@ class _AdMobNativeAdCardState extends State<AdMobNativeAdCard> {
   @override
   Widget build(BuildContext context) {
     if (_loaded && _nativeAd != null) {
-      return Card(
+      return IbmWindowCard(
+        title: 'SPONSORED',
         child: Padding(
           padding: const EdgeInsets.all(8),
           child: ConstrainedBox(
             constraints: const BoxConstraints(
-              minWidth: 300,
-              minHeight: 280,
-              maxHeight: 360,
+              minWidth: 280,
+              minHeight: 260,
+              maxHeight: 340,
             ),
             child: AdWidget(ad: _nativeAd!),
           ),
@@ -186,7 +188,7 @@ class _AdMobNativeAdCardState extends State<AdMobNativeAdCard> {
       );
     }
 
-    return Card(
+    return IbmWindowCard(
       child: Padding(
         padding: const EdgeInsets.all(10),
         child: Row(
@@ -199,14 +201,14 @@ class _AdMobNativeAdCardState extends State<AdMobNativeAdCard> {
               ),
               child: const Text(
                 'SPONSORED',
-                style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: TerminalColors.muted),
+                style: TextStyle(fontSize: 9.0, fontWeight: FontWeight.w700, color: TerminalColors.muted),
               ),
             ),
             const SizedBox(width: 8),
             const Expanded(
               child: Text(
                 'AdMob Native Advanced Ad Slot (Medium Template · Test Mode)',
-                style: TextStyle(fontSize: 10.5, color: TerminalColors.muted),
+                style: TextStyle(fontSize: 9.5, color: TerminalColors.muted),
               ),
             ),
           ],

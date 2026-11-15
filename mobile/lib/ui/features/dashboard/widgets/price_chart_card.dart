@@ -28,16 +28,13 @@ class _PriceChartCardState extends State<PriceChartCard> {
     final bars = (widget.charts[_tf] ?? const <ChartCandle>[]);
     final sliced = bars.length > 60 ? bars.sublist(bars.length - 60) : bars;
 
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const IbmSectionTitle('STRUCTURAL PRICE MAP'),
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+    return IbmWindowCard(
+      title: 'STRUCTURAL PRICE MAP',
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -81,10 +78,8 @@ class _PriceChartCardState extends State<PriceChartCard> {
                           ),
                         ),
                 ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

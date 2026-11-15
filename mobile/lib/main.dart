@@ -1,6 +1,7 @@
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'config/ad_config.dart';
@@ -12,6 +13,16 @@ import 'ui/features/dashboard/views/home_shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: TerminalColors.bg,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
+      systemNavigationBarColor: TerminalColors.panel,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
 
   if (AppConfig.isMobilePlatform) {
     if (defaultTargetPlatform == TargetPlatform.iOS) {
@@ -47,9 +58,18 @@ class BtcProtocolApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'BTC Protocol v4.0',
+      title: 'BTC Desk v4',
       debugShowCheckedModeBanner: false,
       theme: buildTerminalTheme(),
+      builder: (context, child) {
+        final mq = MediaQuery.of(context);
+        return MediaQuery(
+          data: mq.copyWith(
+            textScaler: mq.textScaler.clamp(minScaleFactor: 0.95, maxScaleFactor: 1.05),
+          ),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       home: HomeShell(
         vm: viewModel,
         enablePlatformPlugins: enablePlatformPlugins,

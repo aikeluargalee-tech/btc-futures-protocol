@@ -74,7 +74,7 @@ class _ProtocolVideoCardState extends State<ProtocolVideoCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return IbmWindowCard(
       child: Column(
         children: [
           InkWell(
@@ -93,9 +93,9 @@ class _ProtocolVideoCardState extends State<ProtocolVideoCard> {
                     child: Text(
                       'PROTOCOL BRIEFING VIDEO (vGUZF.mp4)',
                       style: TextStyle(
-                        fontSize: 10.5,
+                        fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        letterSpacing: 0.4,
+                        letterSpacing: 0.3,
                         color: TerminalColors.text,
                       ),
                     ),
@@ -109,7 +109,7 @@ class _ProtocolVideoCardState extends State<ProtocolVideoCard> {
                     child: Text(
                       widget.expanded ? 'HIDE' : 'TAP TO PLAY',
                       style: const TextStyle(
-                        fontSize: 9.5,
+                        fontSize: 9,
                         fontWeight: FontWeight.w700,
                         color: TerminalColors.accent,
                       ),

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -144,19 +145,34 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('BTC PROTOCOL v4.0'), findsOneWidget);
+    expect(find.text('BTC DESK v4'), findsOneWidget);
+    expect(find.textContaining('AI ANALYSIS ENGINE (CORE WORKFLOW)'), findsOneWidget);
     expect(find.text('[COPY AI ANALYSIS PROMPT + JSON]'), findsOneWidget);
+    expect(find.text('[PREVIEW]'), findsOneWidget);
     expect(
-      find.text('Paste into ChatGPT, Gemini, Claude, Grok, DeepSeek, Kimi, or any AI for direct verdict & Q&A.'),
+      find.text('Paste into ChatGPT, Gemini, Claude, Grok, DeepSeek, Kimi, or any AI for direct verdict & follow-up Q&A.'),
       findsOneWidget,
     );
+
+    final listScrollable = find.byType(Scrollable).first;
+    await tester.scrollUntilVisible(
+      find.text('PROTOCOL BRIEFING VIDEO (vGUZF.mp4)'),
+      250,
+      scrollable: listScrollable,
+    );
     expect(find.text('PROTOCOL BRIEFING VIDEO (vGUZF.mp4)'), findsOneWidget);
-    expect(find.text('AdMob Banner Slot (320x50 · Test Mode)'), findsOneWidget);
-    expect(find.text('AdMob Native Advanced Ad Slot (Medium Template · Test Mode)'), findsOneWidget);
 
     await tester.tap(find.text('PROTOCOL BRIEFING VIDEO (vGUZF.mp4)'));
     await tester.pump();
     expect(find.text('Video Briefing Player Ready (vGUZF.mp4)'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('AdMob Banner Slot (320x50 · Test Mode)'),
+      250,
+      scrollable: listScrollable,
+    );
+    expect(find.text('AdMob Native Advanced Ad Slot (Medium Template · Test Mode)'), findsOneWidget);
+    expect(find.text('AdMob Banner Slot (320x50 · Test Mode)'), findsOneWidget);
 
     await tester.tap(find.text('F4 AUDIT'));
     await tester.pump();

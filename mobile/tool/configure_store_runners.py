@@ -36,7 +36,7 @@ def patch_android_manifest() -> None:
     if "com.google.android.gms.ads.APPLICATION_ID" not in txt:
         txt = txt.replace("</application>", f"{meta}\n    </application>", 1)
 
-    txt = re.sub(r'android:label="[^"]+"', 'android:label="BTC Protocol v4"', txt, count=1)
+    txt = re.sub(r'android:label="[^"]+"', 'android:label="BTC Desk v4"', txt, count=1)
     manifest.write_text(txt, encoding="utf-8")
 
 
@@ -104,7 +104,7 @@ def patch_ios_plist_and_podfile() -> None:
     if plist_path.exists():
         with plist_path.open("rb") as f:
             plist = plistlib.load(f)
-        plist["CFBundleDisplayName"] = "BTC Protocol v4"
+        plist["CFBundleDisplayName"] = "BTC Desk v4"
         plist["GADApplicationIdentifier"] = IOS_APP_ID
         plist["NSUserTrackingUsageDescription"] = (
             "This identifier is used to deliver relevant advertising without selling personal data."

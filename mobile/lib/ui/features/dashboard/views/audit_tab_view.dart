@@ -52,125 +52,110 @@ class _AuditTabViewState extends State<AuditTabView> {
     return RefreshIndicator(
       onRefresh: widget.vm.refreshAll,
       child: ListView(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.fromLTRB(10, 6, 10, 14),
         children: [
-          Card(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const IbmSectionTitle('RAW TELEMETRY EXPORT'),
-                Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      InkWell(
-                        onTap: _copyRawJson,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                          decoration: BoxDecoration(
-                            color: TerminalColors.panelAlt,
-                            border: Border.all(color: TerminalColors.borderDark),
-                          ),
-                          child: const Text(
-                            '[COPY RAW JSON ONLY]',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: TerminalColors.text,
-                            ),
-                          ),
-                        ),
+          IbmWindowCard(
+            title: 'RAW TELEMETRY EXPORT',
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  InkWell(
+                    onTap: _copyRawJson,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: TerminalColors.panelAlt,
+                        border: Border.all(color: TerminalColors.borderDark),
                       ),
-                      const SizedBox(height: 5),
-                      Text(
-                        _rawCopyMsg,
+                      child: const Text(
+                        '[COPY RAW JSON ONLY]',
                         style: TextStyle(
                           fontSize: 9.5,
-                          color: _copied ? TerminalColors.up : TerminalColors.muted,
+                          fontWeight: FontWeight.w700,
+                          color: TerminalColors.text,
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 5),
+                  Text(
+                    _rawCopyMsg,
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      color: _copied ? TerminalColors.up : TerminalColors.muted,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 8),
-          Card(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const IbmSectionTitle('SIGNAL & MANAGEMENT AUDIT LOG'),
-                Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (s.auditLogRecent.isEmpty)
-                        const Text(
-                          'No audit events recorded yet.',
-                          style: TextStyle(color: TerminalColors.muted, fontSize: 10),
-                        )
-                      else
-                        for (final item in s.auditLogRecent.take(25))
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 3),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${item.event}  ·  ${item.ts}',
-                                  style: const TextStyle(
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: TerminalColors.accent,
-                                  ),
-                                ),
-                                Text(
-                                  item.detail,
-                                  style: const TextStyle(fontSize: 10, color: TerminalColors.text),
-                                ),
-                              ],
+          const SizedBox(height: 10),
+          IbmWindowCard(
+            title: 'SIGNAL & MANAGEMENT AUDIT LOG',
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (s.auditLogRecent.isEmpty)
+                    const Text(
+                      'No audit events recorded yet.',
+                      style: TextStyle(color: TerminalColors.muted, fontSize: 10),
+                    )
+                  else
+                    for (final item in s.auditLogRecent.take(25))
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 3),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${item.event}  ·  ${item.ts}',
+                              style: const TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w700,
+                                color: TerminalColors.accent,
+                              ),
                             ),
-                          ),
-                    ],
-                  ),
-                ),
-              ],
+                            Text(
+                              item.detail,
+                              style: const TextStyle(fontSize: 9.5, color: TerminalColors.text),
+                            ),
+                          ],
+                        ),
+                      ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 8),
-          Card(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const IbmSectionTitle('FEED DIAGNOSTICS & STORE NOTICE'),
-                Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        s.fetchErrors.isEmpty
-                            ? 'All data feeds succeeded with zero errors.'
-                            : 'Notes: ${s.fetchErrors.join(" | ")}',
-                        style: const TextStyle(fontSize: 10),
-                      ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        'Disclaimer: Educational & paper-trading telemetry tool only. Not financial advice, brokerage execution, or investment solicitation.',
-                        style: TextStyle(fontSize: 9.5, color: TerminalColors.muted),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Privacy Policy: ${AppConfig.privacyPolicyUrl}',
-                        style: TextStyle(fontSize: 9.5, color: TerminalColors.accent),
-                      ),
-                    ],
+          const SizedBox(height: 10),
+          IbmWindowCard(
+            title: 'FEED DIAGNOSTICS & STORE NOTICE',
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    s.fetchErrors.isEmpty
+                        ? 'All data feeds succeeded with zero errors.'
+                        : 'Notes: ${s.fetchErrors.join(" | ")}',
+                    style: const TextStyle(fontSize: 9.5),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Disclaimer: Educational & paper-trading telemetry tool only. Not financial advice, brokerage execution, or investment solicitation.',
+                    style: TextStyle(fontSize: 9.5, color: TerminalColors.muted),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Privacy Policy: ${AppConfig.privacyPolicyUrl}',
+                    style: TextStyle(fontSize: 9.5, color: TerminalColors.accent),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

@@ -65,104 +65,94 @@ class _LedgerTabViewState extends State<LedgerTabView> {
     return RefreshIndicator(
       onRefresh: widget.vm.refreshAll,
       child: ListView(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.fromLTRB(10, 6, 10, 14),
         children: [
-          Card(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const IbmSectionTitle('v4.0 POSITION SIZING CALCULATOR'),
-                Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          IbmWindowCard(
+            title: 'v4.0 POSITION SIZING CALCULATOR',
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _numField('Equity USD', _eqCtrl),
+                  const SizedBox(height: 8),
+                  Row(
                     children: [
-                      _numField('Equity USD', _eqCtrl),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: _dir,
-                              style: const TextStyle(color: TerminalColors.text, fontSize: 10.5),
-                              decoration: const InputDecoration(labelText: 'Direction'),
-                              items: const [
-                                DropdownMenuItem(value: 'LONG', child: Text('LONG')),
-                                DropdownMenuItem(value: 'SHORT', child: Text('SHORT')),
-                              ],
-                              onChanged: (v) => setState(() => _dir = v ?? 'LONG'),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: SwitchListTile(
-                              contentPadding: EdgeInsets.zero,
-                              dense: true,
-                              title: const Text('Weekend 0.5x', style: TextStyle(fontSize: 10)),
-                              value: _weekendHalf,
-                              onChanged: (v) => setState(() => _weekendHalf = v),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(child: _numField('Entry', _entryCtrl)),
-                          const SizedBox(width: 6),
-                          Expanded(child: _numField('Stop', _stopCtrl)),
-                          const SizedBox(width: 6),
-                          Expanded(child: _numField('Target 1', _tpCtrl)),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        calc.valid ? 'VALID v4.0 FUTURES SIZING' : 'INVALID: ${calc.issues.join("; ")}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: calc.valid ? TerminalColors.up : TerminalColors.down,
-                          fontSize: 10.5,
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: _dir,
+                          style: const TextStyle(color: TerminalColors.text, fontSize: 10),
+                          decoration: const InputDecoration(labelText: 'Direction'),
+                          items: const [
+                            DropdownMenuItem(value: 'LONG', child: Text('LONG')),
+                            DropdownMenuItem(value: 'SHORT', child: Text('SHORT')),
+                          ],
+                          onChanged: (v) => setState(() => _dir = v ?? 'LONG'),
                         ),
                       ),
-                      const SizedBox(height: 3),
-                      Text(
-                        'Size: ${calc.sizeBtc.toStringAsFixed(5)} BTC (${fmtUsd(calc.notionalUsd)}) · Lev: ${calc.leverage.toStringAsFixed(2)}x/2.0x${calc.leverageCapped ? " CLAMPED" : ""}',
-                        style: const TextStyle(fontSize: 10.5),
-                      ),
-                      Text(
-                        'Risk: ${calc.actualRiskPct.toStringAsFixed(3)}% (${fmtUsd(calc.actualRiskUsd, decimals: 2)}) · Stop: ${calc.stopDistPct.toStringAsFixed(2)}% · R:R: ${calc.rawRr.toStringAsFixed(2)}:1',
-                        style: const TextStyle(fontSize: 10, color: TerminalColors.muted),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                          title: const Text('Weekend 0.5x', style: TextStyle(fontSize: 9.5)),
+                          value: _weekendHalf,
+                          onChanged: (v) => setState(() => _weekendHalf = v),
+                        ),
                       ),
                     ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(child: _numField('Entry', _entryCtrl)),
+                      const SizedBox(width: 6),
+                      Expanded(child: _numField('Stop', _stopCtrl)),
+                      const SizedBox(width: 6),
+                      Expanded(child: _numField('Target 1', _tpCtrl)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    calc.valid ? 'VALID v4.0 FUTURES SIZING' : 'INVALID: ${calc.issues.join("; ")}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: calc.valid ? TerminalColors.up : TerminalColors.down,
+                      fontSize: 10,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    'Size: ${calc.sizeBtc.toStringAsFixed(5)} BTC (${fmtUsd(calc.notionalUsd)}) · Lev: ${calc.leverage.toStringAsFixed(2)}x/2.0x${calc.leverageCapped ? " CLAMPED" : ""}',
+                    style: const TextStyle(fontSize: 10),
+                  ),
+                  Text(
+                    'Risk: ${calc.actualRiskPct.toStringAsFixed(3)}% (${fmtUsd(calc.actualRiskUsd, decimals: 2)}) · Stop: ${calc.stopDistPct.toStringAsFixed(2)}% · R:R: ${calc.rawRr.toStringAsFixed(2)}:1',
+                    style: const TextStyle(fontSize: 9.5, color: TerminalColors.muted),
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 8),
-          Card(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const IbmSectionTitle('PAPER LEDGER SUMMARY'),
-                Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Equity: ${fmtUsd(port.equityUsd, decimals: 2)}  ·  HWM: ${fmtUsd(port.highWaterMarkUsd)}  ·  DD: ${port.drawdownPct.toStringAsFixed(2)}%',
-                        style: const TextStyle(fontSize: 10.5),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        'Closed Legs: ${port.totalClosedLegs}  ·  WR: ${port.winRatePct.toStringAsFixed(1)}%  ·  PF: ${port.profitFactor.toStringAsFixed(2)}  ·  Exp: ${port.expectancyR.toStringAsFixed(2)}R',
-                        style: const TextStyle(fontSize: 10, color: TerminalColors.muted),
-                      ),
-                    ],
+          const SizedBox(height: 10),
+          IbmWindowCard(
+            title: 'PAPER LEDGER SUMMARY',
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Equity: ${fmtUsd(port.equityUsd, decimals: 2)}  ·  HWM: ${fmtUsd(port.highWaterMarkUsd)}  ·  DD: ${port.drawdownPct.toStringAsFixed(2)}%',
+                    style: const TextStyle(fontSize: 10),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 3),
+                  Text(
+                    'Closed Legs: ${port.totalClosedLegs}  ·  WR: ${port.winRatePct.toStringAsFixed(1)}%  ·  PF: ${port.profitFactor.toStringAsFixed(2)}  ·  Exp: ${port.expectancyR.toStringAsFixed(2)}R',
+                    style: const TextStyle(fontSize: 9.5, color: TerminalColors.muted),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -172,7 +162,7 @@ class _LedgerTabViewState extends State<LedgerTabView> {
 
   Widget _numField(String label, TextEditingController ctrl) => TextField(
         controller: ctrl,
-        style: const TextStyle(fontSize: 10.5, color: TerminalColors.text),
+        style: const TextStyle(fontSize: 10, color: TerminalColors.text),
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         decoration: InputDecoration(labelText: label),
         onChanged: (_) => setState(() {}),

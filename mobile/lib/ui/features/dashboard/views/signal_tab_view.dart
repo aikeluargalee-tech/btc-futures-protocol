@@ -39,231 +39,213 @@ class SignalTabView extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: vm.refreshAll,
       child: ListView(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.fromLTRB(10, 6, 10, 14),
         children: [
-          // 0. Single Primary AI Prompt Copy Bar
-          _AiCopyActionBar(vm: vm),
-          const SizedBox(height: 8),
+          // 1. STANDOUT HERO SECTION: AI Analysis Engine (Core Workflow)
+          _AiCopilotHeroCard(vm: vm),
+          const SizedBox(height: 10),
 
-          // 1. Collapsible Protocol Briefing Video Card (vGUZF.mp4)
+          // 2. Active Signal Status Window
+          IbmWindowCard(
+            title: 'ACTIVE SIGNAL STATUS',
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          sig.status,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: statusColor,
+                          ),
+                        ),
+                      ),
+                      IbmBadge(
+                        label: sig.status == 'FLAT'
+                            ? 'NO FUTURES ENTRY'
+                            : (prop?.entryMethod ?? 'ACTIVE'),
+                        color: statusColor,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '1D Bias: ${reg.dailyBias}  ·  Open Futures: ${port.openPositions.length}/1  ·  Eq: ${fmtUsd(port.equityUsd, decimals: 2)}',
+                    style: const TextStyle(color: TerminalColors.muted, fontSize: 10),
+                  ),
+                  if (reg.dominantFactors.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'Drivers: ${reg.dominantFactors.join(" · ")}',
+                      style: const TextStyle(color: TerminalColors.text, fontSize: 10),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // 3. 4H Multi-Factor Regime Score Gauge Window
+          IbmWindowCard(
+            title: '4H MULTI-FACTOR REGIME SCORE (0-100)',
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${reg.score.toStringAsFixed(1)} / 100',
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                      ),
+                      IbmBadge(
+                        label: reg.bias,
+                        color: reg.bias == 'LONG'
+                            ? TerminalColors.up
+                            : reg.bias == 'SHORT'
+                                ? TerminalColors.down
+                                : TerminalColors.warn,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: TerminalColors.borderDark),
+                    ),
+                    child: LinearProgressIndicator(
+                      value: (reg.score / 100.0).clamp(0.0, 1.0),
+                      minHeight: 7,
+                      backgroundColor: TerminalColors.panelAlt,
+                      valueColor: AlwaysStoppedAnimation(
+                        reg.bias == 'LONG'
+                            ? TerminalColors.up
+                            : reg.bias == 'SHORT'
+                                ? TerminalColors.down
+                                : TerminalColors.accent,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Short ≤ ${reg.shortThreshold.toInt()}',
+                        style: const TextStyle(fontSize: 9.5, color: TerminalColors.muted),
+                      ),
+                      Text(
+                        'Flat ${reg.shortThreshold.toInt() + 1}–${reg.longThreshold.toInt() - 1}',
+                        style: const TextStyle(fontSize: 9.5, color: TerminalColors.muted),
+                      ),
+                      Text(
+                        'Long ≥ ${reg.longThreshold.toInt()}',
+                        style: const TextStyle(fontSize: 9.5, color: TerminalColors.muted),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // 4. 9-Point Checklist Window
+          IbmWindowCard(
+            title: '9-POINT FUTURES QUALIFICATION CHECKLIST',
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final item in sig.checklist)
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      decoration: const BoxDecoration(
+                        border: Border(bottom: BorderSide(color: TerminalColors.panelAlt)),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${item.id}. ${item.rule}',
+                                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 10),
+                                ),
+                                Text(
+                                  item.detail,
+                                  style: const TextStyle(color: TerminalColors.muted, fontSize: 9.5),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          IbmBadge(
+                            label: item.passed ? 'PASS' : 'FAIL',
+                            color: item.passed ? TerminalColors.up : TerminalColors.down,
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // 5. Sizing & 5-Tier Circuit Breakers Window
+          if (prop != null && prop.entryPrice > 0) ...[
+            IbmWindowCard(
+              title: 'PROPOSED SIZING & 5-TIER BREAKERS',
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _kv('Direction / Entry', '${prop.direction} @ ${fmtUsd(prop.entryPrice, decimals: 1)}'),
+                    _kv('Hard Stop', '${fmtUsd(prop.stopPrice, decimals: 1)} (${prop.stopDistancePct.toStringAsFixed(2)}% ≤ 2.2%)'),
+                    _kv('Target 1 (45% @ 1.5R)', '${fmtUsd(prop.target1Price, decimals: 1)} (${prop.target1Label})'),
+                    _kv('R:R (Raw / Adj)', '${prop.rawRr.toStringAsFixed(2)}:1 / ${prop.fundingAdjustedRr.toStringAsFixed(2)}:1'),
+                    _kv('Size / Leverage', '${prop.sizeBtc} BTC (${prop.leverage.toStringAsFixed(2)}x / 2.00x)'),
+                    _kv('Open Heat / Max', '${port.openHeatPct.toStringAsFixed(2)}% / ${port.maxHeatPct.toStringAsFixed(1)}%'),
+                    _kv('Intraday / Daily / Wk', '${fmtSignedPct(port.intradayPnlPct)} / ${fmtSignedPct(port.dailyPnlPct)} / ${fmtSignedPct(port.weeklyPnlPct)}'),
+                    _kv(
+                      'Breakers',
+                      port.breakers.activeLabels.isEmpty
+                          ? 'ALL CLEAR (-1.2 / -2 / -4 / -6 / -10%)'
+                          : port.breakers.activeLabels.join(', '),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+
+          // 6. Collapsible Protocol Briefing Video Card (vGUZF.mp4)
           ProtocolVideoCard(
             expanded: vm.videoExpanded,
             onToggleExpanded: vm.toggleVideoExpanded,
             enablePlatformPlugins: enablePlatformPlugins,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
 
-          // 2. Active Signal & 4H Regime Score Cards
-          Card(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const IbmSectionTitle('ACTIVE SIGNAL STATUS'),
-                Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              sig.status,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: statusColor,
-                              ),
-                            ),
-                          ),
-                          IbmBadge(
-                            label: sig.status == 'FLAT'
-                                ? 'NO FUTURES ENTRY'
-                                : (prop?.entryMethod ?? 'ACTIVE'),
-                            color: statusColor,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        '1D Bias: ${reg.dailyBias}  ·  Open Futures: ${port.openPositions.length}/1  ·  Eq: ${fmtUsd(port.equityUsd, decimals: 2)}',
-                        style: const TextStyle(color: TerminalColors.muted, fontSize: 10),
-                      ),
-                      if (reg.dominantFactors.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          'Drivers: ${reg.dominantFactors.join(" · ")}',
-                          style: const TextStyle(color: TerminalColors.text, fontSize: 10.5),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          // 3. 4H Multi-Factor Regime Score Gauge Card
-          Card(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const IbmSectionTitle('4H MULTI-FACTOR REGIME SCORE (0-100)'),
-                Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '${reg.score.toStringAsFixed(1)} / 100',
-                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-                          ),
-                          IbmBadge(
-                            label: reg.bias,
-                            color: reg.bias == 'LONG'
-                                ? TerminalColors.up
-                                : reg.bias == 'SHORT'
-                                    ? TerminalColors.down
-                                    : TerminalColors.warn,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: TerminalColors.borderDark),
-                        ),
-                        child: LinearProgressIndicator(
-                          value: (reg.score / 100.0).clamp(0.0, 1.0),
-                          minHeight: 7,
-                          backgroundColor: TerminalColors.panelAlt,
-                          valueColor: AlwaysStoppedAnimation(
-                            reg.bias == 'LONG'
-                                ? TerminalColors.up
-                                : reg.bias == 'SHORT'
-                                    ? TerminalColors.down
-                                    : TerminalColors.accent,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Short ≤ ${reg.shortThreshold.toInt()}',
-                            style: const TextStyle(fontSize: 9.5, color: TerminalColors.muted),
-                          ),
-                          Text(
-                            'Flat ${reg.shortThreshold.toInt() + 1}–${reg.longThreshold.toInt() - 1}',
-                            style: const TextStyle(fontSize: 9.5, color: TerminalColors.muted),
-                          ),
-                          Text(
-                            'Long ≥ ${reg.longThreshold.toInt()}',
-                            style: const TextStyle(fontSize: 9.5, color: TerminalColors.muted),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          // 4. Inline Google AdMob Native Advanced Ad Card
+          // 7. Non-intrusive Native + Banner Ads placed cleanly at bottom of scroll feed
           AdMobNativeAdCard(enablePlatformPlugins: enablePlatformPlugins),
-          const SizedBox(height: 8),
-
-          // 5. 9-Point Checklist Card
-          Card(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const IbmSectionTitle('9-POINT FUTURES QUALIFICATION CHECKLIST'),
-                Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      for (final item in sig.checklist)
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 5),
-                          decoration: const BoxDecoration(
-                            border: Border(bottom: BorderSide(color: TerminalColors.panelAlt)),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '${item.id}. ${item.rule}',
-                                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 10.5),
-                                    ),
-                                    Text(
-                                      item.detail,
-                                      style: const TextStyle(color: TerminalColors.muted, fontSize: 9.5),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              IbmBadge(
-                                label: item.passed ? 'PASS' : 'FAIL',
-                                color: item.passed ? TerminalColors.up : TerminalColors.down,
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          // 6. Sizing & 5-Tier Circuit Breakers Card
-          if (prop != null && prop.entryPrice > 0)
-            Card(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const IbmSectionTitle('PROPOSED SIZING & 5-TIER BREAKERS'),
-                  Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _kv('Direction / Entry', '${prop.direction} @ ${fmtUsd(prop.entryPrice, decimals: 1)}'),
-                        _kv('Hard Stop', '${fmtUsd(prop.stopPrice, decimals: 1)} (${prop.stopDistancePct.toStringAsFixed(2)}% ≤ 2.2%)'),
-                        _kv('Target 1 (45% @ 1.5R)', '${fmtUsd(prop.target1Price, decimals: 1)} (${prop.target1Label})'),
-                        _kv('R:R (Raw / Adj)', '${prop.rawRr.toStringAsFixed(2)}:1 / ${prop.fundingAdjustedRr.toStringAsFixed(2)}:1'),
-                        _kv('Size / Leverage', '${prop.sizeBtc} BTC (${prop.leverage.toStringAsFixed(2)}x / 2.00x)'),
-                        _kv('Open Heat / Max', '${port.openHeatPct.toStringAsFixed(2)}% / ${port.maxHeatPct.toStringAsFixed(1)}%'),
-                        _kv('Intraday / Daily / Wk', '${fmtSignedPct(port.intradayPnlPct)} / ${fmtSignedPct(port.dailyPnlPct)} / ${fmtSignedPct(port.weeklyPnlPct)}'),
-                        _kv(
-                          'Breakers',
-                          port.breakers.activeLabels.isEmpty
-                              ? 'ALL CLEAR (-1.2 / -2 / -4 / -6 / -10%)'
-                              : port.breakers.activeLabels.join(', '),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
+          AdMobBannerStrip(enablePlatformPlugins: enablePlatformPlugins),
         ],
       ),
     );
@@ -274,13 +256,13 @@ class SignalTabView extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(k, style: const TextStyle(color: TerminalColors.muted, fontSize: 10)),
+            Text(k, style: const TextStyle(color: TerminalColors.muted, fontSize: 9.5)),
             const SizedBox(width: 8),
             Flexible(
               child: Text(
                 v,
                 textAlign: TextAlign.right,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 10),
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 9.5),
               ),
             ),
           ],
@@ -288,18 +270,19 @@ class SignalTabView extends StatelessWidget {
       );
 }
 
-class _AiCopyActionBar extends StatefulWidget {
-  const _AiCopyActionBar({required this.vm});
+/// Standout Hero Card making AI Prompt + Compact Telemetry Copy the unmistakable center of the app.
+class _AiCopilotHeroCard extends StatefulWidget {
+  const _AiCopilotHeroCard({required this.vm});
 
   final ProtocolViewModel vm;
 
   @override
-  State<_AiCopyActionBar> createState() => _AiCopyActionBarState();
+  State<_AiCopilotHeroCard> createState() => _AiCopilotHeroCardState();
 }
 
-class _AiCopyActionBarState extends State<_AiCopyActionBar> {
+class _AiCopilotHeroCardState extends State<_AiCopilotHeroCard> {
   static const String _defaultHelper =
-      'Paste into ChatGPT, Gemini, Claude, Grok, DeepSeek, Kimi, or any AI for direct verdict & Q&A.';
+      'Paste into ChatGPT, Gemini, Claude, Grok, DeepSeek, Kimi, or any AI for direct verdict & follow-up Q&A.';
 
   String _statusText = _defaultHelper;
   bool _copiedFlash = false;
@@ -319,9 +302,9 @@ class _AiCopyActionBarState extends State<_AiCopyActionBar> {
     _resetTimer?.cancel();
     setState(() {
       _copiedFlash = true;
-      _statusText = 'Copied! Paste into ChatGPT, Gemini, Claude, Grok, DeepSeek, or Kimi.';
+      _statusText = 'Copied (${payload.length} chars)! Paste into ChatGPT, Gemini, Claude, Grok, DeepSeek, or Kimi.';
     });
-    _resetTimer = Timer(const Duration(seconds: 3), () {
+    _resetTimer = Timer(const Duration(seconds: 4), () {
       if (!mounted) return;
       setState(() {
         _copiedFlash = false;
@@ -330,50 +313,213 @@ class _AiCopyActionBarState extends State<_AiCopyActionBar> {
     });
   }
 
+  void _previewPrompt() {
+    final payload = widget.vm.buildAiAnalysisPrompt();
+    if (payload.isEmpty) return;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: TerminalColors.panel,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.zero,
+          side: BorderSide(color: TerminalColors.borderDark, width: 1.5),
+        ),
+        child: SizedBox(
+          width: double.maxFinite,
+          height: MediaQuery.of(ctx).size.height * 0.72,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              IbmSectionTitle(
+                'AI PROMPT + COMPACT TELEMETRY (${payload.length} CHARS)',
+                backgroundColor: TerminalColors.accent,
+                textColor: Colors.white,
+                trailing: InkWell(
+                  onTap: () => Navigator.of(ctx).pop(),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(
+                      '[X]',
+                      style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(10),
+                  child: SelectableText(
+                    payload,
+                    style: const TextStyle(fontSize: 9.5, color: TerminalColors.text, height: 1.35),
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  color: TerminalColors.panelAlt,
+                  border: Border(top: BorderSide(color: TerminalColors.border)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        Navigator.of(ctx).pop();
+                        _copyAiPrompt();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: TerminalColors.accent,
+                          border: Border.all(color: TerminalColors.borderDark),
+                        ),
+                        child: const Text(
+                          '[COPY ALL & CLOSE]',
+                          style: TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        InkWell(
-          onTap: _copyAiPrompt,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: TerminalColors.accent,
-              border: Border.all(color: TerminalColors.borderDark),
+    final stale = widget.vm.isSnapshotStale;
+    final rawLen = widget.vm.buildCompactRawJson().length;
+    final kStr = (rawLen / 1000.0).toStringAsFixed(1);
+
+    return IbmWindowCard(
+      title: 'AI ANALYSIS ENGINE (CORE WORKFLOW)',
+      headerColor: TerminalColors.accent,
+      headerTextColor: Colors.white,
+      borderWidth: 1.5,
+      trailing: IbmBadge(
+        label: stale ? 'STALE >60M' : 'READY',
+        color: stale ? TerminalColors.warn : TerminalColors.up,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Compact packet telemetry strip
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              decoration: BoxDecoration(
+                color: TerminalColors.panelStripe,
+                border: Border.all(color: TerminalColors.border),
+              ),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 2,
+                alignment: WrapAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'RAW PACKET: ~${kStr}K chars (compact OHLCV)',
+                    style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: TerminalColors.text),
+                  ),
+                  const Text(
+                    'UNBIASED · Q&A GROUNDED',
+                    style: TextStyle(fontSize: 9.0, fontWeight: FontWeight.w700, color: TerminalColors.accent),
+                  ),
+                ],
+              ),
             ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.copy_all_sharp, size: 14, color: Colors.white),
-                SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    '[COPY AI ANALYSIS PROMPT + JSON]',
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.4,
+            const SizedBox(height: 8),
+
+            // Standout full-text Primary CTA (never truncated with ellipsis)
+            InkWell(
+              onTap: _copyAiPrompt,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                decoration: BoxDecoration(
+                  color: _copiedFlash ? TerminalColors.up : TerminalColors.accent,
+                  border: Border.all(color: TerminalColors.borderDark, width: 1.2),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: TerminalColors.shadow,
+                      offset: Offset(2, 2),
+                      blurRadius: 0,
                     ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      _copiedFlash ? Icons.check_sharp : Icons.copy_all_sharp,
+                      size: 14,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        _copiedFlash
+                            ? 'COPIED — READY TO PASTE IN ANY AI APP'
+                            : '[COPY AI ANALYSIS PROMPT + JSON]',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 7),
+
+            // Preview button + supported AI model tags
+            Row(
+              children: [
+                InkWell(
+                  onTap: _previewPrompt,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: TerminalColors.panelAlt,
+                      border: Border.all(color: TerminalColors.borderDark),
+                    ),
+                    child: const Text(
+                      '[PREVIEW]',
+                      style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: TerminalColors.text),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'ChatGPT · Gemini · Claude · Grok · DeepSeek · Kimi',
+                    style: TextStyle(fontSize: 9.0, color: TerminalColors.muted),
                   ),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 6),
+
+            // Status / Helper text
+            Text(
+              _statusText,
+              style: TextStyle(
+                fontSize: 9.5,
+                fontWeight: _copiedFlash ? FontWeight.w700 : FontWeight.w400,
+                color: _copiedFlash ? TerminalColors.up : TerminalColors.muted,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
-        Text(
-          _statusText,
-          style: TextStyle(
-            fontSize: 9.5,
-            fontWeight: _copiedFlash ? FontWeight.w700 : FontWeight.w400,
-            color: _copiedFlash ? TerminalColors.up : TerminalColors.muted,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

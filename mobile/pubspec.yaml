@@ -1,7 +1,7 @@
 name: btc_futures_protocol
-description: BTC Short-Term Futures Protocol v4.0 mobile companion app with video briefing and AdMob Banner & Native monetization.
+description: BTC Desk v4 — Short-Term 4H Futures Telemetry, AI Copilot Export & Paper Protocol Monitor.
 publish_to: "none"
-version: 4.0.0+1
+version: 4.1.0+2
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -23,3 +23,10 @@ flutter:
   uses-material-design: true
   assets:
     - assets/video/vGUZF.mp4
+  fonts:
+    - family: IBMPlexMono
+      fonts:
+        - asset: assets/fonts/IBMPlexMono-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/IBMPlexMono-Bold.ttf
+          weight: 700
