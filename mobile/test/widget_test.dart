@@ -9,6 +9,7 @@ import 'package:btc_futures_protocol/data/services/protocol_api_service.dart';
 import 'package:btc_futures_protocol/domain/models/protocol_state.dart';
 import 'package:btc_futures_protocol/domain/telemetry_export.dart';
 import 'package:btc_futures_protocol/main.dart';
+import 'package:btc_futures_protocol/ui/features/dashboard/views/signal_tab_view.dart';
 import 'package:btc_futures_protocol/ui/features/dashboard/view_models/protocol_view_model.dart';
 
 const String _sampleStateJson = '''
@@ -152,10 +153,20 @@ void main() {
         .widgetList<Text>(find.byType(Text))
         .map((t) => t.data ?? t.textSpan?.toPlainText() ?? '')
         .toList();
+    final pendingErr = tester.takeException();
+    final sigMatches = find.byType(SignalTabView, skipOffstage: false).evaluate();
+    final sigSize = sigMatches.isNotEmpty
+        ? (sigMatches.first.renderObject as RenderBox?)?.size
+        : null;
+    final allTexts = tester
+        .widgetList<Text>(find.byType(Text, skipOffstage: false))
+        .map((t) => t.data ?? t.textSpan?.toPlainText() ?? '')
+        .take(30)
+        .toList();
     expect(
       find.textContaining('AI ANALYSIS ENGINE (CORE WORKFLOW)'),
       findsOneWidget,
-      reason: 'Rendered Text widgets: $renderedTexts',
+      reason: 'err=$pendingErr sigSize=$sigSize onstage=$renderedTexts allTexts=$allTexts',
     );
     expect(find.text('[COPY AI ANALYSIS PROMPT + JSON]'), findsOneWidget);
     expect(find.text('[PREVIEW]'), findsOneWidget);
