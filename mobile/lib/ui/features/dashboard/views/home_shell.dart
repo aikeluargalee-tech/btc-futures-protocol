@@ -318,7 +318,6 @@ class HomeShell extends StatelessWidget {
                         onTap: () => vm.setTab(i),
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 7),
-                          alignment: Alignment.center,
                           decoration: BoxDecoration(
                             color: active ? TerminalColors.accent : TerminalColors.panelAlt,
                             border: Border.all(
@@ -327,14 +326,17 @@ class HomeShell extends StatelessWidget {
                                   : TerminalColors.border,
                             ),
                           ),
-                          child: Text(
-                            _tabLabels[i],
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w700,
-                              color: active ? Colors.white : TerminalColors.text,
+                          child: Center(
+                            heightFactor: 1.0,
+                            child: Text(
+                              _tabLabels[i],
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w700,
+                                color: active ? Colors.white : TerminalColors.text,
+                              ),
                             ),
                           ),
                         ),

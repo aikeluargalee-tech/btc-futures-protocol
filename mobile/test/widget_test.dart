@@ -9,7 +9,6 @@ import 'package:btc_futures_protocol/data/services/protocol_api_service.dart';
 import 'package:btc_futures_protocol/domain/models/protocol_state.dart';
 import 'package:btc_futures_protocol/domain/telemetry_export.dart';
 import 'package:btc_futures_protocol/main.dart';
-import 'package:btc_futures_protocol/ui/features/dashboard/views/signal_tab_view.dart';
 import 'package:btc_futures_protocol/ui/features/dashboard/view_models/protocol_view_model.dart';
 
 const String _sampleStateJson = '''
@@ -149,35 +148,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('BTC DESK v4'), findsOneWidget);
-    final renderedTexts = tester
-        .widgetList<Text>(find.byType(Text))
-        .map((t) => t.data ?? t.textSpan?.toPlainText() ?? '')
-        .toList();
-    final pendingErr = tester.takeException();
-    final sigMatches = find.byType(SignalTabView, skipOffstage: false).evaluate();
-    final sigSize = sigMatches.isNotEmpty
-        ? (sigMatches.first.renderObject as RenderBox?)?.size
-        : null;
-    final idxMatches = find.byType(IndexedStack, skipOffstage: false).evaluate();
-    final idxSize = idxMatches.isNotEmpty
-        ? (idxMatches.first.renderObject as RenderBox?)?.size
-        : null;
-    final scfMatches = find.byType(Scaffold).evaluate();
-    final scfSize = scfMatches.isNotEmpty
-        ? (scfMatches.first.renderObject as RenderBox?)?.size
-        : null;
-    final lstMatches = find.byType(ListView, skipOffstage: false).evaluate();
-    final lstSizes = lstMatches.map((e) => (e.renderObject as RenderBox?)?.size).toList();
-    final allTexts = tester
-        .widgetList<Text>(find.byType(Text, skipOffstage: false))
-        .map((t) => t.data ?? t.textSpan?.toPlainText() ?? '')
-        .take(30)
-        .toList();
-    expect(
-      find.textContaining('AI ANALYSIS ENGINE (CORE WORKFLOW)'),
-      findsOneWidget,
-      reason: 'err=$pendingErr scf=$scfSize idx=$idxSize sig=$sigSize lsts=$lstSizes onstage=$renderedTexts allTexts=$allTexts',
-    );
+    expect(find.textContaining('AI ANALYSIS ENGINE (CORE WORKFLOW)'), findsOneWidget);
     expect(find.text('[COPY AI ANALYSIS PROMPT + JSON]'), findsOneWidget);
     expect(find.text('[PREVIEW]'), findsOneWidget);
     expect(
