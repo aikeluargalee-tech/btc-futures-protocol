@@ -41,6 +41,10 @@ class SignalTabView extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(10, 6, 10, 14),
         children: [
+          // 0. Compact Collapsible Purpose Card (Spot & Futures Scope)
+          _PurposeOverviewCard(vm: vm),
+          const SizedBox(height: 10),
+
           // 1. STANDOUT HERO SECTION: AI Analysis Engine (Core Workflow)
           _AiCopilotHeroCard(vm: vm),
           const SizedBox(height: 10),
@@ -268,6 +272,63 @@ class SignalTabView extends StatelessWidget {
           ],
         ),
       );
+}
+
+/// Compact collapsible Purpose card clarifying Spot & Futures decision support + read-only scope.
+class _PurposeOverviewCard extends StatelessWidget {
+  const _PurposeOverviewCard({required this.vm});
+
+  final ProtocolViewModel vm;
+
+  @override
+  Widget build(BuildContext context) {
+    final expanded = vm.purposeExpanded;
+    return IbmWindowCard(
+      title: 'PURPOSE // SPOT & FUTURES DECISION DESK',
+      trailing: InkWell(
+        onTap: vm.togglePurposeExpanded,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: TerminalColors.panel,
+            border: Border.all(color: TerminalColors.borderDark),
+          ),
+          child: Text(
+            expanded ? '[HIDE]' : '[SHOW]',
+            style: const TextStyle(
+              fontSize: 8.5,
+              fontWeight: FontWeight.w700,
+              color: TerminalColors.accent,
+            ),
+          ),
+        ),
+      ),
+      child: expanded
+          ? const Padding(
+              padding: EdgeInsets.fromLTRB(10, 8, 10, 9),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '• Read-Only Quant Telemetry: No exchange login, wallet, or live order execution.',
+                    style: TextStyle(fontSize: 9.5, color: TerminalColors.text, height: 1.35),
+                  ),
+                  SizedBox(height: 3),
+                  Text(
+                    '• Supports Spot or Futures: Use the 4H regime score, key levels & sizer for Spot timing (1.0x) or Futures leverage (max 1:2 isolated).',
+                    style: TextStyle(fontSize: 9.5, color: TerminalColors.text, height: 1.35),
+                  ),
+                  SizedBox(height: 3),
+                  Text(
+                    '• Workflow: Copy the AI prompt below and paste into any AI for analysis & Q&A.',
+                    style: TextStyle(fontSize: 9.0, color: TerminalColors.muted, height: 1.35),
+                  ),
+                ],
+              ),
+            )
+          : const SizedBox.shrink(),
+    );
+  }
 }
 
 /// Standout Hero Card making AI Prompt + Compact Telemetry Copy the unmistakable center of the app.

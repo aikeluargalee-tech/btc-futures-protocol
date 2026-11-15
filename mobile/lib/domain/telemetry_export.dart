@@ -54,7 +54,7 @@ State clearly whether an immediate **4H Close Long**, **4H Close Short**, or **F
 - **Recommended Risk %:** `0.40%` (or `0.20%` if Weekend)
 - **What Invalidates Waiting for This Setup:** Exact price level or candle close that cancels the plan.
 
-After issuing your structured verdict above, remain grounded strictly in the telemetry packet below and answer any follow-up Q&A (alternative entry levels, invalidation distance, funding/slippage sensitivity, or custom equity sizing) without inventing external prices.
+After issuing your structured verdict above, remain grounded strictly in the telemetry packet below and answer any follow-up Q&A—whether for **Spot positioning** (1.0x unleveraged accumulation/hedging levels with no funding drag) or **Futures leverage decisions** (1:2 max isolated sizing, invalidation distance, funding/slippage sensitivity, or custom equity sizing)—without inventing external prices.
 
 ---
 

@@ -110,6 +110,9 @@ class ProtocolViewModel extends ChangeNotifier {
   bool _videoExpanded = false;
   bool get videoExpanded => _videoExpanded;
 
+  bool _purposeExpanded = true;
+  bool get purposeExpanded => _purposeExpanded;
+
   Timer? _liveTimer;
   Timer? _stateTimer;
 
@@ -136,6 +139,11 @@ class ProtocolViewModel extends ChangeNotifier {
 
   void toggleVideoExpanded() {
     _videoExpanded = !_videoExpanded;
+    notifyListeners();
+  }
+
+  void togglePurposeExpanded() {
+    _purposeExpanded = !_purposeExpanded;
     notifyListeners();
   }
 
