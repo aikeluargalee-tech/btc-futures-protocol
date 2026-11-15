@@ -4,14 +4,16 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../../../config/ad_config.dart';
 import '../../../core/theme.dart';
 
-/// Sticky anchored Google AdMob Banner strip at the bottom of the app shell.
+/// Google AdMob Banner strip placed cleanly at the bottom of scrollable tab feeds.
 class AdMobBannerStrip extends StatefulWidget {
   const AdMobBannerStrip({
     super.key,
     this.enablePlatformPlugins = true,
+    this.shouldLoad = true,
   });
 
   final bool enablePlatformPlugins;
+  final bool shouldLoad;
 
   @override
   State<AdMobBannerStrip> createState() => _AdMobBannerStripState();
@@ -20,13 +22,31 @@ class AdMobBannerStrip extends StatefulWidget {
 class _AdMobBannerStripState extends State<AdMobBannerStrip> {
   BannerAd? _bannerAd;
   bool _loaded = false;
+  bool _loadStarted = false;
 
   @override
   void initState() {
     super.initState();
-    if (widget.enablePlatformPlugins && AppConfig.isMobilePlatform) {
-      _loadBanner();
+    _maybeLoadBanner();
+  }
+
+  @override
+  void didUpdateWidget(covariant AdMobBannerStrip oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.shouldLoad && !oldWidget.shouldLoad) {
+      _maybeLoadBanner();
     }
+  }
+
+  void _maybeLoadBanner() {
+    if (_loadStarted ||
+        !widget.shouldLoad ||
+        !widget.enablePlatformPlugins ||
+        !AppConfig.isMobilePlatform) {
+      return;
+    }
+    _loadStarted = true;
+    _loadBanner();
   }
 
   void _loadBanner() {

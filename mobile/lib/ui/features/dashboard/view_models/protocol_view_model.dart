@@ -104,6 +104,9 @@ class ProtocolViewModel extends ChangeNotifier {
   int _tabIndex = 0;
   int get tabIndex => _tabIndex;
 
+  final Set<int> _visitedTabs = {0};
+  bool hasVisitedTab(int idx) => _visitedTabs.contains(idx);
+
   bool _videoExpanded = false;
   bool get videoExpanded => _videoExpanded;
 
@@ -125,7 +128,8 @@ class ProtocolViewModel extends ChangeNotifier {
   }
 
   void setTab(int idx) {
-    if (_tabIndex == idx) return;
+    final newlyVisited = _visitedTabs.add(idx);
+    if (_tabIndex == idx && !newlyVisited) return;
     _tabIndex = idx;
     notifyListeners();
   }

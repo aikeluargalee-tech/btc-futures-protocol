@@ -34,7 +34,11 @@ class HomeShell extends StatelessWidget {
         final age = vm.snapshotAgeLabel;
         final tabs = <Widget>[
           SignalTabView(vm: vm, enablePlatformPlugins: enablePlatformPlugins),
-          RegimeTabView(vm: vm),
+          RegimeTabView(
+            vm: vm,
+            enablePlatformPlugins: enablePlatformPlugins,
+            loadBannerAd: vm.hasVisitedTab(1),
+          ),
           LedgerTabView(vm: vm),
           AuditTabView(vm: vm),
         ];

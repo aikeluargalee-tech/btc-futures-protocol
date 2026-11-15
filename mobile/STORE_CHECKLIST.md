@@ -1,9 +1,9 @@
 # Mobile App Store & Play Store Submission Checklist (`mobile/`)
 
 ## What Is Already Configured (Phase 1 & Phase 2 Complete)
-- **Whitish-Grey IBM Retro UI (`lib/ui/`)**: Matches the web HUD with small typography, `[COPY AI ANALYSIS PROMPT + JSON]` in Signal Tab, and `[COPY RAW JSON ONLY]` in `F4 AUDIT`.
+- **Whitish-Grey IBM Retro UI (`lib/ui/`)**: Matches the web HUD with `IBMPlexMono` typography, hero `AI ANALYSIS ENGINE (CORE WORKFLOW)` card with `[COPY AI ANALYSIS PROMPT + JSON]` & `[PREVIEW]` in `F1 SIGNAL`, and `[COPY RAW JSON ONLY]` in `F4 AUDIT`.
 - **Live Feeds + Bundled Video**: Reads `https://aikeluargalee-tech.github.io/btc-futures-protocol/data/state.json` + live BTC spot tickers; bundles `assets/video/vGUZF.mp4` (`ProtocolVideoCard`).
-- **Google AdMob Monetization**: Sticky anchored `BannerAd` (`AdMobBannerStrip`) + inline `NativeAd` (`AdMobNativeAdCard`), supporting CI `--dart-define` / env overrides with official Test IDs as safe defaults.
+- **Google AdMob Monetization**: Non-intrusive bottom-of-scroll `NativeAd` (`AdMobNativeAdCard`) + `BannerAd` (`AdMobBannerStrip`) on `F1 SIGNAL` plus a lazy-loaded bottom-of-scroll `BannerAd` on `F2 REGIME` (only loaded after first visit to `F2`; `F3 CALC` and `F4 AUDIT` stay ad-free), supporting CI `--dart-define` / env overrides with official Test IDs as safe defaults.
 - **Custom Store Launcher Icons**: `assets/store_icons/` contains custom IBM Retro window icons (`play_store_512.png`, `app_icon_1024.png`, Android `mipmap-*`, iOS `AppIcon.appiconset`), installed automatically by `tool/configure_store_runners.py`.
 - **Hosted Privacy Policy**: Published at `https://aikeluargalee-tech.github.io/btc-futures-protocol/privacy.html` (`privacy.html` in repo root).
 - **Platform Compliance**: Apple ATT (`app_tracking_transparency` + `NSUserTrackingUsageDescription` + `SKAdNetworkItems` + `ITSAppUsesNonExemptEncryption = false`) and Android `minSdk = 24`, `compileSdk = 35`, `targetSdk = 35`, `INTERNET`, `AD_ID`.

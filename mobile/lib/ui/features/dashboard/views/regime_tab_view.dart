@@ -2,12 +2,20 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme.dart';
 import '../view_models/protocol_view_model.dart';
+import '../widgets/admob_widgets.dart';
 import '../widgets/price_chart_card.dart';
 
 class RegimeTabView extends StatelessWidget {
-  const RegimeTabView({super.key, required this.vm});
+  const RegimeTabView({
+    super.key,
+    required this.vm,
+    this.enablePlatformPlugins = true,
+    this.loadBannerAd = false,
+  });
 
   final ProtocolViewModel vm;
+  final bool enablePlatformPlugins;
+  final bool loadBannerAd;
 
   @override
   Widget build(BuildContext context) {
@@ -92,6 +100,11 @@ class RegimeTabView extends StatelessWidget {
                 ],
               ),
             ),
+          ),
+          const SizedBox(height: 10),
+          AdMobBannerStrip(
+            enablePlatformPlugins: enablePlatformPlugins,
+            shouldLoad: loadBannerAd,
           ),
         ],
       ),

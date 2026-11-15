@@ -156,6 +156,9 @@ void main() {
       findsOneWidget,
     );
 
+    expect(vm.hasVisitedTab(0), isTrue);
+    expect(vm.hasVisitedTab(1), isFalse);
+
     final listScrollable = find.byType(Scrollable).first;
     await tester.scrollUntilVisible(
       find.text('PROTOCOL BRIEFING VIDEO (vGUZF.mp4)'),
@@ -176,10 +179,27 @@ void main() {
     expect(find.text('AdMob Native Advanced Ad Slot (Medium Template · Test Mode)'), findsOneWidget);
     expect(find.text('AdMob Banner Slot (320x50 · Test Mode)'), findsOneWidget);
 
+    await tester.tap(find.text('F2 REGIME'));
+    await tester.pump();
+    expect(vm.hasVisitedTab(1), isTrue);
+    final regimeScrollable = find.byType(Scrollable).first;
+    await tester.scrollUntilVisible(
+      find.text('AdMob Banner Slot (320x50 · Test Mode)'),
+      250,
+      scrollable: regimeScrollable,
+    );
+    expect(find.text('AdMob Banner Slot (320x50 · Test Mode)'), findsOneWidget);
+
+    await tester.tap(find.text('F3 CALC'));
+    await tester.pump();
+    expect(find.textContaining('v4.0 POSITION SIZING CALCULATOR'), findsOneWidget);
+    expect(find.textContaining('AdMob'), findsNothing);
+
     await tester.tap(find.text('F4 AUDIT'));
     await tester.pump();
     expect(find.text('[COPY RAW JSON ONLY]'), findsOneWidget);
     expect(AppConfig.privacyPolicyUrl.endsWith('/privacy.html'), isTrue);
     expect(find.textContaining('/privacy.html'), findsOneWidget);
+    expect(find.textContaining('AdMob'), findsNothing);
   });
 }
