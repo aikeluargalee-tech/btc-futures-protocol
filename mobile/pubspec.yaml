@@ -23,6 +23,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/video/vGUZF.mp4
+    - assets/flags/
   fonts:
     - family: IBMPlexMono
       fonts:
