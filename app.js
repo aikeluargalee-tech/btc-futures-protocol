@@ -51,7 +51,9 @@ function renderHeaderLive() {
   $("liveChg").innerHTML = typeof chg === "number" ? `<span class="${chg >= 0 ? "up" : "dn"}">${pct(chg, 2)} 24h</span>` : "—";
   const age = LIVE.at ? Math.round((Date.now() - LIVE.at) / 1000) : null;
   $("liveDot").className = "dot" + (age !== null && age < 20 ? " live" : "");
-  $("liveFeed").textContent = LIVE.src ? `live ${LIVE.src} · ${age}s` : "snapshot price";
+  const liveLabel = window.DeskI18n ? window.DeskI18n.t("live_word") : "live";
+  const snapLabel = window.DeskI18n ? window.DeskI18n.t("snapshot_price") : "snapshot price";
+  $("liveFeed").textContent = LIVE.src ? `${liveLabel} ${LIVE.src} · ${age}s` : snapLabel;
 }
 
 function renderSignalTab() {
@@ -641,13 +643,25 @@ function bindEvents() {
   $("btnCopyRaw").onclick = () => {
     const raw = buildRawTelemetryPacket(STATE);
     if (!raw) return;
-    copyTextWithFeedback(serializeTelemetryCompact(raw), "Copied compact Raw JSON (no pre-computed verdicts).", "auditExportMsg");
+    const msg = window.DeskI18n ? window.DeskI18n.t("raw_copied") : "Copied compact Raw JSON (no pre-computed verdicts).";
+    copyTextWithFeedback(serializeTelemetryCompact(raw), msg, "auditExportMsg");
   };
   $("btnCopyAi").onclick = () => {
     const raw = buildRawTelemetryPacket(STATE);
     if (!raw) return;
-    const promptText = MASTER_QUANT_PROMPT_TEMPLATE.replace("{{RAW_JSON_PAYLOAD}}", serializeTelemetryCompact(raw));
-    copyTextWithFeedback(promptText, "Copied! Paste into ChatGPT, Gemini, Claude, Grok, DeepSeek, or Kimi.");
+    let promptText = MASTER_QUANT_PROMPT_TEMPLATE.replace("{{RAW_JSON_PAYLOAD}}", serializeTelemetryCompact(raw));
+    const meta = window.DeskI18n?.getMeta();
+    if (meta && meta.code !== "en") {
+      promptText = promptText.replace(
+        "### LIVE RAW TELEMETRY PACKET (JSON)",
+        `**Response Language:** Respond strictly in ${meta.aiName} while keeping all BTC prices, levels, and JSON field values exact.\n\n### LIVE RAW TELEMETRY PACKET (JSON)`
+      );
+    }
+    const msg = window.DeskI18n ? window.DeskI18n.t("ai_copied") : "Copied! Paste into ChatGPT, Gemini, Claude, Grok, DeepSeek, or Kimi.";
+    copyTextWithFeedback(promptText, msg);
+  };
+  window.onDeskLangChanged = () => {
+    renderHeaderLive();
   };
   $("btnDlJson").onclick = () => {
     const u = URL.createObjectURL(new Blob([JSON.stringify(STATE, null, 2)], { type: "application/json" }));
@@ -660,6 +674,7 @@ function bindEvents() {
 }
 
 async function init() {
+  window.DeskI18n?.init();
   bindEvents();
   STATE = await fetchJson("data/state.json?t=" + Date.now());
   $("snapMeta").textContent = `v${STATE.protocol_version || "4.0"} · Updated ${STATE.updated_at_utc} · 4H Close ${STATE.last_4h_close_utc || "—"} · Source ${STATE.ticker?.source || "—"}`;
