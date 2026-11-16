@@ -118,9 +118,9 @@ class AppStrings {
       case AppLang.id:
         return 'dalam ${mins}m';
       case AppLang.ko:
-        return '${mins}분 후';
+        return '$mins분 후';
       case AppLang.ja:
-        return '${mins}分後';
+        return '$mins分後';
       case AppLang.fr:
         return 'dans ${mins}m';
       case AppLang.es:
