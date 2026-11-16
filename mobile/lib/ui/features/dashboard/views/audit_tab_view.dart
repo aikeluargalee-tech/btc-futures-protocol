@@ -16,8 +16,8 @@ class AuditTabView extends StatefulWidget {
 }
 
 class _AuditTabViewState extends State<AuditTabView> {
-  String _rawCopyMsg = 'Unopinionated raw JSON (OHLCV + derivatives + macro).';
   bool _copied = false;
+  int _copiedChars = 0;
   Timer? _timer;
 
   @override
@@ -33,13 +33,12 @@ class _AuditTabViewState extends State<AuditTabView> {
     _timer?.cancel();
     setState(() {
       _copied = true;
-      _rawCopyMsg = 'Copied compact Raw JSON (${jsonStr.length} chars).';
+      _copiedChars = jsonStr.length;
     });
     _timer = Timer(const Duration(seconds: 3), () {
       if (!mounted) return;
       setState(() {
         _copied = false;
-        _rawCopyMsg = 'Unopinionated raw JSON (OHLCV + derivatives + macro).';
       });
     });
   }
@@ -48,6 +47,7 @@ class _AuditTabViewState extends State<AuditTabView> {
   Widget build(BuildContext context) {
     final s = widget.vm.state;
     if (s == null) return const Center(child: CircularProgressIndicator());
+    final tr = widget.vm.tr;
 
     return RefreshIndicator(
       onRefresh: widget.vm.refreshAll,
@@ -55,7 +55,7 @@ class _AuditTabViewState extends State<AuditTabView> {
         padding: const EdgeInsets.fromLTRB(10, 6, 10, 14),
         children: [
           IbmWindowCard(
-            title: 'RAW TELEMETRY EXPORT',
+            title: tr.t('raw_export_title'),
             child: Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
@@ -69,9 +69,9 @@ class _AuditTabViewState extends State<AuditTabView> {
                         color: TerminalColors.panelAlt,
                         border: Border.all(color: TerminalColors.borderDark),
                       ),
-                      child: const Text(
-                        '[COPY RAW JSON ONLY]',
-                        style: TextStyle(
+                      child: Text(
+                        tr.t('raw_export_btn'),
+                        style: const TextStyle(
                           fontSize: 9.5,
                           fontWeight: FontWeight.w700,
                           color: TerminalColors.text,
@@ -81,7 +81,7 @@ class _AuditTabViewState extends State<AuditTabView> {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    _rawCopyMsg,
+                    _copied ? tr.rawJsonCopied(_copiedChars) : tr.t('raw_export_helper'),
                     style: TextStyle(
                       fontSize: 9.5,
                       color: _copied ? TerminalColors.up : TerminalColors.muted,
@@ -93,16 +93,16 @@ class _AuditTabViewState extends State<AuditTabView> {
           ),
           const SizedBox(height: 10),
           IbmWindowCard(
-            title: 'MODEL & TELEMETRY AUDIT LOG',
+            title: tr.t('audit_log_title'),
             child: Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (s.auditLogRecent.isEmpty)
-                    const Text(
-                      'No audit events recorded yet.',
-                      style: TextStyle(color: TerminalColors.muted, fontSize: 10),
+                    Text(
+                      tr.t('audit_empty'),
+                      style: const TextStyle(color: TerminalColors.muted, fontSize: 10),
                     )
                   else
                     for (final item in s.auditLogRecent.take(25))
@@ -132,7 +132,7 @@ class _AuditTabViewState extends State<AuditTabView> {
           ),
           const SizedBox(height: 10),
           IbmWindowCard(
-            title: 'FEED DIAGNOSTICS & STORE NOTICE',
+            title: tr.t('diag_title'),
             child: Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
@@ -140,19 +140,19 @@ class _AuditTabViewState extends State<AuditTabView> {
                 children: [
                   Text(
                     s.fetchErrors.isEmpty
-                        ? 'All data feeds succeeded with zero errors.'
-                        : 'Notes: ${s.fetchErrors.join(" | ")}',
+                        ? tr.t('diag_ok')
+                        : '${tr.t('diag_notes')}: ${s.fetchErrors.join(" | ")}',
                     style: const TextStyle(fontSize: 9.5),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
-                    'Disclaimer: Educational & paper-trading telemetry tool only. Not financial advice, brokerage execution, or investment solicitation.',
-                    style: TextStyle(fontSize: 9.5, color: TerminalColors.muted),
+                  Text(
+                    tr.t('diag_disclaimer'),
+                    style: const TextStyle(fontSize: 9.5, color: TerminalColors.muted),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Privacy Policy: ${AppConfig.privacyPolicyUrl}',
-                    style: TextStyle(fontSize: 9.5, color: TerminalColors.accent),
+                  Text(
+                    '${tr.t('diag_privacy')}: ${AppConfig.privacyPolicyUrl}',
+                    style: const TextStyle(fontSize: 9.5, color: TerminalColors.accent),
                   ),
                 ],
               ),

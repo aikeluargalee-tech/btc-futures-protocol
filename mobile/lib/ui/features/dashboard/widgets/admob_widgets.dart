@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../../../config/ad_config.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../core/theme.dart';
 
 /// Google AdMob Banner strip placed cleanly at the bottom of scrollable tab feeds.
@@ -10,10 +11,12 @@ class AdMobBannerStrip extends StatefulWidget {
     super.key,
     this.enablePlatformPlugins = true,
     this.shouldLoad = true,
+    this.tr,
   });
 
   final bool enablePlatformPlugins;
   final bool shouldLoad;
+  final AppStrings? tr;
 
   @override
   State<AdMobBannerStrip> createState() => _AdMobBannerStripState();
@@ -78,9 +81,10 @@ class _AdMobBannerStripState extends State<AdMobBannerStrip> {
 
   @override
   Widget build(BuildContext context) {
+    final tr = widget.tr ?? AppStrings.of(AppLang.en);
     if (_loaded && _bannerAd != null) {
       return IbmWindowCard(
-        title: 'SPONSORED BANNER',
+        title: tr.t('sponsored_banner'),
         child: Container(
           color: TerminalColors.panel,
           width: double.infinity,
@@ -95,13 +99,13 @@ class _AdMobBannerStripState extends State<AdMobBannerStrip> {
       );
     }
 
-    return const IbmWindowCard(
+    return IbmWindowCard(
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         child: Center(
           child: Text(
-            'AdMob Banner Slot (320x50 · Test Mode)',
-            style: TextStyle(color: TerminalColors.muted, fontSize: 9.5),
+            tr.t('admob_banner_test'),
+            style: const TextStyle(color: TerminalColors.muted, fontSize: 9.5),
           ),
         ),
       ),
@@ -114,9 +118,11 @@ class AdMobNativeAdCard extends StatefulWidget {
   const AdMobNativeAdCard({
     super.key,
     this.enablePlatformPlugins = true,
+    this.tr,
   });
 
   final bool enablePlatformPlugins;
+  final AppStrings? tr;
 
   @override
   State<AdMobNativeAdCard> createState() => _AdMobNativeAdCardState();
@@ -191,9 +197,10 @@ class _AdMobNativeAdCardState extends State<AdMobNativeAdCard> {
 
   @override
   Widget build(BuildContext context) {
+    final tr = widget.tr ?? AppStrings.of(AppLang.en);
     if (_loaded && _nativeAd != null) {
       return IbmWindowCard(
-        title: 'SPONSORED',
+        title: tr.t('sponsored_ad'),
         child: Padding(
           padding: const EdgeInsets.all(8),
           child: ConstrainedBox(
@@ -219,16 +226,16 @@ class _AdMobNativeAdCardState extends State<AdMobNativeAdCard> {
                 color: TerminalColors.panelAlt,
                 border: Border.all(color: TerminalColors.border),
               ),
-              child: const Text(
-                'SPONSORED',
-                style: TextStyle(fontSize: 9.0, fontWeight: FontWeight.w700, color: TerminalColors.muted),
+              child: Text(
+                tr.t('sponsored_ad'),
+                style: const TextStyle(fontSize: 9.0, fontWeight: FontWeight.w700, color: TerminalColors.muted),
               ),
             ),
             const SizedBox(width: 8),
-            const Expanded(
+            Expanded(
               child: Text(
-                'AdMob Native Advanced Ad Slot (Medium Template · Test Mode)',
-                style: TextStyle(fontSize: 9.5, color: TerminalColors.muted),
+                tr.t('admob_native_test'),
+                style: const TextStyle(fontSize: 9.5, color: TerminalColors.muted),
               ),
             ),
           ],

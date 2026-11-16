@@ -219,5 +219,46 @@ void main() {
     expect(AppConfig.privacyPolicyUrl.endsWith('/privacy.html'), isTrue);
     expect(find.textContaining('/privacy.html'), findsOneWidget);
     expect(find.textContaining('AdMob'), findsNothing);
+
+    // 7-language flag switcher verification (EN, ZH, ID, KO, JA, FR, ES)
+    for (final code in ['en', 'zh', 'id', 'ko', 'ja', 'fr', 'es']) {
+      expect(find.byKey(Key('lang_btn_$code')), findsOneWidget);
+    }
+
+    await tester.tap(find.byKey(const Key('lang_btn_zh')));
+    await tester.pump();
+    expect(find.text('F1 监控'), findsOneWidget);
+    expect(find.text('[仅复制原始 JSON]'), findsOneWidget);
+    expect(vm.buildAiAnalysisPrompt(), contains('Simplified Chinese'));
+
+    await tester.tap(find.byKey(const Key('lang_btn_id')));
+    await tester.pump();
+    expect(find.text('F1 MONITOR'), findsOneWidget);
+    expect(find.text('[SALIN JSON MENTAH SAJA]'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('lang_btn_ko')));
+    await tester.pump();
+    expect(find.text('F1 모니터'), findsOneWidget);
+    expect(find.text('[원본 JSON만 복사]'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('lang_btn_ja')));
+    await tester.pump();
+    expect(find.text('F1 監視'), findsOneWidget);
+    expect(find.text('[生 JSON のみコピー]'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('lang_btn_fr')));
+    await tester.pump();
+    expect(find.text('F1 MONITEUR'), findsOneWidget);
+    expect(find.text('[COPIER LE JSON BRUT]'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('lang_btn_es')));
+    await tester.pump();
+    expect(find.text('F1 MONITOR'), findsOneWidget);
+    expect(find.text('[COPIAR SOLO JSON CRUDO]'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('lang_btn_en')));
+    await tester.pump();
+    expect(find.text('[COPY RAW JSON ONLY]'), findsOneWidget);
+    expect(vm.buildAiAnalysisPrompt().contains('Response Language:'), isFalse);
   });
 }

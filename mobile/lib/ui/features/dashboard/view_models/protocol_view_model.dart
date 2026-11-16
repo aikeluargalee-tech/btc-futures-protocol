@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../../../../data/repositories/protocol_repository.dart';
 import '../../../../domain/models/protocol_state.dart';
 import '../../../../domain/telemetry_export.dart';
+import '../../../../l10n/app_strings.dart';
 
 class CalcResult {
   final bool valid;
@@ -61,6 +62,16 @@ class ProtocolViewModel extends ChangeNotifier {
     return secs >= -5 && secs < 60;
   }
 
+  AppLang _lang = AppLang.en;
+  AppLang get lang => _lang;
+  AppStrings get tr => AppStrings.of(_lang);
+
+  void setLanguage(AppLang next) {
+    if (_lang == next) return;
+    _lang = next;
+    notifyListeners();
+  }
+
   String get liveFeedDisplay {
     if (_liveSource != null && _liveUpdatedAt != null) {
       final secs = DateTime.now()
@@ -68,10 +79,11 @@ class ProtocolViewModel extends ChangeNotifier {
           .difference(_liveUpdatedAt!)
           .inSeconds
           .clamp(0, 999);
-      return 'Live $_liveSource · ${secs}s';
+      return '${tr.t('live_prefix')} $_liveSource · ${secs}s';
     }
     final age = snapshotAgeLabel;
-    return age != null ? 'Snapshot ($age)' : 'Snapshot';
+    final snap = tr.t('snapshot_prefix');
+    return age != null ? '$snap ($age)' : snap;
   }
 
   String? get snapshotAgeLabel {
@@ -113,6 +125,8 @@ class ProtocolViewModel extends ChangeNotifier {
       s,
       livePrice: _livePrice,
       liveSource: _liveSource,
+      languageInstruction:
+          _lang == AppLang.en ? null : _lang.aiInstructionName,
     );
   }
 
@@ -201,7 +215,9 @@ class ProtocolViewModel extends ChangeNotifier {
     required double entry,
     required double stop,
     required double target1,
+    AppStrings? tr,
   }) {
+    final s = tr ?? AppStrings.of(AppLang.en);
     var riskPct = ddTier1Active ? 0.002 : 0.004;
     if (weekendExtremeHalf) riskPct *= 0.5;
 
@@ -224,9 +240,9 @@ class ProtocolViewModel extends ChangeNotifier {
 
     final issues = <String>[];
     if (entry <= 0 || stop <= 0 || target1 <= 0) {
-      issues.add('Enter valid prices');
+      issues.add(s.t('calc_err_prices'));
     } else {
-      if (!validStopSide) issues.add('Stop on wrong side of entry');
+      if (!validStopSide) issues.add(s.t('calc_err_stop_side'));
       if (stopDistPct > 2.2) {
         issues.add('Stop ${stopDistPct.toStringAsFixed(2)}% > 2.20% max');
       }

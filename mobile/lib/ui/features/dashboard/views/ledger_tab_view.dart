@@ -51,6 +51,7 @@ class _LedgerTabViewState extends State<LedgerTabView> {
     final s = widget.vm.state;
     if (s == null) return const Center(child: CircularProgressIndicator());
     final port = s.portfolio;
+    final tr = widget.vm.tr;
 
     final calc = ProtocolViewModel.computeV4Sizing(
       equityUsd: double.tryParse(_eqCtrl.text) ?? 100000,
@@ -60,6 +61,7 @@ class _LedgerTabViewState extends State<LedgerTabView> {
       entry: double.tryParse(_entryCtrl.text) ?? 0,
       stop: double.tryParse(_stopCtrl.text) ?? 0,
       target1: double.tryParse(_tpCtrl.text) ?? 0,
+      tr: tr,
     );
 
     return RefreshIndicator(
@@ -68,13 +70,13 @@ class _LedgerTabViewState extends State<LedgerTabView> {
         padding: const EdgeInsets.fromLTRB(10, 6, 10, 14),
         children: [
           IbmWindowCard(
-            title: 'v4.0 POSITION SIZING CALCULATOR',
+            title: tr.t('calc_title'),
             child: Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _numField('Equity USD', _eqCtrl),
+                  _numField(tr.t('calc_equity'), _eqCtrl),
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -82,7 +84,7 @@ class _LedgerTabViewState extends State<LedgerTabView> {
                         child: DropdownButtonFormField<String>(
                           value: _dir,
                           style: const TextStyle(color: TerminalColors.text, fontSize: 10),
-                          decoration: const InputDecoration(labelText: 'Direction'),
+                          decoration: InputDecoration(labelText: tr.t('calc_direction')),
                           items: const [
                             DropdownMenuItem(value: 'LONG', child: Text('LONG')),
                             DropdownMenuItem(value: 'SHORT', child: Text('SHORT')),
@@ -95,7 +97,7 @@ class _LedgerTabViewState extends State<LedgerTabView> {
                         child: SwitchListTile(
                           contentPadding: EdgeInsets.zero,
                           dense: true,
-                          title: const Text('Weekend 0.5x', style: TextStyle(fontSize: 9.5)),
+                          title: Text(tr.t('calc_weekend'), style: const TextStyle(fontSize: 9.5)),
                           value: _weekendHalf,
                           onChanged: (v) => setState(() => _weekendHalf = v),
                         ),
@@ -105,16 +107,18 @@ class _LedgerTabViewState extends State<LedgerTabView> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Expanded(child: _numField('Entry', _entryCtrl)),
+                      Expanded(child: _numField(tr.t('calc_entry'), _entryCtrl)),
                       const SizedBox(width: 6),
-                      Expanded(child: _numField('Stop', _stopCtrl)),
+                      Expanded(child: _numField(tr.t('calc_stop'), _stopCtrl)),
                       const SizedBox(width: 6),
-                      Expanded(child: _numField('Target 1', _tpCtrl)),
+                      Expanded(child: _numField(tr.t('calc_target1'), _tpCtrl)),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    calc.valid ? 'VALID v4.0 PAPER SIZING (MAX 2.0x CAP)' : 'INVALID: ${calc.issues.join("; ")}',
+                    calc.valid
+                        ? tr.t('calc_valid')
+                        : '${tr.t('calc_invalid')}: ${calc.issues.join("; ")}',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       color: calc.valid ? TerminalColors.up : TerminalColors.down,
@@ -123,11 +127,11 @@ class _LedgerTabViewState extends State<LedgerTabView> {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    'Size: ${calc.sizeBtc.toStringAsFixed(5)} BTC (${fmtUsd(calc.notionalUsd)}) · Lev: ${calc.leverage.toStringAsFixed(2)}x/2.0x${calc.leverageCapped ? " CLAMPED" : ""}',
+                    '${tr.t('calc_size')}: ${calc.sizeBtc.toStringAsFixed(5)} BTC (${fmtUsd(calc.notionalUsd)}) · ${tr.t('calc_lev')}: ${calc.leverage.toStringAsFixed(2)}x/2.0x${calc.leverageCapped ? " ${tr.t('calc_clamped')}" : ""}',
                     style: const TextStyle(fontSize: 10),
                   ),
                   Text(
-                    'Risk: ${calc.actualRiskPct.toStringAsFixed(3)}% (${fmtUsd(calc.actualRiskUsd, decimals: 2)}) · Stop: ${calc.stopDistPct.toStringAsFixed(2)}% · R:R: ${calc.rawRr.toStringAsFixed(2)}:1',
+                    '${tr.t('calc_risk')}: ${calc.actualRiskPct.toStringAsFixed(3)}% (${fmtUsd(calc.actualRiskUsd, decimals: 2)}) · ${tr.t('calc_stop_lbl')}: ${calc.stopDistPct.toStringAsFixed(2)}% · ${tr.t('calc_rr')}: ${calc.rawRr.toStringAsFixed(2)}:1',
                     style: const TextStyle(fontSize: 9.5, color: TerminalColors.muted),
                   ),
                 ],
@@ -136,19 +140,19 @@ class _LedgerTabViewState extends State<LedgerTabView> {
           ),
           const SizedBox(height: 10),
           IbmWindowCard(
-            title: 'PAPER LEDGER SUMMARY (SIMULATED)',
+            title: tr.t('ledger_title'),
             child: Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Equity: ${fmtUsd(port.equityUsd, decimals: 2)}  ·  HWM: ${fmtUsd(port.highWaterMarkUsd)}  ·  DD: ${port.drawdownPct.toStringAsFixed(2)}%',
+                    '${tr.t('ledger_eq')}: ${fmtUsd(port.equityUsd, decimals: 2)}  ·  ${tr.t('ledger_hwm')}: ${fmtUsd(port.highWaterMarkUsd)}  ·  ${tr.t('ledger_dd')}: ${port.drawdownPct.toStringAsFixed(2)}%',
                     style: const TextStyle(fontSize: 10),
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    'Closed Legs: ${port.totalClosedLegs}  ·  WR: ${port.winRatePct.toStringAsFixed(1)}%  ·  PF: ${port.profitFactor.toStringAsFixed(2)}  ·  Exp: ${port.expectancyR.toStringAsFixed(2)}R',
+                    '${tr.t('ledger_legs')}: ${port.totalClosedLegs}  ·  ${tr.t('ledger_wr')}: ${port.winRatePct.toStringAsFixed(1)}%  ·  ${tr.t('ledger_pf')}: ${port.profitFactor.toStringAsFixed(2)}  ·  ${tr.t('ledger_exp')}: ${port.expectancyR.toStringAsFixed(2)}R',
                     style: const TextStyle(fontSize: 9.5, color: TerminalColors.muted),
                   ),
                 ],

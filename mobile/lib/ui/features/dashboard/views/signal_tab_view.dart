@@ -29,6 +29,7 @@ class SignalTabView extends StatelessWidget {
     final reg = s.regime;
     final port = s.portfolio;
     final prop = sig.proposal;
+    final tr = vm.tr;
 
     final statusColor = sig.status == 'LONG'
         ? TerminalColors.up
@@ -51,7 +52,7 @@ class SignalTabView extends StatelessWidget {
 
           // 2. Model Regime Status Window
           IbmWindowCard(
-            title: 'MODEL REGIME STATUS',
+            title: tr.t('regime_status_title'),
             child: Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
@@ -62,7 +63,7 @@ class SignalTabView extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          sig.status == 'FLAT' ? 'STANDBY (NEUTRAL)' : sig.status,
+                          sig.status == 'FLAT' ? tr.t('standby_neutral') : sig.status,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
@@ -72,21 +73,21 @@ class SignalTabView extends StatelessWidget {
                       ),
                       IbmBadge(
                         label: sig.status == 'FLAT'
-                            ? 'CONDITIONS UNMET'
-                            : (prop?.entryMethod ?? 'ACTIVE'),
+                            ? tr.t('conditions_unmet')
+                            : (prop?.entryMethod ?? tr.t('active_badge')),
                         color: statusColor,
                       ),
                     ],
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '1D Bias: ${reg.dailyBias}  ·  Paper Pos: ${port.openPositions.length}/1  ·  Sim Eq: ${fmtUsd(port.equityUsd, decimals: 2)}',
+                    '${tr.t('bias_1d')}: ${reg.dailyBias}  ·  ${tr.t('paper_pos')}: ${port.openPositions.length}/1  ·  ${tr.t('sim_eq')}: ${fmtUsd(port.equityUsd, decimals: 2)}',
                     style: const TextStyle(color: TerminalColors.muted, fontSize: 10),
                   ),
                   if (reg.dominantFactors.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
-                      'Drivers: ${reg.dominantFactors.join(" · ")}',
+                      '${tr.t('drivers')}: ${reg.dominantFactors.join(" · ")}',
                       style: const TextStyle(color: TerminalColors.text, fontSize: 10),
                     ),
                   ],
@@ -98,7 +99,7 @@ class SignalTabView extends StatelessWidget {
 
           // 3. 4H Multi-Factor Regime Score Gauge Window
           IbmWindowCard(
-            title: '4H MULTI-FACTOR REGIME SCORE (0-100)',
+            title: tr.t('score_title'),
             child: Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
@@ -144,15 +145,15 @@ class SignalTabView extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Short ≤ ${reg.shortThreshold.toInt()}',
+                        '${tr.t('short_le')} ${reg.shortThreshold.toInt()}',
                         style: const TextStyle(fontSize: 9.5, color: TerminalColors.muted),
                       ),
                       Text(
-                        'Flat ${reg.shortThreshold.toInt() + 1}–${reg.longThreshold.toInt() - 1}',
+                        '${tr.t('flat_range')} ${reg.shortThreshold.toInt() + 1}–${reg.longThreshold.toInt() - 1}',
                         style: const TextStyle(fontSize: 9.5, color: TerminalColors.muted),
                       ),
                       Text(
-                        'Long ≥ ${reg.longThreshold.toInt()}',
+                        '${tr.t('long_ge')} ${reg.longThreshold.toInt()}',
                         style: const TextStyle(fontSize: 9.5, color: TerminalColors.muted),
                       ),
                     ],
@@ -165,7 +166,7 @@ class SignalTabView extends StatelessWidget {
 
           // 4. 9-Point Checklist Window
           IbmWindowCard(
-            title: '9-POINT MODEL REGIME CHECKLIST',
+            title: tr.t('checklist_title'),
             child: Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
@@ -197,7 +198,7 @@ class SignalTabView extends StatelessWidget {
                           ),
                           const SizedBox(width: 6),
                           IbmBadge(
-                            label: item.passed ? 'PASS' : 'FAIL',
+                            label: item.passed ? tr.t('pass') : tr.t('fail'),
                             color: item.passed ? TerminalColors.up : TerminalColors.down,
                           ),
                         ],
@@ -212,23 +213,23 @@ class SignalTabView extends StatelessWidget {
           // 5. Sizing & 5-Tier Circuit Breakers Window
           if (prop != null && prop.entryPrice > 0) ...[
             IbmWindowCard(
-              title: 'MODEL RISK SIZING (SIMULATION) & BREAKERS',
+              title: tr.t('sizing_title'),
               child: Padding(
                 padding: const EdgeInsets.all(10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _kv('Scenario / Reference', '${prop.direction} @ ${fmtUsd(prop.entryPrice, decimals: 1)}'),
-                    _kv('Invalidation Ref', '${fmtUsd(prop.stopPrice, decimals: 1)} (${prop.stopDistancePct.toStringAsFixed(2)}% ≤ 2.2%)'),
-                    _kv('Target 1 (45% @ 1.5R)', '${fmtUsd(prop.target1Price, decimals: 1)} (${prop.target1Label})'),
-                    _kv('R:R (Raw / Adj)', '${prop.rawRr.toStringAsFixed(2)}:1 / ${prop.fundingAdjustedRr.toStringAsFixed(2)}:1'),
-                    _kv('Sim Size / Ratio', '${prop.sizeBtc} BTC (${prop.leverage.toStringAsFixed(2)}x / 2.00x)'),
-                    _kv('Open Heat / Max', '${port.openHeatPct.toStringAsFixed(2)}% / ${port.maxHeatPct.toStringAsFixed(1)}%'),
-                    _kv('Intraday / Daily / Wk', '${fmtSignedPct(port.intradayPnlPct)} / ${fmtSignedPct(port.dailyPnlPct)} / ${fmtSignedPct(port.weeklyPnlPct)}'),
+                    _kv(tr.t('kv_scenario'), '${prop.direction} @ ${fmtUsd(prop.entryPrice, decimals: 1)}'),
+                    _kv(tr.t('kv_invalidation'), '${fmtUsd(prop.stopPrice, decimals: 1)} (${prop.stopDistancePct.toStringAsFixed(2)}% ≤ 2.2%)'),
+                    _kv(tr.t('kv_target1'), '${fmtUsd(prop.target1Price, decimals: 1)} (${prop.target1Label})'),
+                    _kv(tr.t('kv_rr'), '${prop.rawRr.toStringAsFixed(2)}:1 / ${prop.fundingAdjustedRr.toStringAsFixed(2)}:1'),
+                    _kv(tr.t('kv_sim_size'), '${prop.sizeBtc} BTC (${prop.leverage.toStringAsFixed(2)}x / 2.00x)'),
+                    _kv(tr.t('kv_heat'), '${port.openHeatPct.toStringAsFixed(2)}% / ${port.maxHeatPct.toStringAsFixed(1)}%'),
+                    _kv(tr.t('kv_pnl'), '${fmtSignedPct(port.intradayPnlPct)} / ${fmtSignedPct(port.dailyPnlPct)} / ${fmtSignedPct(port.weeklyPnlPct)}'),
                     _kv(
-                      'Breakers',
+                      tr.t('kv_breakers'),
                       port.breakers.activeLabels.isEmpty
-                          ? 'ALL CLEAR (-1.2 / -2 / -4 / -6 / -10%)'
+                          ? tr.t('breakers_clear')
                           : port.breakers.activeLabels.join(', '),
                     ),
                   ],
@@ -243,13 +244,20 @@ class SignalTabView extends StatelessWidget {
             expanded: vm.videoExpanded,
             onToggleExpanded: vm.toggleVideoExpanded,
             enablePlatformPlugins: enablePlatformPlugins,
+            tr: tr,
           ),
           const SizedBox(height: 10),
 
           // 7. Non-intrusive Native + Banner Ads placed cleanly at bottom of scroll feed
-          AdMobNativeAdCard(enablePlatformPlugins: enablePlatformPlugins),
+          AdMobNativeAdCard(
+            enablePlatformPlugins: enablePlatformPlugins,
+            tr: tr,
+          ),
           const SizedBox(height: 10),
-          AdMobBannerStrip(enablePlatformPlugins: enablePlatformPlugins),
+          AdMobBannerStrip(
+            enablePlatformPlugins: enablePlatformPlugins,
+            tr: tr,
+          ),
         ],
       ),
     );
@@ -283,8 +291,9 @@ class _PurposeOverviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final expanded = vm.purposeExpanded;
+    final tr = vm.tr;
     return IbmWindowCard(
-      title: 'PURPOSE // READ-ONLY TELEMETRY & RESEARCH DESK',
+      title: tr.t('purpose_title'),
       trailing: InkWell(
         onTap: vm.togglePurposeExpanded,
         child: Container(
@@ -294,7 +303,7 @@ class _PurposeOverviewCard extends StatelessWidget {
             border: Border.all(color: TerminalColors.borderDark),
           ),
           child: Text(
-            expanded ? '[HIDE]' : '[SHOW]',
+            expanded ? tr.t('hide_btn') : tr.t('show_btn'),
             style: const TextStyle(
               fontSize: 8.5,
               fontWeight: FontWeight.w700,
@@ -304,24 +313,24 @@ class _PurposeOverviewCard extends StatelessWidget {
         ),
       ),
       child: expanded
-          ? const Padding(
-              padding: EdgeInsets.fromLTRB(10, 8, 10, 9),
+          ? Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 9),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '• Read-Only Market Telemetry: No exchange login, wallet, order execution, or financial advice.',
-                    style: TextStyle(fontSize: 9.5, color: TerminalColors.text, height: 1.35),
+                    tr.t('purpose_b1'),
+                    style: const TextStyle(fontSize: 9.5, color: TerminalColors.text, height: 1.35),
                   ),
-                  SizedBox(height: 3),
+                  const SizedBox(height: 3),
                   Text(
-                    '• Spot & Paper Risk Modeling: Uses 4H regime metrics, key levels & \$100K paper simulation (max 2.0x model cap) for research.',
-                    style: TextStyle(fontSize: 9.5, color: TerminalColors.text, height: 1.35),
+                    tr.t('purpose_b2'),
+                    style: const TextStyle(fontSize: 9.5, color: TerminalColors.text, height: 1.35),
                   ),
-                  SizedBox(height: 3),
+                  const SizedBox(height: 3),
                   Text(
-                    '• AI Workflow: Copy the raw telemetry packet below into any AI assistant for objective research & Q&A.',
-                    style: TextStyle(fontSize: 9.0, color: TerminalColors.muted, height: 1.35),
+                    tr.t('purpose_b3'),
+                    style: const TextStyle(fontSize: 9.0, color: TerminalColors.muted, height: 1.35),
                   ),
                 ],
               ),
@@ -342,11 +351,8 @@ class _AiCopilotHeroCard extends StatefulWidget {
 }
 
 class _AiCopilotHeroCardState extends State<_AiCopilotHeroCard> {
-  static const String _defaultHelper =
-      'Paste into ChatGPT, Gemini, Claude, Grok, DeepSeek, Kimi, or any AI for direct verdict & follow-up Q&A.';
-
-  String _statusText = _defaultHelper;
   bool _copiedFlash = false;
+  int _copiedChars = 0;
   Timer? _resetTimer;
 
   @override
@@ -363,13 +369,12 @@ class _AiCopilotHeroCardState extends State<_AiCopilotHeroCard> {
     _resetTimer?.cancel();
     setState(() {
       _copiedFlash = true;
-      _statusText = 'Copied (${payload.length} chars)! Paste into ChatGPT, Gemini, Claude, Grok, DeepSeek, or Kimi.';
+      _copiedChars = payload.length;
     });
     _resetTimer = Timer(const Duration(seconds: 4), () {
       if (!mounted) return;
       setState(() {
         _copiedFlash = false;
-        _statusText = _defaultHelper;
       });
     });
   }
@@ -377,6 +382,7 @@ class _AiCopilotHeroCardState extends State<_AiCopilotHeroCard> {
   void _previewPrompt() {
     final payload = widget.vm.buildAiAnalysisPrompt();
     if (payload.isEmpty) return;
+    final tr = widget.vm.tr;
     showDialog<void>(
       context: context,
       builder: (ctx) => Dialog(
@@ -392,7 +398,7 @@ class _AiCopilotHeroCardState extends State<_AiCopilotHeroCard> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               IbmSectionTitle(
-                'AI PROMPT + COMPACT TELEMETRY (${payload.length} CHARS)',
+                tr.aiPromptDialogTitle(payload.length),
                 backgroundColor: TerminalColors.accent,
                 textColor: Colors.white,
                 trailing: InkWell(
@@ -435,9 +441,9 @@ class _AiCopilotHeroCardState extends State<_AiCopilotHeroCard> {
                           color: TerminalColors.accent,
                           border: Border.all(color: TerminalColors.borderDark),
                         ),
-                        child: const Text(
-                          '[COPY ALL & CLOSE]',
-                          style: TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.w700),
+                        child: Text(
+                          tr.t('copy_all_close'),
+                          style: const TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.w700),
                         ),
                       ),
                     ),
@@ -453,18 +459,19 @@ class _AiCopilotHeroCardState extends State<_AiCopilotHeroCard> {
 
   @override
   Widget build(BuildContext context) {
+    final tr = widget.vm.tr;
     final liveFresh = widget.vm.isLiveFeedFresh;
     final stale = widget.vm.isSnapshotStale;
     final rawLen = widget.vm.buildCompactRawJson().length;
     final kStr = (rawLen / 1000.0).toStringAsFixed(1);
 
     return IbmWindowCard(
-      title: 'AI ANALYSIS ENGINE (CORE WORKFLOW)',
+      title: tr.t('ai_card_title'),
       headerColor: TerminalColors.accent,
       headerTextColor: Colors.white,
       borderWidth: 1.5,
       trailing: IbmBadge(
-        label: liveFresh || !stale ? 'LIVE · READY' : 'CACHED · SYNC',
+        label: liveFresh || !stale ? tr.t('live_ready') : tr.t('cached_sync'),
         color: liveFresh || !stale ? TerminalColors.up : TerminalColors.accent,
       ),
       child: Padding(
@@ -485,12 +492,12 @@ class _AiCopilotHeroCardState extends State<_AiCopilotHeroCard> {
                 alignment: WrapAlignment.spaceBetween,
                 children: [
                   Text(
-                    'RAW PACKET: ~${kStr}K chars (compact OHLCV)',
+                    tr.rawPacketLabel(kStr),
                     style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: TerminalColors.text),
                   ),
-                  const Text(
-                    'UNBIASED · Q&A GROUNDED',
-                    style: TextStyle(fontSize: 9.0, fontWeight: FontWeight.w700, color: TerminalColors.accent),
+                  Text(
+                    tr.t('unbiased_tag'),
+                    style: const TextStyle(fontSize: 9.0, fontWeight: FontWeight.w700, color: TerminalColors.accent),
                   ),
                 ],
               ),
@@ -524,9 +531,7 @@ class _AiCopilotHeroCardState extends State<_AiCopilotHeroCard> {
                     const SizedBox(width: 6),
                     Flexible(
                       child: Text(
-                        _copiedFlash
-                            ? 'COPIED — READY TO PASTE IN ANY AI APP'
-                            : '[COPY AI ANALYSIS PROMPT + JSON]',
+                        _copiedFlash ? tr.t('copied_cta') : tr.t('copy_cta'),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.white,
@@ -553,9 +558,9 @@ class _AiCopilotHeroCardState extends State<_AiCopilotHeroCard> {
                       color: TerminalColors.panelAlt,
                       border: Border.all(color: TerminalColors.borderDark),
                     ),
-                    child: const Text(
-                      '[PREVIEW]',
-                      style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: TerminalColors.text),
+                    child: Text(
+                      tr.t('preview_btn'),
+                      style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: TerminalColors.text),
                     ),
                   ),
                 ),
@@ -572,7 +577,7 @@ class _AiCopilotHeroCardState extends State<_AiCopilotHeroCard> {
 
             // Status / Helper text
             Text(
-              _statusText,
+              _copiedFlash ? tr.copiedCharsBanner(_copiedChars) : tr.t('ai_helper'),
               style: TextStyle(
                 fontSize: 9.5,
                 fontWeight: _copiedFlash ? FontWeight.w700 : FontWeight.w400,

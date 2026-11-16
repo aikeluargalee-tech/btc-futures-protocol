@@ -209,6 +209,7 @@ String buildFullAiPrompt(
   ProtocolState state, {
   double? livePrice,
   String? liveSource,
+  String? languageInstruction,
 }) {
   final packet = buildRawTelemetryPacket(
     state,
@@ -216,5 +217,15 @@ String buildFullAiPrompt(
     liveSource: liveSource,
   );
   final compactJson = serializeTelemetryCompact(packet);
-  return masterQuantPromptTemplate.replaceFirst('{{RAW_JSON_PAYLOAD}}', compactJson);
+  var out = masterQuantPromptTemplate.replaceFirst(
+    '{{RAW_JSON_PAYLOAD}}',
+    compactJson,
+  );
+  if (languageInstruction != null && languageInstruction.isNotEmpty) {
+    out = out.replaceFirst(
+      '### LIVE RAW TELEMETRY PACKET (JSON)',
+      '**Response Language:** Respond strictly in $languageInstruction while keeping all BTC prices, levels, and JSON field values exact.\n\n### LIVE RAW TELEMETRY PACKET (JSON)',
+    );
+  }
+  return out;
 }

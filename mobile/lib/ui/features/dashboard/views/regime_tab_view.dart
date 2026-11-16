@@ -22,12 +22,13 @@ class RegimeTabView extends StatelessWidget {
     final s = vm.state;
     if (s == null) return const Center(child: CircularProgressIndicator());
 
+    final tr = vm.tr;
     final groups = s.regime.groups;
-    const orderedKeys = [
-      ('trend_structure', '1. TREND STRUCTURE (30%)'),
-      ('momentum', '2. MOMENTUM 4H (25%)'),
-      ('volatility_liquidity', '3. VOL & LIQUIDITY 4H (25%)'),
-      ('session_context', '4. SESSION / CONTEXT (20%)'),
+    final orderedKeys = [
+      ('trend_structure', tr.t('grp_trend')),
+      ('momentum', tr.t('grp_mom')),
+      ('volatility_liquidity', tr.t('grp_vol')),
+      ('session_context', tr.t('grp_session')),
     ];
 
     return RefreshIndicator(
@@ -60,19 +61,20 @@ class RegimeTabView extends StatelessWidget {
             charts: s.charts,
             levels: s.signal.structuralLevels,
             proposal: s.signal.proposal,
+            tr: tr,
           ),
           const SizedBox(height: 10),
           IbmWindowCard(
-            title: 'SCHEDULED MACRO RELEASES (≤ 60M BLACKOUT)',
+            title: tr.t('macro_title'),
             child: Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (s.macroCalendar.isEmpty)
-                    const Text(
-                      'No USD High-Impact events inside the upcoming window.',
-                      style: TextStyle(color: TerminalColors.muted, fontSize: 10),
+                    Text(
+                      tr.t('macro_empty'),
+                      style: const TextStyle(color: TerminalColors.muted, fontSize: 10),
                     )
                   else
                     for (final ev in s.macroCalendar)
@@ -85,7 +87,7 @@ class RegimeTabView extends StatelessWidget {
                               child: Text(ev.title, style: const TextStyle(fontSize: 10)),
                             ),
                             Text(
-                              'in ${ev.minutesAway.round()}m',
+                              tr.inMinutes(ev.minutesAway.round()),
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
@@ -105,6 +107,7 @@ class RegimeTabView extends StatelessWidget {
           AdMobBannerStrip(
             enablePlatformPlugins: enablePlatformPlugins,
             shouldLoad: loadBannerAd,
+            tr: tr,
           ),
         ],
       ),

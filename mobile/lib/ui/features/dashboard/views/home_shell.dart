@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/formatters.dart';
 import '../../../core/theme.dart';
 import '../view_models/protocol_view_model.dart';
+import '../widgets/language_bar.dart';
 import 'audit_tab_view.dart';
 import 'ledger_tab_view.dart';
 import 'regime_tab_view.dart';
@@ -18,13 +19,6 @@ class HomeShell extends StatelessWidget {
   final ProtocolViewModel vm;
   final bool enablePlatformPlugins;
 
-  static const _tabLabels = <String>[
-    'F1 MONITOR',
-    'F2 REGIME',
-    'F3 CALC',
-    'F4 AUDIT',
-  ];
-
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
@@ -32,6 +26,13 @@ class HomeShell extends StatelessWidget {
       builder: (context, _) {
         final s = vm.state;
         final age = vm.snapshotAgeLabel;
+        final tr = vm.tr;
+        final tabLabels = <String>[
+          tr.t('tab_monitor'),
+          tr.t('tab_regime'),
+          tr.t('tab_calc'),
+          tr.t('tab_audit'),
+        ];
         final tabs = <Widget>[
           SignalTabView(vm: vm, enablePlatformPlugins: enablePlatformPlugins),
           RegimeTabView(
@@ -69,13 +70,13 @@ class HomeShell extends StatelessWidget {
                             ),
                           ],
                         ),
-                        child: const Wrap(
+                        child: Wrap(
                           alignment: WrapAlignment.spaceBetween,
                           crossAxisAlignment: WrapCrossAlignment.center,
                           spacing: 8,
                           runSpacing: 2,
                           children: [
-                            Text(
+                            const Text(
                               '■ QUANT-WORKSTATION // BTC-PROTOCOL REV 4.0',
                               style: TextStyle(
                                 color: Colors.white,
@@ -85,8 +86,8 @@ class HomeShell extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              'SYS: 4H-CYCLE · PAPER MODEL',
-                              style: TextStyle(
+                              tr.t('sys_banner'),
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 9.0,
                                 fontWeight: FontWeight.w400,
@@ -94,6 +95,11 @@ class HomeShell extends StatelessWidget {
                             ),
                           ],
                         ),
+                      ),
+                      const SizedBox(height: 6),
+                      LanguageBar(
+                        selected: vm.lang,
+                        onSelected: vm.setLanguage,
                       ),
                       const SizedBox(height: 6),
 
@@ -122,9 +128,9 @@ class HomeShell extends StatelessWidget {
                                       color: TerminalColors.panelAlt,
                                       border: Border.all(color: TerminalColors.borderDark),
                                     ),
-                                    child: const Text(
-                                      'V4.0 · 4H · TELEMETRY',
-                                      style: TextStyle(
+                                    child: Text(
+                                      tr.t('desk_badge'),
+                                      style: const TextStyle(
                                         fontSize: 9,
                                         fontWeight: FontWeight.w700,
                                         color: TerminalColors.text,
@@ -146,14 +152,14 @@ class HomeShell extends StatelessWidget {
                                               height: 12,
                                               child: CircularProgressIndicator(strokeWidth: 1.8),
                                             )
-                                          : const Row(
+                                          : Row(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                Icon(Icons.refresh_sharp, size: 12, color: TerminalColors.text),
-                                                SizedBox(width: 3),
+                                                const Icon(Icons.refresh_sharp, size: 12, color: TerminalColors.text),
+                                                const SizedBox(width: 3),
                                                 Text(
-                                                  'SYNC',
-                                                  style: TextStyle(
+                                                  tr.t('sync'),
+                                                  style: const TextStyle(
                                                     fontSize: 8.5,
                                                     fontWeight: FontWeight.w700,
                                                     color: TerminalColors.text,
@@ -168,8 +174,8 @@ class HomeShell extends StatelessWidget {
                               const SizedBox(height: 4),
                               Text(
                                 s != null
-                                    ? 'Updated ${s.updatedAtUtc}${age != null ? " ($age)" : ""} · 4H Close ${s.last4hCloseUtc} · ${s.tickerSource}'
-                                    : 'Connecting to live protocol feed…',
+                                    ? '${tr.t('updated')} ${s.updatedAtUtc}${age != null ? " ($age)" : ""} · ${tr.t('close_4h')} ${s.last4hCloseUtc} · ${s.tickerSource}'
+                                    : tr.t('connecting_feed'),
                                 style: const TextStyle(fontSize: 9.0, color: TerminalColors.muted),
                               ),
                               const SizedBox(height: 6),
@@ -204,7 +210,7 @@ class HomeShell extends StatelessWidget {
                                         Text(
                                           s != null
                                               ? vm.liveFeedDisplay
-                                              : 'Connecting…',
+                                              : tr.t('connecting'),
                                           style: TextStyle(
                                             fontSize: 9.5,
                                             color: vm.isLiveFeedFresh
@@ -234,7 +240,7 @@ class HomeShell extends StatelessWidget {
                                         if (s != null) ...[
                                           const SizedBox(width: 6),
                                           Text(
-                                            '${fmtSignedPct(s.chg24Pct)} 24h',
+                                            '${fmtSignedPct(s.chg24Pct)} ${tr.t('chg_24h')}',
                                             style: TextStyle(
                                               fontSize: 9.5,
                                               fontWeight: FontWeight.w700,
@@ -264,7 +270,7 @@ class HomeShell extends StatelessWidget {
                           child: Padding(
                             padding: const EdgeInsets.all(20),
                             child: IbmWindowCard(
-                              title: 'CONNECTION ERROR',
+                              title: tr.t('conn_error'),
                               child: Padding(
                                 padding: const EdgeInsets.all(14),
                                 child: Column(
@@ -289,9 +295,9 @@ class HomeShell extends StatelessWidget {
                                           color: TerminalColors.borderDark,
                                         ),
                                       ),
-                                      child: const Text(
-                                        '[RETRY SYNC]',
-                                        style: TextStyle(fontSize: 10.5),
+                                      child: Text(
+                                        tr.t('retry_sync'),
+                                        style: const TextStyle(fontSize: 10.5),
                                       ),
                                     ),
                                   ],
@@ -318,11 +324,11 @@ class HomeShell extends StatelessWidget {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               child: Row(
-                children: List.generate(_tabLabels.length, (i) {
+                children: List.generate(tabLabels.length, (i) {
                   final active = vm.tabIndex == i;
                   return Expanded(
                     child: Padding(
-                      padding: EdgeInsets.only(right: i < _tabLabels.length - 1 ? 5 : 0),
+                      padding: EdgeInsets.only(right: i < tabLabels.length - 1 ? 5 : 0),
                       child: InkWell(
                         onTap: () => vm.setTab(i),
                         child: Container(
@@ -338,7 +344,7 @@ class HomeShell extends StatelessWidget {
                           child: Center(
                             heightFactor: 1.0,
                             child: Text(
-                              _tabLabels[i],
+                              tabLabels[i],
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(

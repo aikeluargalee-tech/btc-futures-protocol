@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../domain/models/protocol_state.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../core/theme.dart';
 
 class PriceChartCard extends StatefulWidget {
@@ -10,11 +11,13 @@ class PriceChartCard extends StatefulWidget {
     required this.charts,
     required this.levels,
     required this.proposal,
+    this.tr,
   });
 
   final Map<String, List<ChartCandle>> charts;
   final List<StructuralLevel> levels;
   final OrderProposal? proposal;
+  final AppStrings? tr;
 
   @override
   State<PriceChartCard> createState() => _PriceChartCardState();
@@ -25,11 +28,12 @@ class _PriceChartCardState extends State<PriceChartCard> {
 
   @override
   Widget build(BuildContext context) {
+    final tr = widget.tr ?? AppStrings.of(AppLang.en);
     final bars = (widget.charts[_tf] ?? const <ChartCandle>[]);
     final sliced = bars.length > 60 ? bars.sublist(bars.length - 60) : bars;
 
     return IbmWindowCard(
-      title: 'STRUCTURAL PRICE MAP',
+      title: tr.t('chart_title'),
       child: Padding(
         padding: const EdgeInsets.all(10),
         child: Column(
@@ -64,10 +68,10 @@ class _PriceChartCardState extends State<PriceChartCard> {
                     border: Border.all(color: TerminalColors.border),
                   ),
                   child: sliced.length < 2
-                      ? const Center(
+                      ? Center(
                           child: Text(
-                            'Chart data unavailable',
-                            style: TextStyle(color: TerminalColors.muted, fontSize: 10.5),
+                            tr.t('chart_unavail'),
+                            style: const TextStyle(color: TerminalColors.muted, fontSize: 10.5),
                           ),
                         )
                       : CustomPaint(

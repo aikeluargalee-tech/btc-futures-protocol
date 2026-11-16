@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../config/ad_config.dart';
+import '../../../../l10n/app_strings.dart';
 import '../../../core/theme.dart';
 
 /// Collapsible Protocol Briefing Video card bundling vGUZF.mp4.
@@ -11,11 +12,13 @@ class ProtocolVideoCard extends StatefulWidget {
     required this.expanded,
     required this.onToggleExpanded,
     this.enablePlatformPlugins = true,
+    this.tr,
   });
 
   final bool expanded;
   final VoidCallback onToggleExpanded;
   final bool enablePlatformPlugins;
+  final AppStrings? tr;
 
   @override
   State<ProtocolVideoCard> createState() => _ProtocolVideoCardState();
@@ -74,6 +77,7 @@ class _ProtocolVideoCardState extends State<ProtocolVideoCard> {
 
   @override
   Widget build(BuildContext context) {
+    final tr = widget.tr ?? AppStrings.of(AppLang.en);
     return IbmWindowCard(
       child: Column(
         children: [
@@ -89,10 +93,10 @@ class _ProtocolVideoCardState extends State<ProtocolVideoCard> {
                     size: 16,
                   ),
                   const SizedBox(width: 6),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'PROTOCOL BRIEFING VIDEO (vGUZF.mp4)',
-                      style: TextStyle(
+                      tr.t('video_title'),
+                      style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.3,
@@ -107,7 +111,7 @@ class _ProtocolVideoCardState extends State<ProtocolVideoCard> {
                       border: Border.all(color: TerminalColors.borderDark),
                     ),
                     child: Text(
-                      widget.expanded ? 'HIDE' : 'TAP TO PLAY',
+                      widget.expanded ? tr.t('video_hide') : tr.t('video_play'),
                       style: const TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
@@ -122,14 +126,14 @@ class _ProtocolVideoCardState extends State<ProtocolVideoCard> {
           if (widget.expanded)
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-              child: _buildVideoBody(),
+              child: _buildVideoBody(tr),
             ),
         ],
       ),
     );
   }
 
-  Widget _buildVideoBody() {
+  Widget _buildVideoBody(AppStrings tr) {
     if (!widget.enablePlatformPlugins) {
       return Container(
         height: 140,
@@ -138,9 +142,9 @@ class _ProtocolVideoCardState extends State<ProtocolVideoCard> {
           color: TerminalColors.panelAlt,
           border: Border.all(color: TerminalColors.borderDark),
         ),
-        child: const Text(
-          'Video Briefing Player Ready (vGUZF.mp4)',
-          style: TextStyle(color: TerminalColors.text, fontSize: 10.5),
+        child: Text(
+          tr.t('video_ready'),
+          style: const TextStyle(color: TerminalColors.text, fontSize: 10.5),
         ),
       );
     }
