@@ -26,9 +26,9 @@
   "trade_seq": 0,
   "unrealized_pnl_usd": 0,
   "initial_equity": 100000.0,
-  "day_key": "2026-11-22",
+  "day_key": "2026-11-23",
   "intraday_peak_equity": 100000.0,
-  "week_key": "2026-W47",
+  "week_key": "2026-W48",
   "audit_log": [
     {
       "ts": "2026-11-14T04:52:59Z",
