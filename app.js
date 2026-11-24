@@ -74,6 +74,8 @@ function renderSignalTab() {
   const pmG = STATE.positioning_matrix_g;
   const gRow = pmG?.status === "LIVE" ? pmG.active_cell : null;
   const gCls = gRow?.reading === "directional colour only" ? "warn" : "";
+  const mtL = STATE.context_overlays?.market_time_l;
+  const mtCls = mtL?.vol_cluster_active ? "dn" : (mtL?.awake_state === "QUIET_THIN" ? "warn" : "");
 
   $("signalSummary").innerHTML = `
     <div class="signal-head">
@@ -82,7 +84,10 @@ function renderSignalTab() {
     </div>
     <p class="mut" style="margin:8px 0 4px;">Dominant 4H drivers: <b>${esc((reg.dominant_factors || []).join(" · ") || "—")}</b></p>
     <p class="mut" style="margin:0 0 6px;">1D Bias: <b>${esc(reg.daily_bias || "—")}</b> · Open Futures: <b>${(port.open_positions || []).length}/1</b> · Equity: <b>${usd(port.equity_usd, 2)}</b></p>
-    ${pmG?.status === "LIVE" ? `<div><span class="badge ${gCls}">Project G: ${esc(pmG.summary_line)}</span></div>` : ""}
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+      ${pmG?.status === "LIVE" ? `<span class="badge ${gCls}">Project G: ${esc(pmG.summary_line)}</span>` : ""}
+      ${mtL?.status === "LIVE" ? `<span class="badge ${mtCls}">Market Time (L): ${esc(mtL.summary_line)}</span>` : ""}
+    </div>
   `;
 
   const sc = typeof reg.score === "number" ? reg.score : 50;
@@ -129,6 +134,7 @@ function renderSignalTab() {
       ["Nearest 4H Level", prop.level_label ? `${prop.level_label} @ ${usd(prop.level_price, 1)}` : "—"],
       ["Proposed Entry", `${usd(prop.entry_price, 1)} (${prop.entry_method})`],
       ["Hard Stop", `${usd(prop.stop_price, 1)} (${num(prop.stop_distance_pct, 2)}% ≤ 2.2% max)`],
+      ["Stop vs Day Range (L)", mtL?.expected_day_range_pct != null && prop.stop_distance_pct != null ? `${(prop.stop_distance_pct / mtL.expected_day_range_pct).toFixed(2)}x (${mtL.day_of_week} ~${num(mtL.expected_day_range_pct, 2)}%${mtL.stop_noise_warning ? " · TIGHT VS NOISE" : ""})` : "—"],
       ["Target 1 (45% Partial @ 1.5R)", `${usd(prop.target1_price, 1)} (${prop.target1_label})`],
       ["Raw / Funding-Adj R:R", `${num(prop.raw_rr, 2)}:1 / ${num(prop.funding_adjusted_rr, 2)}:1 (min 1.60:1)`],
       ["Calculated Size", `${prop.size_btc ?? "—"} BTC (${usd(prop.notional_usd, 0)})`],
@@ -384,6 +390,7 @@ function renderSpotTab() {
       </div>
     </div>
     <p style="margin:6px 0 8px;">${esc(dibse.actionable_trade_instruction || diag.plain_english_verdict || "")}</p>
+    ${STATE.context_overlays?.etf_flow_regime?.status === "LIVE" ? `<div style="margin-bottom:8px;"><span class="badge ${STATE.context_overlays.etf_flow_regime.regime === "ABSORPTION" || STATE.context_overlays.etf_flow_regime.regime === "SPOT-LED INFLOWS" ? "up" : STATE.context_overlays.etf_flow_regime.regime === "NEW SHORTS" ? "dn" : "warn"}">${esc(STATE.context_overlays.etf_flow_regime.summary_line)}</span></div>` : ""}
     <div class="grid-2" style="margin-bottom:8px;">
       <div>${candRows}</div>
       <dl class="kv">${kv([
@@ -655,12 +662,18 @@ function renderProjectGMatrixCard() {
       </tr>`;
   }).join("");
 
+  const pmH = STATE.context_overlays?.patient_money_h;
+  const hLine = pmH?.status === "LIVE"
+    ? `<div style="margin-bottom:6px;font-size:11px;color:var(--muted);"><b>Patient Money (H):</b> Dollar Funding <b>${pmH.funding_8h_usd != null ? (pmH.funding_8h_usd >= 0 ? "+" : "-") + "$" + Math.round(Math.abs(pmH.funding_8h_usd)).toLocaleString("en-US") : "—"}/8h</b> (${esc(pmH.crowd_payer || "—")}) · Aggression × OI: <span class="badge">${esc(pmH.aggression_oi_state || "—")}</span></div>`
+    : "";
+
   box.innerHTML = `
     <h2>Project G · 8-Cell Positioning Decision Matrix (299 Non-Overlapping Weeks · Context Only)</h2>
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;">
       <div class="mut">${headerMeta}</div>
       ${pm.status === "LIVE" ? `<span class="badge ${active.reading === "directional colour only" ? "warn" : ""}">${esc(pm.summary_line)}</span>` : ""}
     </div>
+    ${hLine}
     <div style="overflow-x:auto;">
       <table>
         <thead>
@@ -780,6 +793,7 @@ function renderNewsTab() {
       ["CMC ETH ETF (1D / 5D)", ce.eth_latest_usd_m != null ? `$${num(ce.eth_latest_usd_m, 1)}M · 5D $${num(ce.eth_5d_sum_usd_m, 1)}M` : "—"],
       ["Farside BTC ETF (1D / 5D)", fe.latest_usd_m != null ? `$${num(fe.latest_usd_m, 1)}M (${fe.latest_date}) · 5D $${num(fe.sum5_usd_m, 1)}M` : "—"],
       ["USDT+USDC Liquidity 7D", st.total_usd_b != null ? `$${num(st.total_usd_b, 2)}B (${pct(st.chg7d_pct, 2)})` : "—"],
+      ["ETF Flow Regime (Project ETF)", STATE.context_overlays?.etf_flow_regime?.status === "LIVE" ? `${STATE.context_overlays.etf_flow_regime.regime} (5D $${num(STATE.context_overlays.etf_flow_regime.inputs?.etf_5d_usd_m, 1)}M · OI ${pct(STATE.context_overlays.etf_flow_regime.inputs?.oi_delta_pct, 2)})` : "—"],
       ["Deribit DVOL (30D IV)", cp.dvol != null ? `${num(cp.dvol, 2)}` : "—"],
     ])}</dl>
   `;
@@ -1049,6 +1063,12 @@ function updateCalc() {
     ["Effective Leverage", `${lev.toFixed(2)}x / 2.00x max${clamped ? " (2x LEVERAGE CLAMPED)" : ""}`],
     ["Actual Risk", `${actualRiskPct.toFixed(3)}% (${usd(actualRiskUsd, 2)})`],
     ["Stop Distance / R:R", `${stopPct.toFixed(2)}% (≤2.2%) / ${rawRR.toFixed(2)}:1 (≥1.6:1)`],
+    ["Session Range Check (L)", (() => {
+      const mt = STATE?.context_overlays?.market_time_l;
+      if (!mt || !mt.expected_day_range_pct || stopPct <= 0) return "—";
+      const ratio = stopPct / mt.expected_day_range_pct;
+      return `${mt.day_of_week} ~${mt.expected_day_range_pct}% day · Stop ${ratio.toFixed(2)}x${ratio < 0.55 ? " (TIGHT VS NOISE)" : ""}${mt.vol_cluster_active ? " · >2% 1H VOL" : ""}`;
+    })()],
   ]);
 }
 
@@ -1429,6 +1449,7 @@ function buildRawTelemetryPacket(fullState) {
       liquidation_magnets: liqMagnets,
       funding_30d_percentile: vl.funding_30d_percentile ?? null,
       positioning_matrix_g: compactMatrixG(fullState),
+      context_overlays: fullState.context_overlays ?? null,
     },
     macro_and_flows: {
       vix: sc.vix ?? null,
@@ -1568,6 +1589,8 @@ function bindEvents() {
         macro_bias: nm.macro_bias,
         cross_asset: nm.cross_asset,
         crypto_pulse: nm.crypto_pulse,
+        etf_flow_regime: STATE.context_overlays?.etf_flow_regime ?? null,
+        market_time_l: STATE.context_overlays?.market_time_l ?? null,
         calendar_usd: (nm.calendar_usd || []).slice(0, 8),
         headlines: (nm.headlines || []).slice(0, 15).map((h) => ({
           category: h.category,
@@ -1612,6 +1635,7 @@ function bindEvents() {
       const rhymePayload = {
         ...STATE.cortex_rhyme,
         positioning_matrix_g: compactMatrixG(STATE),
+        patient_money_h: STATE.context_overlays?.patient_money_h ?? null,
       };
       let promptText = CORTEX_RHYME_AI_PROMPT_TEMPLATE.replace("{{RHYME_JSON_PAYLOAD}}", JSON.stringify(rhymePayload, null, 2));
       const meta = window.DeskI18n?.getMeta();
@@ -1661,6 +1685,8 @@ function bindEvents() {
         spot_magnet: STATE.spot_magnet,
         cmc_liquidations: STATE.derivatives?.cmc_liquidations ?? null,
         positioning_matrix_g: compactMatrixG(STATE),
+        etf_flow_regime: STATE.context_overlays?.etf_flow_regime ?? null,
+        market_time_l: STATE.context_overlays?.market_time_l ?? null,
         news_macro_brief: STATE.news_macro
           ? {
               macro_bias_status: STATE.news_macro.macro_bias?.status ?? null,

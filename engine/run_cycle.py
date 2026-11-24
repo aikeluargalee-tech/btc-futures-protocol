@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .config import load_config
+from .context_overlays import compute_context_overlays
 from .cortex_rhyme_engine import compute_cortex_rhyme
 from .data_fetcher import fetch_all_market_data
 from .kline_playbook_engine import compute_regime_and_kline_playbook
@@ -79,6 +80,14 @@ def main() -> int:
     positioning_matrix_g = compute_positioning_matrix_g(market, cortex_rhyme=cortex_rhyme)
     news_macro = compute_news_macro(market, now_utc=now)
     spot_shield = compute_spot_shield(now_utc=now)
+    context_overlays = compute_context_overlays(
+        market,
+        signal=signal,
+        spot_magnet=spot_magnet,
+        cortex_rhyme=cortex_rhyme,
+        news_macro=news_macro,
+        now_utc=now,
+    )
 
     _save_json(LEDGER_PATH, ledger)
     _save_json(AUDIT_PATH, ledger["audit_log"][-100:])
@@ -204,6 +213,7 @@ def main() -> int:
         "spot_shield": spot_shield,
         "cortex_rhyme": cortex_rhyme,
         "positioning_matrix_g": positioning_matrix_g,
+        "context_overlays": context_overlays,
         "news_macro": news_macro,
         "signal": signal,
         "portfolio": portfolio,
