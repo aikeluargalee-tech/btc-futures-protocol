@@ -155,6 +155,8 @@ def _calc_spot_metrics(
     base_ceiling = round(max(float(c["high"]) for c in h4[-18:]), 2)
     cap_wick_low = round(min(float(c["low"]) for c in h1[-24:]), 2)
     euph_wick_high = round(max(float(c["high"]) for c in h1[-24:]), 2)
+    recent_3h_wick_low = round(min(float(c["low"]) for c in h1[-3:]), 2)
+    recent_3h_wick_high = round(max(float(c["high"]) for c in h1[-3:]), 2)
 
     # Derivatives positioning & volatility
     cur_oi = float(deriv.get("oi_btc") or deriv.get("total_oi_btc") or 0.0)
@@ -217,6 +219,8 @@ def _calc_spot_metrics(
         "base_ceiling": base_ceiling,
         "capitulation_wick_low": cap_wick_low,
         "euphoria_wick_high": euph_wick_high,
+        "recent_3h_wick_low": recent_3h_wick_low,
+        "recent_3h_wick_high": recent_3h_wick_high,
         "coinbase_spot_price": xv.get("coinbase_spot_price"),
         "okx_spot_price": xv.get("okx_spot_price"),
         "coinbase_premium_usd": xv.get("coinbase_premium_usd"),
@@ -300,17 +304,17 @@ def _calc_modeled_clusters(m: dict[str, Any], h4: list[dict[str, Any]]) -> tuple
 
 
 def _eval_lsce(m: dict[str, Any], lower: dict[str, Any] | None, upper: dict[str, Any] | None) -> dict[str, Any]:
-    """Bidirectional Liquidation Sweep Confirmation Engine (LSCE)."""
+    """Bidirectional Liquidation Sweep Confirmation Engine (LSCE) using local 3H sweep window."""
     cur_p = float(m["price"])
-    wick_hi = float(m["euphoria_wick_high"]) or cur_p
-    wick_lo = float(m["capitulation_wick_low"]) or cur_p
+    wick_hi = float(m.get("recent_3h_wick_high") or m["euphoria_wick_high"]) or cur_p
+    wick_lo = float(m.get("recent_3h_wick_low") or m["capitulation_wick_low"]) or cur_p
     l_p = float(lower["price_level"]) if lower else float(m["swing_low_4h"])
     u_p = float(upper["price_level"]) if upper else float(m["swing_high_4h"])
     cvd = float(m["spot_cvd_ratio"])
     depth = float(m["bids_asks_depth_ratio"])
     fund_dec = float(m["funding_rate_decimal"])
 
-    if lower and wick_lo <= l_p * 1.002 and (l_p < cur_p <= l_p * 1.015) and cvd >= 1.05 and depth >= 0.50:
+    if lower and (l_p * 0.975 <= wick_lo <= l_p * 1.002) and (l_p < cur_p <= l_p * 1.015) and cvd >= 1.05 and depth >= 0.50:
         return {
             "status": "SWEEP_AND_RECLAIM_CONFIRMED",
             "side": "LOWER",
@@ -318,11 +322,11 @@ def _eval_lsce(m: dict[str, Any], lower: dict[str, Any] | None, upper: dict[str,
             "sweep_depth_pct": round(((cur_p - l_p) / cur_p) * 100.0, 2),
             "reclaim_level": round(l_p, 2),
             "spot_absorption": f"Strong Bid Absorption (CVD {cvd:.2f}, Depth {depth:.2f})",
-            "action_verdict": f"Lower long shelf (${l_p:,.0f}) swept & reclaimed with spot buying. Loop A (USDT -> BTC) confirmed.",
+            "action_verdict": f"Lower long shelf (${l_p:,.0f}) swept (3H wick ${wick_lo:,.0f}) & reclaimed with spot buying. Loop A (USDT -> BTC) confirmed.",
         }
 
     u_ref = u_p if (upper and wick_hi >= u_p * 0.998) else float(m["swing_high_4h"])
-    if upper and u_ref > 0 and wick_hi >= u_ref * 0.998 and (u_ref * 0.985 <= cur_p < u_ref) and (cvd < 1.08 or depth < 0.75 or fund_dec >= 0.0001):
+    if upper and u_ref > 0 and (u_ref * 0.998 <= wick_hi <= u_ref * 1.025) and (u_ref * 0.985 <= cur_p < u_ref) and (cvd < 1.08 or depth < 0.75 or fund_dec >= 0.0001):
         return {
             "status": "UPPER_SWEEP_REJECTION_CONFIRMED",
             "side": "UPPER",
