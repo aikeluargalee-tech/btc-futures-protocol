@@ -332,11 +332,21 @@ class ProtocolV4Tests(unittest.TestCase):
         self.assertIn("7D VAL", labels)
 
         ledger = init_ledger(cfg)
+        mkt["derivatives"]["cmc_liquidations"] = {
+            "source": "CoinMarketCap (test)",
+            "mark_price": 60000.0,
+            "cumulative_fuel": {"longs_within_2pct_usd_m": 45.2, "shorts_within_2pct_usd_m": 61.5, "squeeze_bias_2pct": "SHORT_SQUEEZE_HEAVY"},
+            "tactical_long_clusters_within_8pct": [{"price": 59725.0, "usd_m": 49.4, "leverage": 72, "distance_pct": -0.46}],
+            "tactical_short_clusters_within_8pct": [{"price": 62000.0, "usd_m": 51.0, "leverage": 30, "distance_pct": 3.33}],
+            "realized": {"h4_long_usd_m": 191.2, "h4_short_usd_m": 3.2, "h4_total_usd_m": 194.4, "h4_long_flush_pct": 98.4},
+        }
         sig = evaluate_signal(mkt, _qualifying_regime(76.0, "BULL"), ledger, cfg)
         magnets = sig.get("liquidation_magnets")
         self.assertIsNotNone(magnets)
         self.assertLess(magnets["long_liq_50x_est"], magnets["short_liq_50x_est"])
         self.assertLess(magnets["long_liq_25x_est"], magnets["long_liq_50x_est"])
+        self.assertIn("cmc_exact_clusters", magnets)
+        self.assertEqual(magnets["cmc_exact_clusters"]["realized"]["h4_long_flush_pct"], 98.4)
 
 
 if __name__ == "__main__":

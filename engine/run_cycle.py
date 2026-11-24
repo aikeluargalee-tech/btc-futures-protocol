@@ -175,6 +175,7 @@ def main() -> int:
             "venues": (market.get("derivatives") or {}).get("venues"),
             "venue_oi_btc": (market.get("derivatives") or {}).get("venue_oi_btc"),
             "orderbook_1pct": (market.get("derivatives") or {}).get("orderbook_1pct"),
+            "cmc_liquidations": (market.get("derivatives") or {}).get("cmc_liquidations"),
         },
         "extras": market.get("extras") or {},
         "etf": market.get("etf"),

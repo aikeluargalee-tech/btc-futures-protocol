@@ -18,7 +18,37 @@ const String _sampleStateJson = '''
   "updated_at_utc": "2026-11-14T05:00:00Z",
   "last_4h_close_utc": "2026-11-14T04:00:00Z",
   "ticker": {"price": 67000.0, "chg24_pct": -1.5, "source": "OKX"},
-  "derivatives": {"current_rate_pct": 0.005, "oi_btc": 33000},
+  "derivatives": {
+    "current_rate_pct": 0.005,
+    "oi_btc": 33000,
+    "cmc_liquidations": {
+      "mark_price": 67000.0,
+      "cumulative_fuel": {
+        "longs_within_2pct_usd_m": 45.2,
+        "shorts_within_2pct_usd_m": 62.1,
+        "longs_within_5pct_usd_m": 120.5,
+        "shorts_within_5pct_usd_m": 140.8,
+        "squeeze_bias_2pct": "SHORT_SQUEEZE_HEAVY"
+      },
+      "tactical_long_clusters_within_8pct": [
+        {"price": 65500.0, "usd_m": 42.3, "leverage": 40, "distance_pct": -2.24}
+      ],
+      "tactical_short_clusters_within_8pct": [
+        {"price": 68400.0, "usd_m": 51.8, "leverage": 35, "distance_pct": 2.09}
+      ],
+      "realized": {
+        "h4_long_usd_m": 191.2,
+        "h4_short_usd_m": 3.2,
+        "h4_total_usd_m": 194.4,
+        "h4_long_flush_pct": 98.4,
+        "h24_long_usd_m": 566.0,
+        "h24_short_usd_m": 217.3,
+        "h24_total_usd_m": 783.2,
+        "h24_long_flush_pct": 72.3,
+        "global_btc_oi_usd_b": 66.02
+      }
+    }
+  },
   "extras": {},
   "charts": {
     "h4": [[1700000000000, 66500, 67500, 66200, 67000], [1700014400000, 67000, 67400, 66800, 67100]],
@@ -117,6 +147,7 @@ void main() {
     expect(meta['completeness_score'], isNotNull);
     expect(meta['price_drift_from_4h_close_pct'], isNotNull);
     expect(deriv['liquidation_magnets'], isA<Map<String, dynamic>>());
+    expect(deriv['cmc_liquidations'], isA<Map<String, dynamic>>());
     expect(riskRef['account_equity_usd'], 50000.0);
 
     final compact = serializeTelemetryCompact(packet);
@@ -221,6 +252,7 @@ void main() {
     await tester.tap(find.text('F2 REGIME'));
     await tester.pump();
     expect(vm.hasVisitedTab(1), isTrue);
+    expect(find.text('CMC LIQUIDATION CLUSTERS & 4H/24H FLUSH'), findsOneWidget);
     final regimeScrollable = find.byType(Scrollable).first;
     await tester.scrollUntilVisible(
       find.text('AdMob Banner Slot (320x50 · Test Mode)'),

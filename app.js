@@ -368,6 +368,11 @@ function renderLedgerTab() {
         .map(([k, v]) => `${k.replace("_futures", "").toUpperCase()} ${pct(v, 4)}`)
         .join(" · ")
     : pct(drv.current_rate_pct, 5);
+  const cmc = drv.cmc_liquidations || {};
+  const real = cmc.realized || {};
+  const tacL = (cmc.tactical_long_clusters_within_8pct || [])[0];
+  const tacS = (cmc.tactical_short_clusters_within_8pct || [])[0];
+  const fuel = cmc.cumulative_fuel || {};
   $("derivKv").innerHTML = kv([
     ["Funding 8h (Venues)", venueStr],
     ["Open Interest (OKX / Total)", `${drv.oi_btc != null ? Math.round(drv.oi_btc).toLocaleString() + " BTC" : "—"} / ${drv.total_oi_btc != null ? Math.round(drv.total_oi_btc).toLocaleString() + " BTC" : "—"}`],
@@ -375,6 +380,11 @@ function renderLedgerTab() {
     ["Fear & Greed", ext.fng_value != null ? `${ext.fng_value} (${ext.fng_label})` : "—"],
     ["ETF Latest / 5D", STATE.etf ? `${STATE.etf.latest_usd_m}M (${STATE.etf.latest_date}) / ${STATE.etf.sum5_usd_m}M` : "—"],
     ["USDT+USDC 7D", STATE.stables ? `${STATE.stables.total_usd_b}B (${pct(STATE.stables.chg7d_pct, 2)})` : "—"],
+    ["CMC 4H Realized Liq (L / S)", real.h4_total_usd_m != null ? `L $${real.h4_long_usd_m}M / S $${real.h4_short_usd_m}M (${real.h4_long_flush_pct}% L)` : "—"],
+    ["CMC 24H Realized Liq (L / S)", real.h24_total_usd_m != null ? `L $${real.h24_long_usd_m}M / S $${real.h24_short_usd_m}M ($${real.h24_total_usd_m}M)` : "—"],
+    ["CMC Top Short Magnet (≤8%)", tacS ? `$${tacS.price.toLocaleString()} ($${tacS.usd_m}M · ${tacS.leverage}x · ${tacS.distance_pct >= 0 ? "+" : ""}${tacS.distance_pct}%)` : "—"],
+    ["CMC Top Long Magnet (≤8%)", tacL ? `$${tacL.price.toLocaleString()} ($${tacL.usd_m}M · ${tacL.leverage}x · ${tacL.distance_pct}%)` : "—"],
+    ["CMC ±2% Squeeze Fuel (S / L)", fuel.shorts_within_2pct_usd_m != null ? `S $${fuel.shorts_within_2pct_usd_m}M vs L $${fuel.longs_within_2pct_usd_m}M (${fuel.squeeze_bias_2pct})` : "—"],
   ]);
 
   const closed = port.closed_trades || [];
@@ -462,7 +472,7 @@ Every trade idea you evaluate MUST strictly obey these guardrails:
 #### 2. 5-PILLAR TELEMETRY AUDIT
 - **A. Price Structure & Volume Profile:** Analyze \`charts_ohlcv_last30\` (\`[ts, O, H, L, C, Vol]\`), EMA alignment (\`ema20_4h\`, \`ema50_4h\`, \`ema50_d\`, \`ema200_d\`), tactical **\`7D Tactical VPOC / VAH / VAL\`**, macro **\`30D VPOC / VAH / VAL\`**, and nearest swing highs/lows.
 - **B. Momentum & Volatility Regime:** Evaluate \`rsi_4h\`, \`rsi_d\`, \`roc6/12/20_4h_pct\`, \`atr_4h_usd\` (\`atr_4h_percentile\`), and \`dvol\`. Classify as **Compression**, **Early Expansion**, or **Late Climax / Exhaustion**.
-- **C. Multi-Venue Derivatives & Microstructure:** Evaluate \`funding_rate_pct\` across OKX, Kraken Futures, Deribit, and Hyperliquid, \`oi_btc\` / \`venue_oi_btc\`, **\`derivatives.liquidation_magnets\`** (25x/50x magnetic clusters), and **\`derivatives.orderbook_1pct\`** (±1% bid/ask depth ratio & spread bps). Identify crowding, slippage, or squeeze asymmetry.
+- **C. Multi-Venue Derivatives, CMC Liquidation Map & Microstructure:** Evaluate \`funding_rate_pct\` across OKX, Kraken Futures, Deribit, and Hyperliquid, \`oi_btc\` / \`venue_oi_btc\`, **\`derivatives.cmc_liquidations\`** (tactical ±8% dollar-weighted Long & Short liquidation magnet clusters, ±2%/±5% cumulative squeeze fuel, and realized 4H/24H long vs. short liquidation wipeouts in $M), **\`derivatives.liquidation_magnets\`**, and **\`derivatives.orderbook_1pct\`** (±1% bid/ask depth ratio & spread bps). Flag stop-hunt zones and whether a 4H long/short liquidation flush has already exhausted momentum.
 - **D. Institutional Flows & Macro Context:** Evaluate 5-day ETF flows (\`etf.sum5_usd_m\`), 7d stablecoin liquidity (\`stables.chg7d_pct\`), \`dxy\`, \`vix\`, Fear & Greed (\`fng_value\`), and session liquidity (\`session_name\`).
 - **E. Telemetry Integrity Check:** Verify \`meta.completeness_score\`, inspect \`fetch_errors\`, and check live spot drift (\`meta.price_drift_from_4h_close_atr\`).
 
@@ -602,6 +612,7 @@ function buildRawTelemetryPacket(fullState) {
     derivatives: {
       ...(fullState.derivatives || {}),
       orderbook_1pct: fullState.derivatives?.orderbook_1pct ?? null,
+      cmc_liquidations: fullState.derivatives?.cmc_liquidations ?? null,
       liquidation_magnets: liqMagnets,
       funding_30d_percentile: vl.funding_30d_percentile ?? null,
     },

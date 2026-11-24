@@ -40,7 +40,7 @@ Every trade idea you evaluate MUST strictly obey these guardrails:
 #### 2. 5-PILLAR TELEMETRY AUDIT
 - **A. Price Structure & Volume Profile:** Analyze `charts_ohlcv_last30` (`[ts, O, H, L, C, Vol]`), EMA alignment (`ema20_4h`, `ema50_4h`, `ema50_d`, `ema200_d`), tactical **`7D Tactical VPOC / VAH / VAL`**, macro **`30D VPOC / VAH / VAL`**, and nearest swing highs/lows.
 - **B. Momentum & Volatility Regime:** Evaluate `rsi_4h`, `rsi_d`, `roc6/12/20_4h_pct`, `atr_4h_usd` (`atr_4h_percentile`), and `dvol`. Classify as **Compression**, **Early Expansion**, or **Late Climax / Exhaustion**.
-- **C. Multi-Venue Derivatives & Microstructure:** Evaluate `funding_rate_pct` across OKX, Kraken Futures, Deribit, and Hyperliquid, `oi_btc` / `venue_oi_btc`, **`derivatives.liquidation_magnets`** (25x/50x magnetic clusters), and **`derivatives.orderbook_1pct`** (±1% bid/ask depth ratio & spread bps). Identify crowding, slippage, or squeeze asymmetry.
+- **C. Multi-Venue Derivatives, CMC Liquidation Map & Microstructure:** Evaluate `funding_rate_pct` across OKX, Kraken Futures, Deribit, and Hyperliquid, `oi_btc` / `venue_oi_btc`, **`derivatives.cmc_liquidations`** (tactical ±8% dollar-weighted Long & Short liquidation magnet clusters, ±2%/±5% cumulative squeeze fuel, and realized 4H/24H long vs. short liquidation wipeouts in $M), **`derivatives.liquidation_magnets`**, and **`derivatives.orderbook_1pct`** (±1% bid/ask depth ratio & spread bps). Flag stop-hunt zones and whether a 4H long/short liquidation flush has already exhausted momentum.
 - **D. Institutional Flows & Macro Context:** Evaluate 5-day ETF flows (`etf.sum5_usd_m`), 7d stablecoin liquidity (`stables.chg7d_pct`), `dxy`, `vix`, Fear & Greed (`fng_value`), and session liquidity (`session_name`).
 - **E. Telemetry Integrity Check:** Verify `meta.completeness_score`, inspect `fetch_errors`, and check live spot drift (`meta.price_drift_from_4h_close_atr`).
 
@@ -231,6 +231,7 @@ Map<String, dynamic> buildRawTelemetryPacket(
         'oi_btc': state.derivatives.oiBtc,
       },
       'orderbook_1pct': derivMap['orderbook_1pct'],
+      'cmc_liquidations': derivMap['cmc_liquidations'],
       'liquidation_magnets': magnets,
       'funding_30d_percentile': vl['funding_30d_percentile'],
     },

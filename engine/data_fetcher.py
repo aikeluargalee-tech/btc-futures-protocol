@@ -16,11 +16,18 @@ BINANCE_VISION = "https://data-api.binance.vision/api/v3"
 KRAKEN_FUTURES = "https://futures.kraken.com/derivatives/api/v3"
 DERIBIT_PUBLIC = "https://www.deribit.com/api/v2/public"
 HYPERLIQUID_INFO = "https://api.hyperliquid.xyz/info"
+CMC_DATA_API = "https://api.coinmarketcap.com/data-api/v3"
 
 
-def _get_json(url: str, name: str, errors: list[str], timeout: int = 12) -> Any:
+def _get_json(
+    url: str,
+    name: str,
+    errors: list[str],
+    timeout: int = 12,
+    headers: dict[str, str] | None = None,
+) -> Any:
     try:
-        req = urllib.request.Request(url, headers=UA)
+        req = urllib.request.Request(url, headers=headers or UA)
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return json.loads(resp.read().decode("utf-8"))
     except Exception as exc:
@@ -296,6 +303,129 @@ def fetch_orderbook_imbalance(errors: list[str]) -> dict[str, Any]:
     return empty
 
 
+def fetch_cmc_liquidations(errors: list[str]) -> dict[str, Any] | None:
+    """Fetch keyless CoinMarketCap BTC Liquidation Map ($50 bins) and 4H/24H Realized Liquidations."""
+    cmc_headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130 Safari/537.36",
+        "Accept": "application/json",
+    }
+
+    def _fmt_bucket(b: dict[str, Any], mark: float) -> dict[str, Any]:
+        p0 = float(b.get("price") or 0.0)
+        p1 = float(b.get("endPrice") or p0)
+        mid = round((p0 + p1) / 2.0, 1)
+        amt_m = round(float(b.get("amount") or 0.0) / 1e6, 2)
+        dist_pct = round(((mid - mark) / mark) * 100.0, 2) if mark > 0 else 0.0
+        return {
+            "price": mid,
+            "range": [round(p0, 1), round(p1, 1)],
+            "usd_m": amt_m,
+            "leverage": b.get("leverage"),
+            "distance_pct": dist_pct,
+        }
+
+    out: dict[str, Any] = {"source": "CoinMarketCap (Hyperliquid Exact Map + Multi-Exchange Realized)"}
+
+    rm = _get_json(
+        f"{CMC_DATA_API}/liquidations/map/latest?exchangeId=8112&baseId=1&scope=token&convertId=2781",
+        "CMC liquidation map",
+        errors,
+        headers=cmc_headers,
+    )
+    if rm and isinstance(rm.get("data"), dict):
+        d = rm["data"]
+        mark = float(d.get("mark") or 0.0)
+        long_buckets = d.get("longBuckets") or []
+        short_buckets = d.get("shortBuckets") or []
+        if mark > 0 and (long_buckets or short_buckets):
+            total_long_below_m = round(float(long_buckets[-1].get("cumulative") or 0.0) / 1e6, 2) if long_buckets else 0.0
+            total_short_above_m = round(float(short_buckets[-1].get("cumulative") or 0.0) / 1e6, 2) if short_buckets else 0.0
+            longs_2pct_m = round(
+                sum(float(b.get("amount") or 0.0) for b in long_buckets if float(b.get("price") or 0.0) >= mark * 0.98) / 1e6,
+                2,
+            )
+            shorts_2pct_m = round(
+                sum(float(b.get("amount") or 0.0) for b in short_buckets if float(b.get("endPrice") or b.get("price") or 0.0) <= mark * 1.02) / 1e6,
+                2,
+            )
+            longs_5pct_m = round(
+                sum(float(b.get("amount") or 0.0) for b in long_buckets if float(b.get("price") or 0.0) >= mark * 0.95) / 1e6,
+                2,
+            )
+            shorts_5pct_m = round(
+                sum(float(b.get("amount") or 0.0) for b in short_buckets if float(b.get("endPrice") or b.get("price") or 0.0) <= mark * 1.05) / 1e6,
+                2,
+            )
+            squeeze_bias = (
+                "SHORT_SQUEEZE_HEAVY"
+                if shorts_2pct_m > longs_2pct_m * 1.15
+                else ("LONG_FLUSH_HEAVY" if longs_2pct_m > shorts_2pct_m * 1.15 else "BALANCED")
+            )
+            tac_longs = sorted(
+                [b for b in long_buckets if float(b.get("price") or 0.0) >= mark * 0.92],
+                key=lambda b: float(b.get("amount") or 0.0),
+                reverse=True,
+            )[:3]
+            tac_shorts = sorted(
+                [b for b in short_buckets if float(b.get("endPrice") or b.get("price") or 0.0) <= mark * 1.08],
+                key=lambda b: float(b.get("amount") or 0.0),
+                reverse=True,
+            )[:3]
+            macro_long = max(long_buckets, key=lambda b: float(b.get("amount") or 0.0), default=None)
+            macro_short = max(short_buckets, key=lambda b: float(b.get("amount") or 0.0), default=None)
+
+            out["mark_price"] = round(mark, 1)
+            out["cumulative_fuel"] = {
+                "total_long_below_usd_m": total_long_below_m,
+                "total_short_above_usd_m": total_short_above_m,
+                "longs_within_2pct_usd_m": longs_2pct_m,
+                "shorts_within_2pct_usd_m": shorts_2pct_m,
+                "longs_within_5pct_usd_m": longs_5pct_m,
+                "shorts_within_5pct_usd_m": shorts_5pct_m,
+                "squeeze_bias_2pct": squeeze_bias,
+            }
+            out["tactical_long_clusters_within_8pct"] = [_fmt_bucket(b, mark) for b in tac_longs]
+            out["tactical_short_clusters_within_8pct"] = [_fmt_bucket(b, mark) for b in tac_shorts]
+            out["largest_macro_long_cluster"] = _fmt_bucket(macro_long, mark) if macro_long else None
+            out["largest_macro_short_cluster"] = _fmt_bucket(macro_short, mark) if macro_short else None
+
+    r4 = _get_json(
+        f"{CMC_DATA_API}/liquidations/table?page=1&pageSize=25&sort=totalLiquidations4h&ascendingOrder=false&interval=4h",
+        "CMC 4h liquidations",
+        errors,
+        headers=cmc_headers,
+    )
+    r24 = _get_json(
+        f"{CMC_DATA_API}/liquidations/table?page=1&pageSize=25&sort=totalLiquidations1d&ascendingOrder=false&interval=1d",
+        "CMC 24h liquidations",
+        errors,
+        headers=cmc_headers,
+    )
+    items4 = ((r4 or {}).get("data") or {}).get("items") or []
+    items24 = ((r24 or {}).get("data") or {}).get("items") or []
+    btc4 = next((x for x in items4 if x.get("symbol") == "BTC" or x.get("coinId") == 1), None)
+    btc24 = next((x for x in items24 if x.get("symbol") == "BTC" or x.get("coinId") == 1), None)
+    if btc4 or btc24:
+        b4 = btc4 or {}
+        b24 = btc24 or {}
+        oi_usd = float(b24.get("openInterestUsd") or b4.get("openInterestUsd") or 0.0)
+        tot4 = float(b4.get("totalLiquidations") or 0.0)
+        tot24 = float(b24.get("totalLiquidations") or 0.0)
+        out["realized"] = {
+            "h4_long_usd_m": round(float(b4.get("longLiquidations") or 0.0) / 1e6, 2),
+            "h4_short_usd_m": round(float(b4.get("shortLiquidations") or 0.0) / 1e6, 2),
+            "h4_total_usd_m": round(tot4 / 1e6, 2),
+            "h4_long_flush_pct": round((float(b4.get("longLiquidations") or 0.0) / tot4) * 100.0, 1) if tot4 > 0 else 0.0,
+            "h24_long_usd_m": round(float(b24.get("longLiquidations") or 0.0) / 1e6, 2),
+            "h24_short_usd_m": round(float(b24.get("shortLiquidations") or 0.0) / 1e6, 2),
+            "h24_total_usd_m": round(tot24 / 1e6, 2),
+            "h24_long_flush_pct": round((float(b24.get("longLiquidations") or 0.0) / tot24) * 100.0, 1) if tot24 > 0 else 0.0,
+            "global_btc_oi_usd_b": round(oi_usd / 1e9, 2),
+        }
+
+    return out if len(out) > 1 else None
+
+
 def fetch_macro(errors: list[str]) -> dict[str, Any]:
     """Fetch 3-month daily series from Yahoo Finance for VIX, DXY, US10Y, SPX, NDX."""
     symbols = [
@@ -464,6 +594,7 @@ def fetch_all_market_data() -> dict[str, Any]:
 
     funding = fetch_funding_and_oi(errors)
     funding["orderbook_1pct"] = fetch_orderbook_imbalance(errors)
+    funding["cmc_liquidations"] = fetch_cmc_liquidations(errors)
     macro = fetch_macro(errors)
     etf = fetch_etf_flows(errors)
     stables = fetch_stablecoins(errors)
