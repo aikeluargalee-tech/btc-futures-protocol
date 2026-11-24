@@ -226,6 +226,76 @@ def fetch_funding_and_oi(errors: list[str]) -> dict[str, Any]:
     return out
 
 
+def fetch_orderbook_imbalance(errors: list[str]) -> dict[str, Any]:
+    """Fetch top L2 depth within +-1% of mid-price, bid/ask ratio, and spread bps."""
+    empty = {
+        "bid_depth_1pct_usd": None,
+        "ask_depth_1pct_usd": None,
+        "imbalance_ratio": None,
+        "imbalance_pct": None,
+        "spread_bps": None,
+        "source": "unavailable",
+    }
+
+    def _compute(
+        bids: list[Any],
+        asks: list[Any],
+        contract_mult: float,
+        source_name: str,
+    ) -> dict[str, Any] | None:
+        if not bids or not asks:
+            return None
+        try:
+            best_bid = float(bids[0][0])
+            best_ask = float(asks[0][0])
+            if best_bid <= 0 or best_ask <= 0 or best_ask < best_bid:
+                return None
+            mid = (best_bid + best_ask) / 2.0
+            spread_bps = round(((best_ask - best_bid) / mid) * 10000.0, 4)
+            bid_floor = mid * 0.99
+            ask_ceil = mid * 1.01
+            bid_usd = 0.0
+            for row in bids:
+                px = float(row[0])
+                if px < bid_floor:
+                    break
+                bid_usd += px * float(row[1]) * contract_mult
+            ask_usd = 0.0
+            for row in asks:
+                px = float(row[0])
+                if px > ask_ceil:
+                    break
+                ask_usd += px * float(row[1]) * contract_mult
+            tot = bid_usd + ask_usd
+            ratio = round(bid_usd / ask_usd, 2) if ask_usd > 0 else None
+            imb_pct = round(((bid_usd - ask_usd) / tot) * 100.0, 1) if tot > 0 else None
+            return {
+                "bid_depth_1pct_usd": round(bid_usd, 0),
+                "ask_depth_1pct_usd": round(ask_usd, 0),
+                "imbalance_ratio": ratio,
+                "imbalance_pct": imb_pct,
+                "spread_bps": spread_bps,
+                "source": source_name,
+            }
+        except Exception:
+            return None
+
+    ob = _get_json(f"{OKX_BASE}/market/books?instId=BTC-USDT-SWAP&sz=400", "OKX L2 book", errors)
+    if ob and ob.get("data"):
+        row = ob["data"][0]
+        res = _compute(row.get("bids") or [], row.get("asks") or [], 0.01, "OKX BTC-USDT-SWAP")
+        if res is not None:
+            return res
+
+    bz = _get_json(f"{BINANCE_VISION}/depth?symbol=BTCUSDT&limit=500", "BinanceVision L2 book", errors)
+    if bz and isinstance(bz, dict):
+        res = _compute(bz.get("bids") or [], bz.get("asks") or [], 1.0, "BinanceVision BTCUSDT")
+        if res is not None:
+            return res
+
+    return empty
+
+
 def fetch_macro(errors: list[str]) -> dict[str, Any]:
     """Fetch 3-month daily series from Yahoo Finance for VIX, DXY, US10Y, SPX, NDX."""
     symbols = [
@@ -393,6 +463,7 @@ def fetch_all_market_data() -> dict[str, Any]:
         ticker["source"] = f"Fallback {h1_src} last close"
 
     funding = fetch_funding_and_oi(errors)
+    funding["orderbook_1pct"] = fetch_orderbook_imbalance(errors)
     macro = fetch_macro(errors)
     etf = fetch_etf_flows(errors)
     stables = fetch_stablecoins(errors)

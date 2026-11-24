@@ -12,7 +12,12 @@ from engine.paper_ledger import (
     process_cycle,
 )
 from engine.regime_engine import compute_regime
-from engine.signal_engine import calculate_position_sizing, check_macro_release_window, evaluate_signal
+from engine.signal_engine import (
+    calculate_position_sizing,
+    check_macro_release_window,
+    evaluate_signal,
+    identify_structural_levels,
+)
 
 
 def _make_candles(
@@ -316,6 +321,22 @@ class ProtocolV4Tests(unittest.TestCase):
         l3["realized_equity"] = 89500.0  # -10.5% DD
         process_cycle(l3, mkt, reg, cfg, now)
         self.assertTrue(l3["breakers"]["dd_tier2_locked"])
+
+    def test_v41_7d_vpoc_and_liquidation_magnets(self):
+        cfg = load_config()
+        mkt = _make_market("bull")
+        levels = identify_structural_levels(mkt)
+        labels = {lv["label"] for lv in levels}
+        self.assertIn("7D Tactical VPOC", labels)
+        self.assertIn("7D VAH", labels)
+        self.assertIn("7D VAL", labels)
+
+        ledger = init_ledger(cfg)
+        sig = evaluate_signal(mkt, _qualifying_regime(76.0, "BULL"), ledger, cfg)
+        magnets = sig.get("liquidation_magnets")
+        self.assertIsNotNone(magnets)
+        self.assertLess(magnets["long_liq_50x_est"], magnets["short_liq_50x_est"])
+        self.assertLess(magnets["long_liq_25x_est"], magnets["long_liq_50x_est"])
 
 
 if __name__ == "__main__":

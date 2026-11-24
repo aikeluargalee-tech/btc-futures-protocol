@@ -37,6 +37,7 @@ class _LedgerTabViewState extends State<LedgerTabView> {
     final prop = s?.signal.proposal;
     if (s == null || prop == null || prop.entryPrice <= 0) return;
     _eqCtrl.text = s.portfolio.equityUsd.round().toString();
+    widget.vm.setCustomEquityUsd(s.portfolio.equityUsd);
     _entryCtrl.text = prop.entryPrice.toStringAsFixed(1);
     _stopCtrl.text = prop.stopPrice.toStringAsFixed(1);
     _tpCtrl.text = prop.target1Price.toStringAsFixed(1);
@@ -169,6 +170,11 @@ class _LedgerTabViewState extends State<LedgerTabView> {
         style: const TextStyle(fontSize: 10, color: TerminalColors.text),
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         decoration: InputDecoration(labelText: label),
-        onChanged: (_) => setState(() {}),
+        onChanged: (v) {
+          if (ctrl == _eqCtrl) {
+            widget.vm.setCustomEquityUsd(double.tryParse(v));
+          }
+          setState(() {});
+        },
       );
 }

@@ -41,6 +41,13 @@ def identify_structural_levels(market_data: dict[str, Any]) -> list[dict[str, An
         levels.append({"price": vp["vah"], "label": "30D VAH", "kind": "volume"})
         levels.append({"price": vp["val"], "label": "30D VAL", "kind": "volume"})
 
+    h1 = market_data["klines"].get("1h") or []
+    vp_7d = volume_profile(h1[-168:] if len(h1) >= 24 else h4[-42:], bin_width=50.0)
+    if vp_7d:
+        levels.append({"price": vp_7d["poc"], "label": "7D Tactical VPOC", "kind": "volume"})
+        levels.append({"price": vp_7d["vah"], "label": "7D VAH", "kind": "volume"})
+        levels.append({"price": vp_7d["val"], "label": "7D VAL", "kind": "volume"})
+
     levels.sort(key=lambda x: x["price"])
     deduped: list[dict[str, Any]] = []
     for lv in levels:
@@ -48,6 +55,29 @@ def identify_structural_levels(market_data: dict[str, Any]) -> list[dict[str, An
             continue
         deduped.append(lv)
     return deduped
+
+
+def estimate_liquidation_magnets(
+    price: float,
+    h4: list[dict[str, float]],
+    levels: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Estimate deterministic 25x/50x isolated liquidation bands around 7D VPOC and 4H pivots."""
+    h4_hi, h4_lo = swing_pivots(h4[-120:], left=3, right=3)
+    swing_low = h4_lo[-1]["price"] if h4_lo else None
+    swing_high = h4_hi[-1]["price"] if h4_hi else None
+    vpoc_7d = next((l["price"] for l in levels if l.get("label") == "7D Tactical VPOC"), None)
+    anchor_long = swing_low or vpoc_7d or price
+    anchor_short = swing_high or vpoc_7d or price
+    return {
+        "basis": "Deterministic 25x/50x isolated liquidation bands anchored to 7D VPOC & recent 4H swing pivots",
+        "long_liq_50x_est": round(anchor_long * (1.0 - 0.016), 1),
+        "long_liq_25x_est": round(anchor_long * (1.0 - 0.036), 1),
+        "short_liq_50x_est": round(anchor_short * (1.0 + 0.016), 1),
+        "short_liq_25x_est": round(anchor_short * (1.0 + 0.036), 1),
+        "recent_4h_swing_low_pool": round(swing_low, 1) if swing_low else None,
+        "recent_4h_swing_high_pool": round(swing_high, 1) if swing_high else None,
+    }
 
 
 def check_macro_release_window(calendar: list[dict[str, Any]], blackout_minutes: float) -> dict[str, Any]:
@@ -371,5 +401,6 @@ def evaluate_signal(
         "checklist": checklist,
         "rejection_reasons": [] if futures_status != "FLAT" else rejections,
         "proposal": proposal,
+        "liquidation_magnets": estimate_liquidation_magnets(price, h4, levels),
         "macro_blackout": macro_chk,
     }

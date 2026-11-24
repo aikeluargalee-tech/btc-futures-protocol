@@ -107,6 +107,14 @@ class ProtocolViewModel extends ChangeNotifier {
     return DateTime.now().toUtc().difference(parsed.toUtc()).inMinutes > 300;
   }
 
+  double? _customEquityUsd;
+  double get effectiveEquityUsd =>
+      _customEquityUsd ?? _state?.portfolio.equityUsd ?? 100000.0;
+
+  void setCustomEquityUsd(double? v) {
+    if (v != null && v > 0) _customEquityUsd = v;
+  }
+
   String buildCompactRawJson() {
     final s = _state;
     if (s == null) return '{}';
@@ -114,6 +122,7 @@ class ProtocolViewModel extends ChangeNotifier {
       s,
       livePrice: _livePrice,
       liveSource: _liveSource,
+      accountEquityUsd: effectiveEquityUsd,
     );
     return serializeTelemetryCompact(packet);
   }
@@ -125,6 +134,7 @@ class ProtocolViewModel extends ChangeNotifier {
       s,
       livePrice: _livePrice,
       liveSource: _liveSource,
+      accountEquityUsd: effectiveEquityUsd,
       languageInstruction:
           _lang == AppLang.en ? null : _lang.aiInstructionName,
     );

@@ -104,12 +104,33 @@ void main() {
     expect(parsed.regime.score, 31.5);
     expect(parsed.signal.status, 'FLAT');
 
-    final packet = buildRawTelemetryPacket(parsed, livePrice: 67050.0, liveSource: 'BinanceVision');
+    final packet = buildRawTelemetryPacket(
+      parsed,
+      livePrice: 67050.0,
+      liveSource: 'BinanceVision',
+      accountEquityUsd: 50000.0,
+    );
+    final meta = packet['meta'] as Map<String, dynamic>;
+    final deriv = packet['derivatives'] as Map<String, dynamic>;
+    final riskRef =
+        packet['risk_constraints_reference'] as Map<String, dynamic>;
+    expect(meta['completeness_score'], isNotNull);
+    expect(meta['price_drift_from_4h_close_pct'], isNotNull);
+    expect(deriv['liquidation_magnets'], isA<Map<String, dynamic>>());
+    expect(riskRef['account_equity_usd'], 50000.0);
+
     final compact = serializeTelemetryCompact(packet);
     expect(compact.contains('[1700000000000, 66500, 67500, 66200, 67000]'), isTrue);
     expect(compact.contains('"checklist"'), isFalse);
 
-    final prompt = buildFullAiPrompt(parsed, livePrice: 67050.0, liveSource: 'BinanceVision');
+    final prompt = buildFullAiPrompt(
+      parsed,
+      livePrice: 67050.0,
+      liveSource: 'BinanceVision',
+      accountEquityUsd: 50000.0,
+    );
+    expect(prompt.contains('BTC Short-Term Futures Protocol (v4.1)'), isTrue);
+    expect(prompt.contains('MOBILE EXECUTION TL;DR'), isTrue);
     expect(prompt.contains('answer any follow-up Q&A'), isTrue);
     expect(prompt.contains('Spot positioning'), isTrue);
     expect(prompt.contains('BinanceVision'), isTrue);
