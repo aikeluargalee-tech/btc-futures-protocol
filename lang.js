@@ -13,7 +13,7 @@
 
   const DICT = {
     en: {
-      sys_meta: "SYS: 4H-SWING · MAX LEV 1:2 · KEYS [1-7]",
+      sys_meta: "SYS: 4H-SWING · MAX LEV 1:2 · KEYS [1-8]",
       brand_title: "BTC Short-Term Futures Protocol",
       brand_badge: "v4.0 · 4H · MAX 1:2 LEV",
       copy_ai: "[Copy AI Analysis Prompt + JSON]",
@@ -24,6 +24,7 @@
       tab_spot: "Spot Magnet (DIBSE)",
       tab_rhyme: "S2 Cortex-Rhyme",
       tab_news: "News & Macro",
+      tab_shield: "Spot Shield (80/20)",
       tab_f3: "Paper Ledger & Risk Calc",
       tab_f4: "Audit Log & Config",
       vid_title: "Protocol Briefing Video (vGUZF.mp4)",
@@ -63,7 +64,7 @@
       live_word: "live",
     },
     zh: {
-      sys_meta: "系统: 4H波段 · 最大杠杆 1:2 · 快捷键 [1-7]",
+      sys_meta: "系统: 4H波段 · 最大杠杆 1:2 · 快捷键 [1-8]",
       brand_title: "BTC 短线期货协议",
       brand_badge: "v4.0 · 4H · 最高 1:2 杠杆",
       copy_ai: "[复制 AI 分析提示词 + JSON]",
@@ -74,6 +75,7 @@
       tab_spot: "现货磁力雷达 (SPOT)",
       tab_rhyme: "历史相似态 (RHYME)",
       tab_news: "宏观与快讯",
+      tab_shield: "现货护盾 (80/20)",
       tab_f3: "模拟账本与风险计算",
       tab_f4: "审计日志与配置",
       vid_title: "协议简报视频 (vGUZF.mp4)",
@@ -113,7 +115,7 @@
       live_word: "实时",
     },
     id: {
-      sys_meta: "SYS: 4H-SWING · MAKS LEV 1:2 · TOMBOL [1-7]",
+      sys_meta: "SYS: 4H-SWING · MAKS LEV 1:2 · TOMBOL [1-8]",
       brand_title: "Protokol Futures Jangka Pendek BTC",
       brand_badge: "v4.0 · 4H · MAKS 1:2 LEV",
       copy_ai: "[Salin Prompt Analisis AI + JSON]",
@@ -124,6 +126,7 @@
       tab_spot: "Spot Magnet (DIBSE)",
       tab_rhyme: "S2 Cortex-Rhyme",
       tab_news: "Berita & Makro",
+      tab_shield: "Spot Shield (80/20)",
       tab_f3: "Buku Simulasi & Kalkulator",
       tab_f4: "Log Audit & Konfig",
       vid_title: "Video Ringkasan Protokol (vGUZF.mp4)",
@@ -163,7 +166,7 @@
       live_word: "langsung",
     },
     ko: {
-      sys_meta: "시스템: 4H-SWING · 최대 레버리지 1:2 · 키 [1-7]",
+      sys_meta: "시스템: 4H-SWING · 최대 레버리지 1:2 · 키 [1-8]",
       brand_title: "BTC 단기 선물 프로토콜",
       brand_badge: "v4.0 · 4H · 최대 1:2 레버리지",
       copy_ai: "[AI 분석 프롬프트 + JSON 복사]",
@@ -174,6 +177,7 @@
       tab_spot: "현물 마그넷 (SPOT)",
       tab_rhyme: "S2 유사국면 (RHYME)",
       tab_news: "뉴스 & 매크로",
+      tab_shield: "현물 쉴드 (80/20)",
       tab_f3: "모의 원장 및 리스크 계산기",
       tab_f4: "감사 로그 및 설정",
       vid_title: "프로토콜 브리핑 영상 (vGUZF.mp4)",
@@ -213,7 +217,7 @@
       live_word: "실시간",
     },
     ja: {
-      sys_meta: "SYS: 4H-SWING · 最大レバ 1:2 · キー [1-7]",
+      sys_meta: "SYS: 4H-SWING · 最大レバ 1:2 · キー [1-8]",
       brand_title: "BTC 短期先物プロトコル",
       brand_badge: "v4.0 · 4H · 最大 1:2 レバ",
       copy_ai: "[AI分析プロンプト + JSON をコピー]",
@@ -224,6 +228,7 @@
       tab_spot: "現物マグネット (SPOT)",
       tab_rhyme: "S2 類似局面 (RHYME)",
       tab_news: "ニュース・マクロ",
+      tab_shield: "現物シールド (80/20)",
       tab_f3: "模擬台帳・リスク計算機",
       tab_f4: "監査ログ・設定",
       vid_title: "プロトコル解説動画 (vGUZF.mp4)",
@@ -263,7 +268,7 @@
       live_word: "live",
     },
     fr: {
-      sys_meta: "SYS : 4H-SWING · LEV MAX 1:2 · TOUCHES [1-7]",
+      sys_meta: "SYS : 4H-SWING · LEV MAX 1:2 · TOUCHES [1-8]",
       brand_title: "Protocole Futures Court Terme BTC",
       brand_badge: "v4.0 · 4H · LEV MAX 1:2",
       copy_ai: "[Copier Prompt IA + JSON]",
@@ -274,6 +279,7 @@
       tab_spot: "Spot Magnet (DIBSE)",
       tab_rhyme: "S2 Cortex-Rhyme",
       tab_news: "Actus & Macro",
+      tab_shield: "Spot Shield (80/20)",
       tab_f3: "Registre Papier & Calculateur",
       tab_f4: "Audit & Paramètres",
       vid_title: "Vidéo Briefing Protocole (vGUZF.mp4)",
@@ -313,7 +319,7 @@
       live_word: "direct",
     },
     es: {
-      sys_meta: "SYS: 4H-SWING · APAL. MÁX 1:2 · TECLAS [1-7]",
+      sys_meta: "SYS: 4H-SWING · APAL. MÁX 1:2 · TECLAS [1-8]",
       brand_title: "Protocolo de Futuros Corto Plazo BTC",
       brand_badge: "v4.0 · 4H · APAL. MÁX 1:2",
       copy_ai: "[Copiar Prompt IA + JSON]",
@@ -324,6 +330,7 @@
       tab_spot: "Spot Magnet (DIBSE)",
       tab_rhyme: "S2 Cortex-Rhyme",
       tab_news: "Noticias y Macro",
+      tab_shield: "Escudo Spot (80/20)",
       tab_f3: "Libro Papel y Calculadora",
       tab_f4: "Auditoría y Config",
       vid_title: "Video Resumen del Protocolo (vGUZF.mp4)",

@@ -23,6 +23,7 @@ from .paper_ledger import (
 from .regime_engine import compute_regime
 from .signal_engine import evaluate_signal
 from .spot_magnet_engine import compute_spot_magnet
+from .spot_shield_engine import compute_spot_shield
 
 ROOT = Path(__file__).resolve().parent.parent
 LEDGER_PATH = ROOT / "data" / "ledger.json"
@@ -75,6 +76,7 @@ def main() -> int:
     spot_magnet = compute_spot_magnet(market, regime, signal)
     cortex_rhyme = compute_cortex_rhyme()
     news_macro = compute_news_macro(market, now_utc=now)
+    spot_shield = compute_spot_shield(now_utc=now)
 
     _save_json(LEDGER_PATH, ledger)
     _save_json(AUDIT_PATH, ledger["audit_log"][-100:])
@@ -197,6 +199,7 @@ def main() -> int:
         "kline_patterns": playbook_bundle["kline_patterns"],
         "cortex_11p": playbook_bundle["cortex_11p"],
         "spot_magnet": spot_magnet,
+        "spot_shield": spot_shield,
         "cortex_rhyme": cortex_rhyme,
         "news_macro": news_macro,
         "signal": signal,
@@ -206,8 +209,10 @@ def main() -> int:
         "fetch_errors": market.get("fetch_errors") or [],
     }
     _save_json(STATE_PATH, state)
+    sh_s1 = (spot_shield.get("sleeve1") or {}).get("action", "—")
+    sh_s2 = (spot_shield.get("sleeve2") or {}).get("action", "—")
     print(
-        f"[OK] BTC={market['ticker']['price']} | v4.0 Regime={regime['score']} ({regime['bias']}, 1D={regime.get('daily_bias')}, {playbook_bundle['state_of_regime']['code']}) | Spot={(spot_magnet.get('regime_diagnosis') or {}).get('name')} | News={len(news_macro.get('headlines') or [])} | KlineHits={playbook_bundle['kline_patterns']['active_count']} | Signal={signal['status']} | Eq=${eq:,.2f}"
+        f"[OK] BTC={market['ticker']['price']} | v4.0 Regime={regime['score']} ({regime['bias']}, 1D={regime.get('daily_bias')}, {playbook_bundle['state_of_regime']['code']}) | Spot={(spot_magnet.get('regime_diagnosis') or {}).get('name')} | Shield={sh_s1}/{sh_s2} | News={len(news_macro.get('headlines') or [])} | KlineHits={playbook_bundle['kline_patterns']['active_count']} | Signal={signal['status']} | Eq=${eq:,.2f}"
     )
     return 0
 

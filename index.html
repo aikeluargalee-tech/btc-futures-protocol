@@ -9,13 +9,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=15">
+  <link rel="stylesheet" href="style.css?v=16">
 </head>
 <body>
   <div class="wrap">
     <div class="ws-titlebar">
       <span>&#9632; QUANT-WORKSTATION // BTC-PROTOCOL REV 4.0</span>
-      <span class="ws-sysmeta" data-i18n="sys_meta">SYS: 4H-SWING · MAX LEV 1:2 · KEYS [1-7]</span>
+      <span class="ws-sysmeta" data-i18n="sys_meta">SYS: 4H-SWING · MAX LEV 1:2 · KEYS [1-8]</span>
     </div>
 
     <div class="lang-bar" id="langBar" role="group" aria-label="Language Selector">
@@ -54,8 +54,9 @@
       <button class="tab-btn" data-tab="spot"><kbd>F3</kbd> <span data-i18n="tab_spot">Spot Magnet (DIBSE)</span></button>
       <button class="tab-btn" data-tab="rhyme"><kbd>F4</kbd> <span data-i18n="tab_rhyme">S2 Cortex-Rhyme</span></button>
       <button class="tab-btn" data-tab="news"><kbd>F5</kbd> <span data-i18n="tab_news">News &amp; Macro</span></button>
-      <button class="tab-btn" data-tab="ledger"><kbd>F6</kbd> <span data-i18n="tab_f3">Paper Ledger &amp; Risk Calc</span></button>
-      <button class="tab-btn" data-tab="audit"><kbd>F7</kbd> <span data-i18n="tab_f4">Audit Log &amp; Config</span></button>
+      <button class="tab-btn" data-tab="shield"><kbd>F6</kbd> <span data-i18n="tab_shield">Spot Shield (80/20)</span></button>
+      <button class="tab-btn" data-tab="ledger"><kbd>F7</kbd> <span data-i18n="tab_f3">Paper Ledger &amp; Risk Calc</span></button>
+      <button class="tab-btn" data-tab="audit"><kbd>F8</kbd> <span data-i18n="tab_f4">Audit Log &amp; Config</span></button>
     </nav>
 
     <!-- TAB 1: SIGNAL TAB -->
@@ -192,7 +193,21 @@
       <div class="card" id="newsWireBox"></div>
     </section>
 
-    <!-- TAB 6: PAPER LEDGER & RISK CALCULATOR -->
+    <!-- TAB 6: SPOT SHIELD (80/20 DUAL-SLEEVE MONITOR) -->
+    <section class="tab-panel" id="tab-shield">
+      <div class="actions" style="margin-bottom:10px;">
+        <button class="btn btn-primary" id="btnCopyShieldAi">[Copy Spot Shield AI Prompt + JSON]</button>
+        <span class="mut" id="shieldActionMsg" style="align-self:center;">Pure Closed-Bar BTCUSDT Spot Mechanical Compass (80% 4H VWAP Shield + 20% 1D TTM Squeeze). Separate from F3 DIBSE.</span>
+      </div>
+      <div class="card" id="shieldHeroBox"></div>
+      <div class="grid-2">
+        <div class="card" id="shieldS1Box"></div>
+        <div class="card" id="shieldS2Box"></div>
+      </div>
+      <div class="card" id="shieldAuditBox"></div>
+    </section>
+
+    <!-- TAB 7: PAPER LEDGER & RISK CALCULATOR -->
     <section class="tab-panel" id="tab-ledger">
       <div class="card">
         <h2 data-i18n="h_calc">Interactive v4.0 Position Sizing Calculator</h2>
@@ -251,7 +266,7 @@
       </div>
     </section>
   </div>
-  <script src="lang.js?v=5"></script>
-  <script src="app.js?v=16"></script>
+  <script src="lang.js?v=6"></script>
+  <script src="app.js?v=17"></script>
 </body>
 </html>
