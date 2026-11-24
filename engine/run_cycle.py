@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .config import load_config
+from .cortex_rhyme_engine import compute_cortex_rhyme
 from .data_fetcher import fetch_all_market_data
 from .kline_playbook_engine import compute_regime_and_kline_playbook
 from .paper_ledger import (
@@ -71,6 +72,7 @@ def main() -> int:
     playbook_bundle = compute_regime_and_kline_playbook(market, regime, signal)
     regime["state_of_regime"] = playbook_bundle["state_of_regime"]
     spot_magnet = compute_spot_magnet(market, regime, signal)
+    cortex_rhyme = compute_cortex_rhyme()
 
     _save_json(LEDGER_PATH, ledger)
     _save_json(AUDIT_PATH, ledger["audit_log"][-100:])
@@ -193,6 +195,7 @@ def main() -> int:
         "kline_patterns": playbook_bundle["kline_patterns"],
         "cortex_11p": playbook_bundle["cortex_11p"],
         "spot_magnet": spot_magnet,
+        "cortex_rhyme": cortex_rhyme,
         "signal": signal,
         "portfolio": portfolio,
         "audit_log_recent": list(reversed(ledger["audit_log"][-40:])),

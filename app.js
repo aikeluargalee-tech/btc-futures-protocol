@@ -14,6 +14,8 @@ const kv = (rows) => rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`
 let STATE = null;
 let LIVE = { price: null, src: null, at: 0 };
 let CHART_TF = "h4";
+let RHYME_LENS = "AUTO";
+let RHYME_COND = "ALL";
 
 async function fetchJson(url) {
   const r = await fetch(url, { cache: "no-store" });
@@ -470,6 +472,148 @@ function renderSpotTab() {
   `).join("");
 }
 
+function renderRhymeTab() {
+  const cr = STATE?.cortex_rhyme;
+  if (!$("rhymeHeroBox")) return;
+  if (!cr || cr.meta?.status === "unavailable" || !cr.diagnostics) {
+    $("rhymeHeroBox").innerHTML = `<h2>S2 CORTEX-RHYME · Historical State-Space Conditioning</h2><p class="mut">Historical archive unavailable.</p>`;
+    if ($("rhymeDistBox")) $("rhymeDistBox").innerHTML = "";
+    if ($("rhymeAnaloguesBox")) $("rhymeAnaloguesBox").innerHTML = "";
+    return;
+  }
+
+  const lenses = cr.lenses || {};
+  const chosenLens = (RHYME_LENS !== "AUTO" && lenses[RHYME_LENS]) ? lenses[RHYME_LENS] : null;
+  const diag = chosenLens ? chosenLens.diagnostics : cr.diagnostics;
+  const activeLensName = chosenLens ? chosenLens.lens_id : (cr.meta?.active_lens || diag.active_lens || "5D_MICROSTRUCTURE");
+  const isRegime = RHYME_COND === "REGIME";
+
+  const qRaw = isRegime ? (diag.regime_sample_quality || "thin") : (diag.sample_quality || "thin");
+  const nAnalogs = isRegime ? (diag.regime_analogues_found ?? 0) : (diag.analogues_found ?? 0);
+  const avgDist = isRegime ? diag.regime_avg_distance : diag.avg_vector_distance;
+  const qCls = qRaw === "solid" ? "up" : qRaw === "moderate" ? "warn" : "dn";
+  const posture = diag.posture_verdict || "NEUTRAL_CHOP";
+  const pCls = posture.includes("POSITIVE") ? "up" : posture.includes("NEGATIVE") ? "dn" : "warn";
+
+  const cur = cr.current_state || {};
+  const rawM = cur.raw_metrics || {};
+  const zVec = cur.z_vector || {};
+  const regCtx = cur.regime_context || {};
+
+  const afterMap = isRegime
+    ? (chosenLens ? chosenLens.regime_matched_setups : cr.regime_matched_setups)
+    : (chosenLens ? chosenLens.after_similar_setups : cr.after_similar_setups);
+  const baseMap = isRegime
+    ? (chosenLens ? chosenLens.regime_baseline_hours : cr.regime_baseline_hours)
+    : (chosenLens ? chosenLens.baseline_all_hours : cr.baseline_all_hours);
+  const edgeMap = isRegime
+    ? (chosenLens ? chosenLens.regime_edge_vs_baseline : cr.regime_edge_vs_baseline)
+    : (chosenLens ? chosenLens.edge_vs_baseline : cr.edge_vs_baseline);
+  const analogs = chosenLens ? (chosenLens.top_analogues || []) : (cr.top_analogues || []);
+
+  const thinWarn = qRaw === "thin"
+    ? `<div class="reject-box"><b class="dn">THIN SAMPLE WARNING (n=${nAnalogs})</b> — Historical precedent under current conditioning is scarce; treat distributions as indicative only.</div>`
+    : "";
+  const fbNote = (RHYME_LENS === "AUTO" && diag.fallback_triggered && diag.fallback_reason)
+    ? `<p class="mut" style="color:var(--warn);margin:4px 0 0;">Auto-Arbitration: ${esc(diag.fallback_reason)}</p>`
+    : "";
+
+  $("rhymeHeroBox").innerHTML = `
+    <h2>S2 CORTEX-RHYME v${esc(cr.meta?.version || "1.2.0")} · Current State Vector &amp; Sample Quality</h2>
+    <div class="signal-head" style="margin-bottom:8px;">
+      <div>
+        <div class="big-num ${qCls}">QUALITY: ${esc(qRaw.toUpperCase())} (n=${nAnalogs} · ${diag.history_days ?? "—"}d · dist ${num(avgDist, 3)})</div>
+        <div class="mut">As of ${esc(cr.meta?.as_of_utc || "—")} · Lens: <b>${esc(activeLensName)}</b> · 200D SMA Context: <b>${esc(regCtx.trend_regime || "—")}</b> (${usd(regCtx.sma_200d, 0)}, ${pct(regCtx.distance_from_sma_200d_pct, 2)})</div>
+      </div>
+      <div>
+        <span class="badge ${pCls}">${esc(posture)}</span>
+        <span class="badge">24H EV: ${pct(diag.conditional_ev_24h_pct, 3)}</span>
+      </div>
+    </div>
+    ${fbNote}
+    ${thinWarn}
+    <div class="grid-2" style="margin-top:8px;">
+      <dl class="kv">${kv([
+        ["1. Carry Funding (Z)", `${pct(rawM.funding_rate_pct, 4)} (z = ${num(zVec.funding_rate, 3)})`],
+        ["2. Term Basis (Z)", `${num(rawM.basis_bps, 2)} bps (z = ${num(zVec.basis_bps, 3)})`],
+        ["3. OI 24H Delta (Z)", `${pct(rawM.oi_delta_24h_pct, 2)} (z = ${num(zVec.oi_delta_24h, 3)})`],
+        ["4. GK Vol 24H Ann (Z)", `${num(rawM.gk_vol_24h_ann_pct, 2)}% (z = ${num(zVec.gk_vol_24h, 3)})`],
+        ["5. Taker Buy Ratio (Z)", `${num(rawM.taker_buy_ratio, 4)} (z = ${num(zVec.taker_buy_ratio, 3)})`],
+        ["6. Live L2 Book Skew", rawM.live_l2_imbalance != null ? `${num(rawM.live_l2_imbalance, 4)}` : "UNAVAILABLE"],
+      ])}</dl>
+      <dl class="kv">${kv([
+        ["Distance Metric", "Regularized Mahalanobis (ridge λ=0.05)"],
+        ["Causal Z-Window", "168h trailing (zero future leakage)"],
+        ["De-Clustering / Embargo", `${diag.declustering_hours ?? 24}h min spacing · ${diag.embargo_hours ?? 72}h forward embargo`],
+        ["Funding–Basis Corr", `${num(diag.funding_basis_correlation, 3)}`],
+        ["Baseline Pool", `${diag.baseline_hours_evaluated ?? "—"} historical hours (${cr.meta?.status || "live"})`],
+        ["Mandate", "Distributional Prior Only · Zero Trade Permission"],
+      ])}</dl>
+    </div>
+  `;
+
+  const rowsHtml = ["4h", "24h", "72h"].map((h) => {
+    const a = afterMap?.[h] || {};
+    const b = baseMap?.[h] || {};
+    const e = edgeMap?.[h] || {};
+    const liftCls = (e.up_share_lift_pts ?? 0) >= 5 ? "up" : (e.up_share_lift_pts ?? 0) <= -5 ? "dn" : "warn";
+    return `
+      <tr>
+        <td><b>+${esc(h.toUpperCase())}</b></td>
+        <td><b>${pct(a.median_pct, 2)}</b></td>
+        <td>${num(a.up_share, 1)}%</td>
+        <td>${pct(a.median_up_pct, 2)} / ${pct(a.median_down_pct, 2)}</td>
+        <td><b>${num(a.tail_skew_ratio, 2)}x</b></td>
+        <td>${pct(b.median_pct, 2)} (${num(b.up_share, 1)}% up)</td>
+        <td class="${liftCls}"><b>${(e.up_share_lift_pts ?? 0) >= 0 ? "+" : ""}${num(e.up_share_lift_pts, 1)} pts</b> (${pct(e.median_lift_pct, 2)})</td>
+      </tr>`;
+  }).join("");
+
+  $("rhymeDistBox").innerHTML = `
+    <h2>Empirical Forward Distributions (${isRegime ? "Matched 200D SMA Regime" : "Full Historical Archive"}) vs. Base Rate</h2>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Horizon</th>
+            <th>Similar Median</th>
+            <th>% Rose</th>
+            <th>Up-Tail / Down-Tail</th>
+            <th>Tail Skew</th>
+            <th>Unconditional Base</th>
+            <th>Edge Lift vs. Base</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    </div>
+  `;
+
+  const analogRows = analogs.map((a) => `
+    <tr>
+      <td>${esc(a.timestamp_utc)}</td>
+      <td>${usd(a.btc_price, 1)}</td>
+      <td>${num(a.distance, 3)}</td>
+      <td>${esc(a.trend_regime || "—")}</td>
+      <td class="${(a.ret_4h_pct ?? 0) >= 0 ? "up" : "dn"}">${pct(a.ret_4h_pct, 2)}</td>
+      <td class="${(a.ret_24h_pct ?? 0) >= 0 ? "up" : "dn"}">${pct(a.ret_24h_pct, 2)}</td>
+      <td class="${(a.ret_72h_pct ?? 0) >= 0 ? "up" : "dn"}">${pct(a.ret_72h_pct, 2)}</td>
+    </tr>`).join("");
+
+  $("rhymeAnaloguesBox").innerHTML = `
+    <h2>Top Historical Analogues (${analogs.length} Shown · De-Clustered ≥ 24h)</h2>
+    ${analogs.length ? `
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr><th>Timestamp (UTC)</th><th>BTC Price</th><th>Dist (σ)</th><th>200D Regime</th><th>+4H</th><th>+24H</th><th>+72H</th></tr>
+          </thead>
+          <tbody>${analogRows}</tbody>
+        </table>
+      </div>` : `<p class="mut">No historical analogues within cutoff threshold.</p>`}
+  `;
+}
+
 function renderChart() {
   const bars = (STATE?.charts?.[CHART_TF] || []).slice(-60);
   if (bars.length < 2) {
@@ -672,6 +816,21 @@ function activateTab(tabId) {
   document.querySelectorAll("#tabNav .tab-btn").forEach((x) => x.classList.toggle("active", x.dataset.tab === tabId));
   document.querySelectorAll(".tab-panel").forEach((p) => p.classList.toggle("active", p.id === `tab-${tabId}`));
 }
+
+const CORTEX_RHYME_AI_PROMPT_TEMPLATE = `### ROLE & OBJECTIVE
+Act as an Empirical Quantitative Microstructure Statistician auditing telemetry from **S2 CORTEX-RHYME v1.2.0 (MOD 63)**.
+STRICT GUARDRAIL: Publish ONLY observational historical conditioning statistics and tail-risk interpretation. **NEVER issue a trade directive, leverage size, or entry permission.**
+
+Evaluate the state-space payload strictly using these rules:
+1. **Freshness & Sample Quality Gate:** Check \`meta.as_of_utc\`, \`diagnostics.sample_quality\` (\`solid\` / \`moderate\` / \`thin\`), \`diagnostics.analogues_found\`, \`diagnostics.history_days\`, \`diagnostics.avg_vector_distance\`, and whether \`diagnostics.fallback_triggered\` promoted \`3D_DEEP_CARRY_VOL\`. If \`thin\`, lead with a clear warning that the sample is indicative only.
+2. **Baseline-Adjusted Horizons (+4h, +24h, +72h):** Compare \`after_similar_setups\` (\`median_pct\`, \`up_share\`) side-by-side against \`baseline_all_hours\` via \`edge_vs_baseline\` (\`up_share_lift_pts\`, \`median_lift_pct\`). Explicitly note if outcomes differ materially from random hours or look like noise.
+3. **Payoff & Tail Asymmetry:** Contrast \`median_up_pct\` vs. \`median_down_pct\` and \`tail_skew_ratio\` to flag upside or downside fat-tail cliffs.
+4. **200D SMA Regime Context & 5D Vector:** Interpret \`current_state.raw_metrics\`, \`z_vector\`, live L2 skew, and whether conditioning inside \`current_state.regime_context.trend_regime\` aligns with or diverges from the full archive.
+
+### LIVE CORTEX-RHYME TELEMETRY (JSON)
+\`\`\`json
+{{RHYME_JSON_PAYLOAD}}
+\`\`\``;
 
 const SPOT_MAGNET_AI_PROMPT_TEMPLATE = `### ROLE & OBJECTIVE
 Act as an Institutional Quantitative Spot Bitcoin Strategist executing the **BTC Magnet Monitor (DIBSE Dual-Sleeve Protocol)**.
@@ -900,6 +1059,15 @@ function buildRawTelemetryPacket(fullState) {
       microstructure_rulebook_3: fullState.cortex_11p.microstructure_rulebook_3,
     } : null,
     spot_magnet: fullState.spot_magnet ?? null,
+    cortex_rhyme_prior: fullState.cortex_rhyme ? {
+      as_of_utc: fullState.cortex_rhyme.meta?.as_of_utc ?? null,
+      active_lens: fullState.cortex_rhyme.meta?.active_lens ?? null,
+      current_state: fullState.cortex_rhyme.current_state ?? null,
+      diagnostics: fullState.cortex_rhyme.diagnostics ?? null,
+      after_similar_setups: fullState.cortex_rhyme.after_similar_setups ?? null,
+      baseline_all_hours: fullState.cortex_rhyme.baseline_all_hours ?? null,
+      edge_vs_baseline: fullState.cortex_rhyme.edge_vs_baseline ?? null,
+    } : null,
     risk_constraints_reference: {
       account_equity_usd: accountEquityUsd,
       max_leverage: lr.max_leverage ?? 2.0,
@@ -962,9 +1130,41 @@ function bindEvents() {
   document.addEventListener("keydown", (e) => {
     if (e.altKey || e.ctrlKey || e.metaKey) return;
     if (/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName || "")) return;
-    const map = { "1": "signal", "2": "regime", "3": "spot", "4": "ledger", "5": "audit" };
+    const map = { "1": "signal", "2": "regime", "3": "spot", "4": "rhyme", "5": "ledger", "6": "audit" };
     if (map[e.key]) activateTab(map[e.key]);
   });
+  if ($("rhymeLensSeg")) {
+    $("rhymeLensSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-lens]");
+      if (!b) return;
+      RHYME_LENS = b.dataset.lens;
+      document.querySelectorAll("#rhymeLensSeg .tab-btn").forEach((x) => x.classList.toggle("active", x === b));
+      renderRhymeTab();
+    });
+  }
+  if ($("rhymeCondSeg")) {
+    $("rhymeCondSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-cond]");
+      if (!b) return;
+      RHYME_COND = b.dataset.cond;
+      document.querySelectorAll("#rhymeCondSeg .tab-btn").forEach((x) => x.classList.toggle("active", x === b));
+      renderRhymeTab();
+    });
+  }
+  if ($("btnCopyRhymeAi")) {
+    $("btnCopyRhymeAi").onclick = () => {
+      if (!STATE?.cortex_rhyme) return;
+      let promptText = CORTEX_RHYME_AI_PROMPT_TEMPLATE.replace("{{RHYME_JSON_PAYLOAD}}", JSON.stringify(STATE.cortex_rhyme, null, 2));
+      const meta = window.DeskI18n?.getMeta();
+      if (meta && meta.code !== "en") {
+        promptText = promptText.replace(
+          "### LIVE CORTEX-RHYME TELEMETRY (JSON)",
+          `**Response Language:** Respond strictly in ${meta.aiName} while keeping all historical numbers and JSON values exact.\n\n### LIVE CORTEX-RHYME TELEMETRY (JSON)`
+        );
+      }
+      copyTextWithFeedback(promptText, "Copied S2 CORTEX-RHYME AI Prompt + JSON!", "rhymeActionMsg");
+    };
+  }
   $("chartSeg").addEventListener("click", (e) => {
     const b = e.target.closest("button[data-tf]");
     if (!b) return;
@@ -1035,6 +1235,7 @@ async function init() {
   renderSignalTab();
   renderRegimeTab();
   renderSpotTab();
+  renderRhymeTab();
   renderLedgerTab();
   renderAuditTab();
   seedCalcFromState();

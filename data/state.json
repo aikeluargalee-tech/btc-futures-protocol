@@ -150,14 +150,10 @@
     "fng_label": "Extreme Fear"
   },
   "etf": {
-    "latest_date": "23 Nov 2026",
-    "latest_usd_m": -569.7,
-    "sum5_usd_m": -2367.6,
+    "latest_date": "24 Nov 2026",
+    "latest_usd_m": 0.0,
+    "sum5_usd_m": -2127.7,
     "last5": [
-      [
-        "17 Nov 2026",
-        -239.9
-      ],
       [
         "18 Nov 2026",
         -306.5
@@ -173,6 +169,10 @@
       [
         "23 Nov 2026",
         -569.7
+      ],
+      [
+        "24 Nov 2026",
+        0.0
       ]
     ]
   },
@@ -200,14 +200,6 @@
   ],
   "charts": {
     "h4": [
-      [
-        1794211200000,
-        73837.2,
-        74785.0,
-        73711.1,
-        74333.4,
-        1314649.28
-      ],
       [
         1794225600000,
         74333.5,
@@ -919,6 +911,14 @@
         60245.0,
         60400.1,
         1396178.0
+      ],
+      [
+        1795507200000,
+        60400.1,
+        60541.9,
+        59366.0,
+        60394.0,
+        2436127.53
       ]
     ],
     "d1": [
@@ -1664,8 +1664,8 @@
         "daily_bias_score": 6.0,
         "daily_structure": "BEARISH_LH_LL",
         "h4_structure": "BULLISH_HH_HL",
-        "ema20_4h": 60942.7,
-        "ema50_4h": 62562.1,
+        "ema20_4h": 60890.4,
+        "ema50_4h": 62477.2,
         "ema50_d": 72966.8,
         "ema200_d": 73471.4,
         "components": {
@@ -1678,17 +1678,17 @@
       },
       "momentum": {
         "weight": 0.25,
-        "score": 41.05,
-        "rsi_4h": 45.29,
+        "score": 40.7,
+        "rsi_4h": 45.26,
         "rsi_d": 26.6,
-        "roc6_4h_pct": -1.68,
-        "roc12_4h_pct": 2.14,
-        "roc20_4h_pct": 2.51,
+        "roc6_4h_pct": -1.63,
+        "roc12_4h_pct": -1.05,
+        "roc20_4h_pct": 6.51,
         "components": {
           "h4_oscillator_score": 25.3,
-          "h4_roc_score": 53.9
+          "h4_roc_score": 53.3
         },
-        "summary": "RSI4H=45.29, ROC6(24h)=-1.68%"
+        "summary": "RSI4H=45.26, ROC6(24h)=-1.63%"
       },
       "volatility_liquidity": {
         "weight": 0.25,
@@ -1700,8 +1700,8 @@
         "funding_rate_pct": 0.00433,
         "funding_30d_percentile": 41.11,
         "components": {
-          "atr_4h_percentile_score": 37.0,
-          "rel_volume_4h_score": 35.5,
+          "atr_4h_percentile_score": 44.3,
+          "rel_volume_4h_score": 59.2,
           "funding_score": 72.0
         },
         "summary": "ATR4Hp=90.0, RelVol4H=0.51x, Fund=0.00433%",
@@ -1738,9 +1738,9 @@
       {
         "key": "momentum",
         "label": "Momentum",
-        "score": 41.05,
+        "score": 40.7,
         "weight": 0.25,
-        "weighted_impact_vs_50": -2.24
+        "weighted_impact_vs_50": -2.32
       },
       {
         "key": "session_context",
@@ -1752,17 +1752,17 @@
       {
         "key": "volatility_liquidity",
         "label": "Volatility & Liquidity",
-        "score": 56.54,
+        "score": 44.93,
         "weight": 0.25,
-        "weighted_impact_vs_50": 1.63
+        "weighted_impact_vs_50": -1.27
       }
     ],
     "dominant_factors": [
       "Trend Structure (37.3/100, -3.8 pts)",
-      "Momentum (41.0/100, -2.2 pts)"
+      "Momentum (40.7/100, -2.3 pts)"
     ],
-    "last_4h_close_ts": 1795492800000,
-    "last_4h_close_utc": "2026-11-24T04:00:00Z",
+    "last_4h_close_ts": 1795507200000,
+    "last_4h_close_utc": "2026-11-24T08:00:00Z",
     "recalc_utc_day": "2026-11-24",
     "recalc_at_utc": "2026-11-24T11:07:56Z",
     "is_weekend_utc": false,
@@ -1772,7 +1772,7 @@
       "id": "R5_DISTRIBUTION_BEAR",
       "name": "Distribution / Bear",
       "bias": "BEARISH",
-      "volatility_modifier": "COMPRESSION",
+      "volatility_modifier": "CLIMAX_EXHAUSTION",
       "flow_modifier": "DEFENSIVE",
       "spot_taker_buy_ratio_24h": 0.5003,
       "summary": "[R5] Distribution / Bear \u00b7 Vol=COMPRESSION \u00b7 Flow=DEFENSIVE \u00b7 SpotBuy24H=50.0%",
@@ -1825,7 +1825,7 @@
     "id": "R5_DISTRIBUTION_BEAR",
     "name": "Distribution / Bear",
     "bias": "BEARISH",
-    "volatility_modifier": "COMPRESSION",
+    "volatility_modifier": "CLIMAX_EXHAUSTION",
     "flow_modifier": "DEFENSIVE",
     "spot_taker_buy_ratio_24h": 0.5003,
     "summary": "[R5] Distribution / Bear \u00b7 Vol=COMPRESSION \u00b7 Flow=DEFENSIVE \u00b7 SpotBuy24H=50.0%",
@@ -1888,23 +1888,25 @@
       ],
       "4h": [
         {
-          "id": "INSIDE_BAR",
-          "name": "Inside Bar (Coil)",
-          "timeframe": "4H",
-          "direction": "NEUTRAL",
-          "detail": "Range $60,245.0\u2013$60,744.3 contained inside prior 4H bar",
-          "bar_ts": 1795492800000,
+          "id": "ENGULFING",
+          "name": "Engulfing Candle",
+          "timeframe": "1H",
+          "direction": "BULLISH",
+          "detail": "Bullish body engulfs prior 1H bar (vol 1.20x)",
+          "bar_ts": 1795518000000,
           "confluence_level": "Prior Daily Low ($60,339.6)",
           "conviction": "STRUCTURAL_CONFLUENCE"
-        },
+        }
+      ],
+      "4h": [
         {
-          "id": "NR4_NR7",
-          "name": "NR7 Squeeze",
+          "id": "PIN_BAR",
+          "name": "Pin Bar / Hammer",
           "timeframe": "4H",
-          "direction": "NEUTRAL",
-          "detail": "Narrowest 4H range of last 7 bars ($499.3)",
-          "bar_ts": 1795492800000,
-          "confluence_level": "Prior Daily Low ($60,339.6)",
+          "direction": "BULLISH",
+          "detail": "Lower wick 87% of range; close near high",
+          "bar_ts": 1795507200000,
+          "confluence_level": "7D VAL ($59,350.0)",
           "conviction": "STRUCTURAL_CONFLUENCE"
         }
       ],
@@ -1927,18 +1929,21 @@
         "id": "ENGULFING",
         "name": "Engulfing Candle",
         "category": "Reversal",
-        "active_tfs": [],
-        "direction": "INACTIVE",
-        "detail": null,
-        "confluence_level": null,
-        "conviction": "INACTIVE"
+        "active_tfs": [
+          "1H"
+        ],
+        "direction": "BULLISH",
+        "detail": "Bullish body engulfs prior 1H bar (vol 1.20x)",
+        "confluence_level": "Prior Daily Low ($60,339.6)",
+        "conviction": "STRUCTURAL_CONFLUENCE"
       },
       {
         "id": "PIN_BAR",
         "name": "Pin Bar / Rejection Wick",
         "category": "Reversal",
         "active_tfs": [
-          "1D"
+          "1D",
+          "4H"
         ],
         "direction": "BEARISH",
         "detail": "Upper wick 79% of range; close near low",
@@ -1961,13 +1966,11 @@
         "id": "INSIDE_BAR",
         "name": "Inside Bar (Coil)",
         "category": "Consolidation",
-        "active_tfs": [
-          "4H"
-        ],
-        "direction": "NEUTRAL",
-        "detail": "Range $60,245.0\u2013$60,744.3 contained inside prior 4H bar",
-        "confluence_level": "Prior Daily Low ($60,339.6)",
-        "conviction": "STRUCTURAL_CONFLUENCE"
+        "active_tfs": [],
+        "direction": "INACTIVE",
+        "detail": null,
+        "confluence_level": null,
+        "conviction": "INACTIVE"
       },
       {
         "id": "OUTSIDE_BAR",
@@ -1993,13 +1996,11 @@
         "id": "NR4_NR7",
         "name": "NR4 / NR7 Range Squeeze",
         "category": "Volatility",
-        "active_tfs": [
-          "4H"
-        ],
-        "direction": "NEUTRAL",
-        "detail": "Narrowest 4H range of last 7 bars ($499.3)",
-        "confluence_level": "Prior Daily Low ($60,339.6)",
-        "conviction": "STRUCTURAL_CONFLUENCE"
+        "active_tfs": [],
+        "direction": "INACTIVE",
+        "detail": null,
+        "confluence_level": null,
+        "conviction": "INACTIVE"
       },
       {
         "id": "TIGHT_COIL_3BAR",
@@ -2053,8 +2054,8 @@
     "price_and_pois": {
       "last_close": 59763.6,
       "htf_supply_cluster": {
-        "low": 64209.3,
-        "high": 64930.7,
+        "low": 64214.1,
+        "high": 64925.9,
         "status": "OVERHEAD"
       },
       "htf_demand_cluster": {
@@ -2296,10 +2297,10 @@
       "ls_ratio_percentile_72h": 77.8,
       "ls_ratio_available": true,
       "oi_history_available": true,
-      "bids_asks_depth_ratio": 1.16,
-      "swing_low_4h": 59455.31,
+      "bids_asks_depth_ratio": 1.09,
+      "swing_low_4h": 59390.86,
       "swing_high_4h": 64603.12,
-      "base_floor": 57381.45,
+      "base_floor": 58140.0,
       "base_ceiling": 64603.12,
       "capitulation_wick_low": 59390.86,
       "euphoria_wick_high": 64603.12,
@@ -2411,11 +2412,11 @@
       ]
     },
     "regime_diagnosis": {
-      "regime_id": "DISTRIBUTION_BEAR_CONTINUATION",
-      "name": "Distribution / Bear Continuation",
-      "diagnosis": "Weak spot demand / active overhead distribution",
-      "playbook": "Distribution Bounce -> Loop B Trim (0.50x)",
-      "suitability": "Loop B Bounce Harvest / Loop A Patient",
+      "regime_id": "RANGE_LIQUIDATION_MAGNET",
+      "name": "Range / Liquidation Magnet",
+      "diagnosis": "Defined 4H channel with liquidation clusters on both edges",
+      "playbook": "Dual-Sleeve Standby: 10% USDT + 10% BTC",
+      "suitability": "Core Bidirectional DIBSE Habitat",
       "majority_score": "3/4 observations confirmed",
       "matched_criteria": [
         "Price trapped below Daily VWAP, Weekly VWAP & closed 4H ceiling",
@@ -2454,7 +2455,7 @@
             "Positioning skewed (L/S 2.55, Fund 0.004%)",
             "Symmetrical liquidation pools active above & below spot"
           ],
-          "active": false
+          "active": true
         },
         {
           "id": "CASCADE_FORCED_DELEVERAGING",
@@ -2469,25 +2470,25 @@
         {
           "id": "DISTRIBUTION_BEAR_CONTINUATION",
           "name": "Distribution / Bear Continuation",
-          "matches_count": 3,
+          "matches_count": 2,
           "required": 3,
           "matched": [
             "Price trapped below Daily VWAP, Weekly VWAP & closed 4H ceiling",
             "Spot CVD persistently negative (7D -5031 / Ratio 1.00)",
             "Funding +0.0043% / compressed basis (-0.13%)"
           ],
-          "active": true
+          "active": false
         }
       ],
       "notes": "Weak spot demand / active overhead distribution. Rule Score: 3/4 observations confirmed. LSCE: UPPER_SWEEP_REJECTION_CONFIRMED. Dominant Magnet: UPPER ($60,100 if swept, +0.59%).",
       "plain_english_verdict": "[Distribution / Bear Continuation] Weak spot demand / active overhead distribution. LOOP B (BTC -> USDT): Rotate 50% of 10% BTC Sleeve (5.0% equity) into USDT; rebuy < P_sell."
     },
     "dibse": {
-      "dibse_signal": "LOOP B: BTC -> USDT",
-      "dibse_headline": "Loop B: Trim 50% of 10% BTC Sleeve into Bounce",
-      "rotation": "BTC -> USDT",
-      "sizing_factor": 0.5,
-      "recommended_cash_deploy_pct": 50.0,
+      "dibse_signal": "HOLD BOTH SLEEVES",
+      "dibse_headline": "Hold Both Sleeves (Wait Range Edge)",
+      "rotation": "Hold Both Sleeves",
+      "sizing_factor": 0.0,
+      "recommended_cash_deploy_pct": 0.0,
       "active_sandbox_pct": 20.0,
       "usdt_sleeve_pct": 10.0,
       "btc_sleeve_pct": 10.0,
@@ -2497,10 +2498,756 @@
       "loop_a_zone": "Washout $59,400\u2013$59,455 -> Profit Exit > $64,603",
       "loop_b_zone": "Squeeze $60,100\u2013$64,603 -> Rebuy < $59,455",
       "sleeve_allocation": "10% USDT Sleeve + 10% BTC Sleeve (20% Active Sandbox | 80% Untouched Core)",
-      "actionable_trade_instruction": "LOOP B (BTC -> USDT): Rotate 50% of 10% BTC Sleeve (5.0% equity) into USDT; rebuy < P_sell.",
+      "actionable_trade_instruction": "HOLD BOTH SLEEVES: Keep permanent 10% USDT + 10% BTC Sandbox balanced (80% Core untouched) until Loop A/B confirms.",
       "stop_rule": "ZERO STOP-LOSSES (DIBSE Asymmetric Self-Healing Inventory)",
-      "structural_invalidation_level": 59455.31,
+      "structural_invalidation_level": 59390.86,
       "failure_protocol": "Underwater Loop A holds Spot BTC inventory (> P_buy); bypassed Loop B holds Spot USDT (< P_sell)."
+    }
+  },
+  "cortex_rhyme": {
+    "meta": {
+      "engine": "CORTEX-RHYME",
+      "version": "1.2.0",
+      "active_lens": "5D_MICROSTRUCTURE",
+      "distance_metric": "regularized_mahalanobis_dual_lens",
+      "instrument": "BTC-USDT-SWAP",
+      "status": "live",
+      "as_of_utc": "2026-11-24T11:00:00Z",
+      "generated_at_utc": "2026-11-24T12:56:07Z",
+      "history_sources": [
+        "OKX Public v5 Keyless Archive"
+      ],
+      "disclaimer": "Observational historical statistics only. Never issues a trade, size, or permission."
+    },
+    "current_state": {
+      "btc_price": 60394.0,
+      "regime_context": {
+        "trend_regime": "BELOW_200D_SMA",
+        "sma_200d": 72237.52,
+        "distance_from_sma_200d_pct": -16.4
+      },
+      "raw_metrics": {
+        "funding_rate_pct": 0.0022,
+        "basis_bps": -5.46,
+        "oi_delta_24h_pct": -4.52,
+        "gk_vol_24h_ann_pct": 83.92,
+        "taker_buy_ratio": 0.4903,
+        "live_l2_imbalance": -0.5907
+      },
+      "z_vector": {
+        "funding_rate": 0.614,
+        "basis_bps": -0.682,
+        "oi_delta_24h": -0.741,
+        "gk_vol_24h": 0.768,
+        "taker_buy_ratio": -0.155
+      }
+    },
+    "diagnostics": {
+      "analogues_found": 20,
+      "target_k": 20,
+      "history_days": 66.9,
+      "baseline_hours_evaluated": 1533,
+      "sample_quality": "moderate",
+      "avg_vector_distance": 0.702,
+      "funding_basis_correlation": 0.251,
+      "conditional_ev_24h_pct": 0.266,
+      "posture_verdict": "NEUTRAL_CHOP",
+      "regime_analogues_found": 8,
+      "regime_sample_quality": "thin",
+      "regime_avg_distance": 1.435,
+      "embargo_hours": 72,
+      "declustering_hours": 24,
+      "active_lens": "5D_MICROSTRUCTURE",
+      "fallback_triggered": false,
+      "fallback_reason": null
+    },
+    "after_similar_setups": {
+      "4h": {
+        "median_pct": 0.3,
+        "up_share": 90.0,
+        "median_up_pct": 0.37,
+        "median_down_pct": -0.08,
+        "tail_skew_ratio": 4.49
+      },
+      "24h": {
+        "median_pct": 0.16,
+        "up_share": 65.0,
+        "median_up_pct": 1.12,
+        "median_down_pct": -1.32,
+        "tail_skew_ratio": 0.85
+      },
+      "72h": {
+        "median_pct": -0.96,
+        "up_share": 40.0,
+        "median_up_pct": 1.85,
+        "median_down_pct": -1.94,
+        "tail_skew_ratio": 0.96
+      }
+    },
+    "baseline_all_hours": {
+      "4h": {
+        "median_pct": -0.02,
+        "up_share": 48.7,
+        "median_up_pct": 0.34,
+        "median_down_pct": -0.38,
+        "tail_skew_ratio": 0.87
+      },
+      "24h": {
+        "median_pct": -0.18,
+        "up_share": 44.5,
+        "median_up_pct": 0.76,
+        "median_down_pct": -1.26,
+        "tail_skew_ratio": 0.6
+      },
+      "72h": {
+        "median_pct": -1.07,
+        "up_share": 34.3,
+        "median_up_pct": 1.23,
+        "median_down_pct": -2.24,
+        "tail_skew_ratio": 0.55
+      }
+    },
+    "edge_vs_baseline": {
+      "4h": {
+        "up_share_lift_pts": 41.3,
+        "median_lift_pct": 0.32
+      },
+      "24h": {
+        "up_share_lift_pts": 20.5,
+        "median_lift_pct": 0.34
+      },
+      "72h": {
+        "up_share_lift_pts": 5.7,
+        "median_lift_pct": 0.11
+      }
+    },
+    "regime_matched_setups": {
+      "4h": {
+        "median_pct": -0.32,
+        "up_share": 50.0,
+        "median_up_pct": 0.2,
+        "median_down_pct": -0.97,
+        "tail_skew_ratio": 0.21
+      },
+      "24h": {
+        "median_pct": -1.17,
+        "up_share": 37.5,
+        "median_up_pct": 1.89,
+        "median_down_pct": -3.68,
+        "tail_skew_ratio": 0.51
+      },
+      "72h": {
+        "median_pct": -4.92,
+        "up_share": 12.5,
+        "median_up_pct": 3.95,
+        "median_down_pct": -5.74,
+        "tail_skew_ratio": 0.69
+      }
+    },
+    "regime_baseline_hours": {
+      "4h": {
+        "median_pct": -0.27,
+        "up_share": 40.1,
+        "median_up_pct": 0.62,
+        "median_down_pct": -0.85,
+        "tail_skew_ratio": 0.74
+      },
+      "24h": {
+        "median_pct": -1.64,
+        "up_share": 24.9,
+        "median_up_pct": 0.87,
+        "median_down_pct": -2.46,
+        "tail_skew_ratio": 0.35
+      },
+      "72h": {
+        "median_pct": -3.87,
+        "up_share": 13.4,
+        "median_up_pct": 3.91,
+        "median_down_pct": -4.46,
+        "tail_skew_ratio": 0.88
+      }
+    },
+    "regime_edge_vs_baseline": {
+      "4h": {
+        "up_share_lift_pts": 9.9,
+        "median_lift_pct": -0.05
+      },
+      "24h": {
+        "up_share_lift_pts": 12.6,
+        "median_lift_pct": 0.47
+      },
+      "72h": {
+        "up_share_lift_pts": -0.9,
+        "median_lift_pct": -1.05
+      }
+    },
+    "top_analogues": [
+      {
+        "timestamp_utc": "2026-10-01T07:00:00Z",
+        "btc_price": 83380.1,
+        "trend_regime": "ABOVE_200D_SMA",
+        "distance": 0.459,
+        "ret_4h_pct": 0.6,
+        "ret_24h_pct": 3.24,
+        "ret_72h_pct": 2.02
+      },
+      {
+        "timestamp_utc": "2026-11-05T21:00:00Z",
+        "btc_price": 75815.0,
+        "trend_regime": "ABOVE_200D_SMA",
+        "distance": 0.491,
+        "ret_4h_pct": 0.37,
+        "ret_24h_pct": 0.1,
+        "ret_72h_pct": -2.27
+      },
+      {
+        "timestamp_utc": "2026-10-12T23:00:00Z",
+        "btc_price": 81808.0,
+        "trend_regime": "ABOVE_200D_SMA",
+        "distance": 0.494,
+        "ret_4h_pct": 1.82,
+        "ret_24h_pct": 1.62,
+        "ret_72h_pct": 0.47
+      },
+      {
+        "timestamp_utc": "2026-10-02T21:00:00Z",
+        "btc_price": 84484.1,
+        "trend_regime": "ABOVE_200D_SMA",
+        "distance": 0.509,
+        "ret_4h_pct": 0.14,
+        "ret_24h_pct": 0.23,
+        "ret_72h_pct": 1.68
+      },
+      {
+        "timestamp_utc": "2026-11-11T12:00:00Z",
+        "btc_price": 73853.9,
+        "trend_regime": "ABOVE_200D_SMA",
+        "distance": 0.519,
+        "ret_4h_pct": 0.5,
+        "ret_24h_pct": -1.32,
+        "ret_72h_pct": -9.31
+      },
+      {
+        "timestamp_utc": "2026-10-29T02:00:00Z",
+        "btc_price": 79932.9,
+        "trend_regime": "ABOVE_200D_SMA",
+        "distance": 0.566,
+        "ret_4h_pct": -0.0,
+        "ret_24h_pct": -3.18,
+        "ret_72h_pct": -2.82
+      },
+      {
+        "timestamp_utc": "2026-11-09T10:00:00Z",
+        "btc_price": 74118.5,
+        "trend_regime": "ABOVE_200D_SMA",
+        "distance": 0.593,
+        "ret_4h_pct": 1.0,
+        "ret_24h_pct": 0.1,
+        "ret_72h_pct": -0.93
+      },
+      {
+        "timestamp_utc": "2026-09-29T06:00:00Z",
+        "btc_price": 83965.1,
+        "trend_regime": "ABOVE_200D_SMA",
+        "distance": 0.596,
+        "ret_4h_pct": 0.03,
+        "ret_24h_pct": -1.13,
+        "ret_72h_pct": 2.36
+      },
+      {
+        "timestamp_utc": "2026-09-25T13:00:00Z",
+        "btc_price": 83881.7,
+        "trend_regime": "ABOVE_200D_SMA",
+        "distance": 0.601,
+        "ret_4h_pct": -0.16,
+        "ret_24h_pct": 0.04,
+        "ret_72h_pct": -0.33
+      },
+      {
+        "timestamp_utc": "2026-11-12T14:00:00Z",
+        "btc_price": 71612.9,
+        "trend_regime": "BELOW_200D_SMA",
+        "distance": 0.668,
+        "ret_4h_pct": 0.17,
+        "ret_24h_pct": -3.68,
+        "ret_72h_pct": -9.6
+      }
+    ],
+    "lenses": {
+      "5D_MICROSTRUCTURE": {
+        "lens_id": "5D_MICROSTRUCTURE",
+        "dimensions": [
+          "funding_rate",
+          "basis_bps",
+          "oi_delta_24h",
+          "gk_vol_24h",
+          "taker_buy_ratio"
+        ],
+        "diagnostics": {
+          "analogues_found": 20,
+          "target_k": 20,
+          "history_days": 66.9,
+          "baseline_hours_evaluated": 1533,
+          "sample_quality": "moderate",
+          "avg_vector_distance": 0.702,
+          "funding_basis_correlation": 0.251,
+          "conditional_ev_24h_pct": 0.266,
+          "posture_verdict": "NEUTRAL_CHOP",
+          "regime_analogues_found": 8,
+          "regime_sample_quality": "thin",
+          "regime_avg_distance": 1.435,
+          "embargo_hours": 72,
+          "declustering_hours": 24
+        },
+        "after_similar_setups": {
+          "4h": {
+            "median_pct": 0.3,
+            "up_share": 90.0,
+            "median_up_pct": 0.37,
+            "median_down_pct": -0.08,
+            "tail_skew_ratio": 4.49
+          },
+          "24h": {
+            "median_pct": 0.16,
+            "up_share": 65.0,
+            "median_up_pct": 1.12,
+            "median_down_pct": -1.32,
+            "tail_skew_ratio": 0.85
+          },
+          "72h": {
+            "median_pct": -0.96,
+            "up_share": 40.0,
+            "median_up_pct": 1.85,
+            "median_down_pct": -1.94,
+            "tail_skew_ratio": 0.96
+          }
+        },
+        "baseline_all_hours": {
+          "4h": {
+            "median_pct": -0.02,
+            "up_share": 48.7,
+            "median_up_pct": 0.34,
+            "median_down_pct": -0.38,
+            "tail_skew_ratio": 0.87
+          },
+          "24h": {
+            "median_pct": -0.18,
+            "up_share": 44.5,
+            "median_up_pct": 0.76,
+            "median_down_pct": -1.26,
+            "tail_skew_ratio": 0.6
+          },
+          "72h": {
+            "median_pct": -1.07,
+            "up_share": 34.3,
+            "median_up_pct": 1.23,
+            "median_down_pct": -2.24,
+            "tail_skew_ratio": 0.55
+          }
+        },
+        "edge_vs_baseline": {
+          "4h": {
+            "up_share_lift_pts": 41.3,
+            "median_lift_pct": 0.32
+          },
+          "24h": {
+            "up_share_lift_pts": 20.5,
+            "median_lift_pct": 0.34
+          },
+          "72h": {
+            "up_share_lift_pts": 5.7,
+            "median_lift_pct": 0.11
+          }
+        },
+        "regime_matched_setups": {
+          "4h": {
+            "median_pct": -0.32,
+            "up_share": 50.0,
+            "median_up_pct": 0.2,
+            "median_down_pct": -0.97,
+            "tail_skew_ratio": 0.21
+          },
+          "24h": {
+            "median_pct": -1.17,
+            "up_share": 37.5,
+            "median_up_pct": 1.89,
+            "median_down_pct": -3.68,
+            "tail_skew_ratio": 0.51
+          },
+          "72h": {
+            "median_pct": -4.92,
+            "up_share": 12.5,
+            "median_up_pct": 3.95,
+            "median_down_pct": -5.74,
+            "tail_skew_ratio": 0.69
+          }
+        },
+        "regime_baseline_hours": {
+          "4h": {
+            "median_pct": -0.27,
+            "up_share": 40.1,
+            "median_up_pct": 0.62,
+            "median_down_pct": -0.85,
+            "tail_skew_ratio": 0.74
+          },
+          "24h": {
+            "median_pct": -1.64,
+            "up_share": 24.9,
+            "median_up_pct": 0.87,
+            "median_down_pct": -2.46,
+            "tail_skew_ratio": 0.35
+          },
+          "72h": {
+            "median_pct": -3.87,
+            "up_share": 13.4,
+            "median_up_pct": 3.91,
+            "median_down_pct": -4.46,
+            "tail_skew_ratio": 0.88
+          }
+        },
+        "regime_edge_vs_baseline": {
+          "4h": {
+            "up_share_lift_pts": 9.9,
+            "median_lift_pct": -0.05
+          },
+          "24h": {
+            "up_share_lift_pts": 12.6,
+            "median_lift_pct": 0.47
+          },
+          "72h": {
+            "up_share_lift_pts": -0.9,
+            "median_lift_pct": -1.05
+          }
+        },
+        "top_analogues": [
+          {
+            "timestamp_utc": "2026-10-01T07:00:00Z",
+            "btc_price": 83380.1,
+            "trend_regime": "ABOVE_200D_SMA",
+            "distance": 0.459,
+            "ret_4h_pct": 0.6,
+            "ret_24h_pct": 3.24,
+            "ret_72h_pct": 2.02
+          },
+          {
+            "timestamp_utc": "2026-11-05T21:00:00Z",
+            "btc_price": 75815.0,
+            "trend_regime": "ABOVE_200D_SMA",
+            "distance": 0.491,
+            "ret_4h_pct": 0.37,
+            "ret_24h_pct": 0.1,
+            "ret_72h_pct": -2.27
+          },
+          {
+            "timestamp_utc": "2026-10-12T23:00:00Z",
+            "btc_price": 81808.0,
+            "trend_regime": "ABOVE_200D_SMA",
+            "distance": 0.494,
+            "ret_4h_pct": 1.82,
+            "ret_24h_pct": 1.62,
+            "ret_72h_pct": 0.47
+          },
+          {
+            "timestamp_utc": "2026-10-02T21:00:00Z",
+            "btc_price": 84484.1,
+            "trend_regime": "ABOVE_200D_SMA",
+            "distance": 0.509,
+            "ret_4h_pct": 0.14,
+            "ret_24h_pct": 0.23,
+            "ret_72h_pct": 1.68
+          },
+          {
+            "timestamp_utc": "2026-11-11T12:00:00Z",
+            "btc_price": 73853.9,
+            "trend_regime": "ABOVE_200D_SMA",
+            "distance": 0.519,
+            "ret_4h_pct": 0.5,
+            "ret_24h_pct": -1.32,
+            "ret_72h_pct": -9.31
+          },
+          {
+            "timestamp_utc": "2026-10-29T02:00:00Z",
+            "btc_price": 79932.9,
+            "trend_regime": "ABOVE_200D_SMA",
+            "distance": 0.566,
+            "ret_4h_pct": -0.0,
+            "ret_24h_pct": -3.18,
+            "ret_72h_pct": -2.82
+          },
+          {
+            "timestamp_utc": "2026-11-09T10:00:00Z",
+            "btc_price": 74118.5,
+            "trend_regime": "ABOVE_200D_SMA",
+            "distance": 0.593,
+            "ret_4h_pct": 1.0,
+            "ret_24h_pct": 0.1,
+            "ret_72h_pct": -0.93
+          },
+          {
+            "timestamp_utc": "2026-09-29T06:00:00Z",
+            "btc_price": 83965.1,
+            "trend_regime": "ABOVE_200D_SMA",
+            "distance": 0.596,
+            "ret_4h_pct": 0.03,
+            "ret_24h_pct": -1.13,
+            "ret_72h_pct": 2.36
+          },
+          {
+            "timestamp_utc": "2026-09-25T13:00:00Z",
+            "btc_price": 83881.7,
+            "trend_regime": "ABOVE_200D_SMA",
+            "distance": 0.601,
+            "ret_4h_pct": -0.16,
+            "ret_24h_pct": 0.04,
+            "ret_72h_pct": -0.33
+          },
+          {
+            "timestamp_utc": "2026-11-12T14:00:00Z",
+            "btc_price": 71612.9,
+            "trend_regime": "BELOW_200D_SMA",
+            "distance": 0.668,
+            "ret_4h_pct": 0.17,
+            "ret_24h_pct": -3.68,
+            "ret_72h_pct": -9.6
+          }
+        ]
+      },
+      "3D_DEEP_CARRY_VOL": {
+        "lens_id": "3D_DEEP_CARRY_VOL",
+        "dimensions": [
+          "funding_rate",
+          "basis_bps",
+          "gk_vol_24h"
+        ],
+        "diagnostics": {
+          "analogues_found": 20,
+          "target_k": 20,
+          "history_days": 727.7,
+          "baseline_hours_evaluated": 17224,
+          "sample_quality": "solid",
+          "avg_vector_distance": 0.391,
+          "funding_basis_correlation": 0.113,
+          "conditional_ev_24h_pct": 0.012,
+          "posture_verdict": "NEUTRAL_CHOP",
+          "regime_analogues_found": 20,
+          "regime_sample_quality": "solid",
+          "regime_avg_distance": 0.721,
+          "embargo_hours": 72,
+          "declustering_hours": 24
+        },
+        "after_similar_setups": {
+          "4h": {
+            "median_pct": -0.01,
+            "up_share": 50.0,
+            "median_up_pct": 0.25,
+            "median_down_pct": -0.45,
+            "tail_skew_ratio": 0.57
+          },
+          "24h": {
+            "median_pct": 0.17,
+            "up_share": 55.0,
+            "median_up_pct": 0.79,
+            "median_down_pct": -0.94,
+            "tail_skew_ratio": 0.84
+          },
+          "72h": {
+            "median_pct": -0.06,
+            "up_share": 50.0,
+            "median_up_pct": 1.99,
+            "median_down_pct": -1.27,
+            "tail_skew_ratio": 1.56
+          }
+        },
+        "baseline_all_hours": {
+          "4h": {
+            "median_pct": 0.0,
+            "up_share": 50.3,
+            "median_up_pct": 0.4,
+            "median_down_pct": -0.39,
+            "tail_skew_ratio": 1.01
+          },
+          "24h": {
+            "median_pct": 0.02,
+            "up_share": 50.4,
+            "median_up_pct": 1.08,
+            "median_down_pct": -1.23,
+            "tail_skew_ratio": 0.88
+          },
+          "72h": {
+            "median_pct": -0.05,
+            "up_share": 49.3,
+            "median_up_pct": 2.06,
+            "median_down_pct": -2.17,
+            "tail_skew_ratio": 0.95
+          }
+        },
+        "edge_vs_baseline": {
+          "4h": {
+            "up_share_lift_pts": -0.3,
+            "median_lift_pct": -0.01
+          },
+          "24h": {
+            "up_share_lift_pts": 4.6,
+            "median_lift_pct": 0.15
+          },
+          "72h": {
+            "up_share_lift_pts": 0.7,
+            "median_lift_pct": -0.01
+          }
+        },
+        "regime_matched_setups": {
+          "4h": {
+            "median_pct": 0.18,
+            "up_share": 60.0,
+            "median_up_pct": 0.51,
+            "median_down_pct": -0.27,
+            "tail_skew_ratio": 1.86
+          },
+          "24h": {
+            "median_pct": -0.12,
+            "up_share": 45.0,
+            "median_up_pct": 1.19,
+            "median_down_pct": -1.06,
+            "tail_skew_ratio": 1.12
+          },
+          "72h": {
+            "median_pct": -0.68,
+            "up_share": 35.0,
+            "median_up_pct": 1.3,
+            "median_down_pct": -1.34,
+            "tail_skew_ratio": 0.97
+          }
+        },
+        "regime_baseline_hours": {
+          "4h": {
+            "median_pct": 0.01,
+            "up_share": 50.4,
+            "median_up_pct": 0.43,
+            "median_down_pct": -0.44,
+            "tail_skew_ratio": 0.98
+          },
+          "24h": {
+            "median_pct": -0.01,
+            "up_share": 49.7,
+            "median_up_pct": 1.18,
+            "median_down_pct": -1.39,
+            "tail_skew_ratio": 0.85
+          },
+          "72h": {
+            "median_pct": -0.03,
+            "up_share": 49.8,
+            "median_up_pct": 2.29,
+            "median_down_pct": -2.38,
+            "tail_skew_ratio": 0.97
+          }
+        },
+        "regime_edge_vs_baseline": {
+          "4h": {
+            "up_share_lift_pts": 9.6,
+            "median_lift_pct": 0.17
+          },
+          "24h": {
+            "up_share_lift_pts": -4.7,
+            "median_lift_pct": -0.11
+          },
+          "72h": {
+            "up_share_lift_pts": -14.8,
+            "median_lift_pct": -0.65
+          }
+        },
+        "top_analogues": [
+          {
+            "timestamp_utc": "2026-08-25T09:00:00Z",
+            "btc_price": 79158.4,
+            "trend_regime": "ABOVE_200D_SMA",
+            "distance": 0.163,
+            "ret_4h_pct": -0.68,
+            "ret_24h_pct": -0.94,
+            "ret_72h_pct": 0.13
+          },
+          {
+            "timestamp_utc": "2026-09-23T20:00:00Z",
+            "btc_price": 84200.0,
+            "trend_regime": "ABOVE_200D_SMA",
+            "distance": 0.175,
+            "ret_4h_pct": 0.1,
+            "ret_24h_pct": 0.16,
+            "ret_72h_pct": -0.25
+          },
+          {
+            "timestamp_utc": "2026-10-29T05:00:00Z",
+            "btc_price": 80196.5,
+            "trend_regime": "ABOVE_200D_SMA",
+            "distance": 0.229,
+            "ret_4h_pct": -0.03,
+            "ret_24h_pct": -2.11,
+            "ret_72h_pct": -2.93
+          },
+          {
+            "timestamp_utc": "2026-08-20T22:00:00Z",
+            "btc_price": 72641.8,
+            "trend_regime": "ABOVE_200D_SMA",
+            "distance": 0.246,
+            "ret_4h_pct": 2.44,
+            "ret_24h_pct": 8.0,
+            "ret_72h_pct": 6.82
+          },
+          {
+            "timestamp_utc": "2026-09-02T15:00:00Z",
+            "btc_price": 77256.3,
+            "trend_regime": "ABOVE_200D_SMA",
+            "distance": 0.286,
+            "ret_4h_pct": 0.07,
+            "ret_24h_pct": 5.26,
+            "ret_72h_pct": 3.24
+          },
+          {
+            "timestamp_utc": "2026-10-31T00:00:00Z",
+            "btc_price": 77493.7,
+            "trend_regime": "ABOVE_200D_SMA",
+            "distance": 0.302,
+            "ret_4h_pct": -0.46,
+            "ret_24h_pct": 0.18,
+            "ret_72h_pct": -0.5
+          },
+          {
+            "timestamp_utc": "2026-10-01T05:00:00Z",
+            "btc_price": 84255.0,
+            "trend_regime": "ABOVE_200D_SMA",
+            "distance": 0.307,
+            "ret_4h_pct": -0.61,
+            "ret_24h_pct": 2.03,
+            "ret_72h_pct": 0.73
+          },
+          {
+            "timestamp_utc": "2026-11-05T16:00:00Z",
+            "btc_price": 76350.0,
+            "trend_regime": "ABOVE_200D_SMA",
+            "distance": 0.34,
+            "ret_4h_pct": -0.21,
+            "ret_24h_pct": -0.5,
+            "ret_72h_pct": -0.8
+          },
+          {
+            "timestamp_utc": "2026-10-12T23:00:00Z",
+            "btc_price": 81808.0,
+            "trend_regime": "ABOVE_200D_SMA",
+            "distance": 0.346,
+            "ret_4h_pct": 1.82,
+            "ret_24h_pct": 1.62,
+            "ret_72h_pct": 0.47
+          },
+          {
+            "timestamp_utc": "2026-11-09T08:00:00Z",
+            "btc_price": 74526.7,
+            "trend_regime": "ABOVE_200D_SMA",
+            "distance": 0.365,
+            "ret_4h_pct": 0.48,
+            "ret_24h_pct": 0.22,
+            "ret_72h_pct": -1.29
+          }
+        ]
+      }
     }
   },
   "signal": {
@@ -2529,17 +3276,12 @@
         "kind": "volume"
       },
       {
-        "price": 60245.0,
-        "label": "Prior 4H Low",
-        "kind": "support"
-      },
-      {
         "price": 60339.6,
         "label": "Prior Daily Low",
         "kind": "support"
       },
       {
-        "price": 60744.3,
+        "price": 60541.9,
         "label": "Prior 4H High",
         "kind": "resistance"
       },
@@ -2589,7 +3331,7 @@
         "id": 1,
         "rule": "Regime Score Meets Threshold",
         "passed": false,
-        "detail": "Score 43.9 in Flat Zone (32\u201368); no exceptions"
+        "detail": "Score 40.9 in Flat Zone (32\u201368); no exceptions"
       },
       {
         "id": 2,
@@ -2601,7 +3343,7 @@
         "id": 3,
         "rule": "4H Confirmation (BOS / Rejection+Vol)",
         "passed": false,
-        "detail": "No 4H bearish BOS (< 59419.0) or qualifying rejection candle (vol 0.51x)"
+        "detail": "No 4H bearish BOS (< 59419.0) or qualifying rejection candle (vol 0.90x)"
       },
       {
         "id": 4,
