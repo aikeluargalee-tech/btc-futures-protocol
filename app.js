@@ -678,10 +678,10 @@ Act as an Institutional Quantitative Spot Bitcoin Strategist executing the **BTC
 Evaluate the raw unleveraged Spot telemetry packet below (Strict **1.0x Spot-Only**: zero margin, zero perpetual futures, zero forced stop-losses; rotating between a **10% USDT Sleeve** and a **10% BTC Sleeve** with **80% Untouched Core Reserve**).
 
 Answer these 5 audit questions strictly from the JSON telemetry:
-1. **Regime & 4-Criteria Majority Audit:** Does price vs. Daily/Weekly VWAP, Spot CVD (Ratio + 7D/14D slopes), Coinbase Premium (bps), Funding/OI, and Book Depth support **Loop A (`USDT -> BTC`)**, **Loop B (`BTC -> USDT`)**, or **Hold Both Sleeves**?
-2. **Bidirectional LSCE & 10x–100x Magnet Pull:** Which liquidity cluster exerts dominant pull (`Upper Short Pool` vs. `Lower Long Pool` vs. CMC ±8% clusters), and is LSCE confirming absorption or warning of a fakeout?
+1. **Regime & 4-Criteria Majority Audit:** Does price vs. Daily/Weekly VWAP, Spot CVD (Ratio + 7D/14D slopes), Coinbase Premium (bps), Funding/OI, and Book Depth support **Loop A (\`USDT -> BTC\`)**, **Loop B (\`BTC -> USDT\`)**, or **Hold Both Sleeves**?
+2. **Bidirectional LSCE & 10x–100x Magnet Pull:** Which liquidity cluster exerts dominant pull (\`Upper Short Pool\` vs. \`Lower Long Pool\` vs. CMC ±8% clusters), and is LSCE confirming absorption or warning of a fakeout?
 3. **Futures Trap Check:** Compare Spot CVD against Perp Funding/OI/Basis — is upside Spot-Led or Fragile Leverage?
-4. **DIBSE Execution Plan:** State exact Loop A accumulation zone (`Exit > P_buy`) or Loop B distribution zone (`Rebuy < P_sell`), sizing factor (`0.0x–1.0x` of the 10% sleeve), and what invalidates waiting.
+4. **DIBSE Execution Plan:** State exact Loop A accumulation zone (\`Exit > P_buy\`) or Loop B distribution zone (\`Rebuy < P_sell\`), sizing factor (\`0.0x–1.0x\` of the 10% sleeve), and what invalidates waiting.
 5. **Quick Mobile Summary (<= 80 words):** Crisp bullet summary for Spot inventory execution.
 
 ### LIVE SPOT MAGNET TELEMETRY (JSON)
