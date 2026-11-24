@@ -71,13 +71,18 @@ function renderSignalTab() {
   const stBadge = status === "LONG" ? "up" : status === "SHORT" ? "dn" : "warn";
   const biasBadge = reg.bias === "LONG" ? "up" : reg.bias === "SHORT" ? "dn" : "warn";
 
+  const pmG = STATE.positioning_matrix_g;
+  const gRow = pmG?.status === "LIVE" ? pmG.active_cell : null;
+  const gCls = gRow?.reading === "directional colour only" ? "warn" : "";
+
   $("signalSummary").innerHTML = `
     <div class="signal-head">
       <div class="big-num ${status === "LONG" ? "up" : status === "SHORT" ? "dn" : "warn"}">${esc(status)}</div>
       <span class="badge ${stBadge}">${status === "FLAT" ? "NO FUTURES ENTRY" : esc(prop.entry_method || "FUTURES ACTIVE")}</span>
     </div>
     <p class="mut" style="margin:8px 0 4px;">Dominant 4H drivers: <b>${esc((reg.dominant_factors || []).join(" · ") || "—")}</b></p>
-    <p class="mut" style="margin:0;">1D Bias: <b>${esc(reg.daily_bias || "—")}</b> · Open Futures: <b>${(port.open_positions || []).length}/1</b> · Equity: <b>${usd(port.equity_usd, 2)}</b></p>
+    <p class="mut" style="margin:0 0 6px;">1D Bias: <b>${esc(reg.daily_bias || "—")}</b> · Open Futures: <b>${(port.open_positions || []).length}/1</b> · Equity: <b>${usd(port.equity_usd, 2)}</b></p>
+    ${pmG?.status === "LIVE" ? `<div><span class="badge ${gCls}">Project G: ${esc(pmG.summary_line)}</span></div>` : ""}
   `;
 
   const sc = typeof reg.score === "number" ? reg.score : 50;
@@ -480,6 +485,7 @@ function renderRhymeTab() {
     $("rhymeHeroBox").innerHTML = `<h2>S2 CORTEX-RHYME · Historical State-Space Conditioning</h2><p class="mut">Historical archive unavailable.</p>`;
     if ($("rhymeDistBox")) $("rhymeDistBox").innerHTML = "";
     if ($("rhymeAnaloguesBox")) $("rhymeAnaloguesBox").innerHTML = "";
+    if ($("rhymeMatrixGBox")) renderProjectGMatrixCard();
     return;
   }
 
@@ -612,6 +618,60 @@ function renderRhymeTab() {
           <tbody>${analogRows}</tbody>
         </table>
       </div>` : `<p class="mut">No historical analogues within cutoff threshold.</p>`}
+  `;
+
+  renderProjectGMatrixCard();
+}
+
+function renderProjectGMatrixCard() {
+  const box = $("rhymeMatrixGBox");
+  if (!box) return;
+  const pm = STATE.positioning_matrix_g;
+  if (!pm) {
+    box.innerHTML = "";
+    return;
+  }
+  const active = pm.active_cell || {};
+  const rows = pm.matrix_rows || [];
+  const band = pm.daily_funding_band || {};
+  const headerMeta = pm.status === "LIVE"
+    ? `Live Funding: <b>${pct(pm.funding_8h_pct, 5)}</b>/8h (<b>${pct(pm.funding_daily_pct, 4)}</b>/day · Band <b>${esc(band.band || "—")}</b>) · OI Δ (${esc(pm.oi_window || "3d")}): <b>${pct(pm.oi_delta_pct, 2)}</b> · 200D SMA: ${usd(pm.sma_200d, 0)}`
+    : `Status: ${esc(pm.reason || "unavailable")}`;
+
+  const tableRows = rows.map((r) => {
+    const isAct = pm.status === "LIVE" && r.id === active.id;
+    const bg = isAct ? (r.reading === "directional colour only" ? "background:var(--warn-bg);font-weight:700;" : "background:var(--acc-soft);font-weight:700;") : "";
+    const rdCls = r.reading === "directional colour only" ? "warn" : (r.reading === "never occurred in 299 weeks" ? "dn" : "mut");
+    return `
+      <tr style="${bg}">
+        <td>${isAct ? "▶ " : ""}${esc(r.regime_label)}</td>
+        <td>${esc(r.state_label)} (${esc(r.funding_sign)} / ${esc(r.oi_sign)})</td>
+        <td>${r.n}</td>
+        <td>${r.mean_7d_pct != null ? pct(r.mean_7d_pct, 2) : "—"}</td>
+        <td>${r.median_7d_pct != null ? pct(r.median_7d_pct, 2) : "—"}</td>
+        <td>${r.hit_rate_pct != null ? `${r.hit_rate_pct}%` : "—"}</td>
+        <td>${r.mean_14d_pct != null ? pct(r.mean_14d_pct, 2) : "—"}</td>
+        <td class="${rdCls}">${esc(r.reading)}</td>
+      </tr>`;
+  }).join("");
+
+  box.innerHTML = `
+    <h2>Project G · 8-Cell Positioning Decision Matrix (299 Non-Overlapping Weeks · Context Only)</h2>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;">
+      <div class="mut">${headerMeta}</div>
+      ${pm.status === "LIVE" ? `<span class="badge ${active.reading === "directional colour only" ? "warn" : ""}">${esc(pm.summary_line)}</span>` : ""}
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr><th>Regime</th><th>Leverage State (Fund / OI)</th><th>n</th><th>Mean 7d</th><th>Med 7d</th><th>Hit</th><th>Mean 14d</th><th>Reading</th></tr>
+        </thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>
+    <p class="mut" style="margin:6px 0 0;font-size:10px;">
+      <b>${esc(pm.guardrail || "Context only — no cell authorizes a trade.")}</b> Signal lives strictly in tail (&lt;-0.01%/day + rising OI below 200D SMA, n=18 [50–87% CI]); 7 of 8 cells carry no standalone edge.
+    </p>
   `;
 }
 
@@ -1241,6 +1301,25 @@ function topHeadlines5(fullState) {
   }));
 }
 
+function compactMatrixG(fullState) {
+  const pm = fullState?.positioning_matrix_g;
+  if (!pm || pm.status !== "LIVE") return null;
+  return {
+    regime_200d: pm.regime_200d,
+    funding_8h_pct: pm.funding_8h_pct,
+    funding_daily_pct: pm.funding_daily_pct,
+    oi_delta_pct: pm.oi_delta_pct,
+    oi_window: pm.oi_window,
+    leverage_state: pm.leverage_state_label,
+    n_weeks: pm.active_cell?.n ?? null,
+    hit_rate_pct: pm.active_cell?.hit_rate_pct ?? null,
+    median_7d_pct: pm.active_cell?.median_7d_pct ?? null,
+    reading: pm.active_cell?.reading ?? null,
+    summary_line: pm.summary_line,
+    guardrail: pm.guardrail,
+  };
+}
+
 function buildRawTelemetryPacket(fullState) {
   if (!fullState) return null;
   const g = fullState.regime?.groups || {};
@@ -1349,6 +1428,7 @@ function buildRawTelemetryPacket(fullState) {
       cmc_liquidations: fullState.derivatives?.cmc_liquidations ?? null,
       liquidation_magnets: liqMagnets,
       funding_30d_percentile: vl.funding_30d_percentile ?? null,
+      positioning_matrix_g: compactMatrixG(fullState),
     },
     macro_and_flows: {
       vix: sc.vix ?? null,
@@ -1529,7 +1609,11 @@ function bindEvents() {
   if ($("btnCopyRhymeAi")) {
     $("btnCopyRhymeAi").onclick = () => {
       if (!STATE?.cortex_rhyme) return;
-      let promptText = CORTEX_RHYME_AI_PROMPT_TEMPLATE.replace("{{RHYME_JSON_PAYLOAD}}", JSON.stringify(STATE.cortex_rhyme, null, 2));
+      const rhymePayload = {
+        ...STATE.cortex_rhyme,
+        positioning_matrix_g: compactMatrixG(STATE),
+      };
+      let promptText = CORTEX_RHYME_AI_PROMPT_TEMPLATE.replace("{{RHYME_JSON_PAYLOAD}}", JSON.stringify(rhymePayload, null, 2));
       const meta = window.DeskI18n?.getMeta();
       if (meta && meta.code !== "en") {
         promptText = promptText.replace(
@@ -1576,6 +1660,7 @@ function bindEvents() {
         live_spot_price: activePrice(),
         spot_magnet: STATE.spot_magnet,
         cmc_liquidations: STATE.derivatives?.cmc_liquidations ?? null,
+        positioning_matrix_g: compactMatrixG(STATE),
         news_macro_brief: STATE.news_macro
           ? {
               macro_bias_status: STATE.news_macro.macro_bias?.status ?? null,

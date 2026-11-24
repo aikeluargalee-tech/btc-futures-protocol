@@ -12,6 +12,7 @@ from .cortex_rhyme_engine import compute_cortex_rhyme
 from .data_fetcher import fetch_all_market_data
 from .kline_playbook_engine import compute_regime_and_kline_playbook
 from .news_macro_engine import compute_news_macro
+from .positioning_matrix import compute_positioning_matrix_g
 from .paper_ledger import (
     compute_review_metrics,
     execute_signal_entry,
@@ -75,6 +76,7 @@ def main() -> int:
     regime["state_of_regime"] = playbook_bundle["state_of_regime"]
     spot_magnet = compute_spot_magnet(market, regime, signal)
     cortex_rhyme = compute_cortex_rhyme()
+    positioning_matrix_g = compute_positioning_matrix_g(market, cortex_rhyme=cortex_rhyme)
     news_macro = compute_news_macro(market, now_utc=now)
     spot_shield = compute_spot_shield(now_utc=now)
 
@@ -201,6 +203,7 @@ def main() -> int:
         "spot_magnet": spot_magnet,
         "spot_shield": spot_shield,
         "cortex_rhyme": cortex_rhyme,
+        "positioning_matrix_g": positioning_matrix_g,
         "news_macro": news_macro,
         "signal": signal,
         "portfolio": portfolio,
