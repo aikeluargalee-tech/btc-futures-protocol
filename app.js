@@ -776,6 +776,7 @@ function renderShieldTab() {
     $("shieldS1Box").innerHTML = "";
     $("shieldS2Box").innerHTML = "";
     $("shieldAuditBox").innerHTML = "";
+    $("shieldGuideBox").innerHTML = "";
     return;
   }
 
@@ -865,6 +866,31 @@ function renderShieldTab() {
         </tbody>
       </table>
     </div>
+  `;
+
+  $("shieldGuideBox").innerHTML = `
+    <h2>How Sleeve #1 &amp; Sleeve #2 Work (Plain-English Cheat Sheet)</h2>
+    <div class="grid-2">
+      <div>
+        <p style="margin:0 0 6px;"><b>Sleeve #1 — Core Trend Engine (80% · Closed 4H Bars)</b></p>
+        <ul class="mut" style="margin:0;padding-left:16px;line-height:1.5;">
+          <li><b>Job:</b> Rides sustained multi-week Bitcoin uptrends and automatically steps into 100% USDT during macro bear markets (~65% time in cash historically).</li>
+          <li><b>Buys BTC only when all 3 agree:</b> Close is above the shifted <b>120D EMA</b> macro shield, above the 15-day Rolling VWAP + <b>0.50×ATR(14)</b> noise buffer, and the 12-bar VWAP slope is rising.</li>
+          <li><b>Exits to USDT when:</b> Closed 4H price falls below 120D EMA, breaks below RVWAP − 0.50×ATR, or hits the <b>3.0×ATR</b> hard stop.</li>
+        </ul>
+      </div>
+      <div>
+        <p style="margin:0 0 6px;"><b>Sleeve #2 — Volatility Breakout Sidekick (20% Cap · Closed 1D Bars)</b></p>
+        <ul class="mut" style="margin:0;padding-left:16px;line-height:1.5;">
+          <li><b>Job:</b> Catches sharp coiled breakouts — including violent bottom rebounds while price is still below the 120D EMA (<b>no macro off-switch</b>).</li>
+          <li><b>Buys BTC when:</b> Daily Bollinger Bands stay compressed inside Keltner Channels for <b>&gt;= 3 consecutive days</b>, then release with rising positive 20-bar OLS momentum and Close &gt; KC Mid.</li>
+          <li><b>Exits to USDT when:</b> Daily close drops below <b>SMA(21)</b>, OLS momentum turns negative (&lt; 0), or the <b>2.0×ATR</b> catastrophe stop hits.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="mut" style="margin:8px 0 0;border-top:1px solid var(--line);padding-top:6px;">
+      <b>80/20 Portfolio Rule:</b> Both sleeves track completely segregated BTC/USDT ledgers (one sleeve never sells the other's BTC) using pure closed Binance Spot OHLCV only. Rebalance back to 80/20 quarterly (Jan 1, Apr 1, Jul 1, Oct 1 · 00:00 UTC) only if drift exceeds <b>±3%</b> ([77%, 83%]).
+    </p>
   `;
 }
 
