@@ -315,74 +315,86 @@ def _eval_lsce(m: dict[str, Any], lower: dict[str, Any] | None, upper: dict[str,
     fund_dec = float(m["funding_rate_decimal"])
 
     if lower and (l_p * 0.975 <= wick_lo <= l_p * 1.002) and (l_p < cur_p <= l_p * 1.015) and cvd >= 1.05 and depth >= 0.50:
+        msg = f"Modelled lower shelf (${l_p:,.0f}) swept (3H wick ${wick_lo:,.0f}) & reclaimed with spot buying; Loop A (USDT -> BTC) condition observed."
         return {
-            "status": "SWEEP_AND_RECLAIM_CONFIRMED",
+            "status": "SWEEP_AND_RECLAIM_OBSERVED",
             "side": "LOWER",
-            "cluster_tested": f"Lower Longs (${l_p:,.0f})",
+            "cluster_tested": f"Modelled Lower Longs (${l_p:,.0f})",
             "sweep_depth_pct": round(((cur_p - l_p) / cur_p) * 100.0, 2),
             "reclaim_level": round(l_p, 2),
             "spot_absorption": f"Strong Bid Absorption (CVD {cvd:.2f}, Depth {depth:.2f})",
-            "action_verdict": f"Lower long shelf (${l_p:,.0f}) swept (3H wick ${wick_lo:,.0f}) & reclaimed with spot buying. Loop A (USDT -> BTC) confirmed.",
+            "observation": msg,
+            "action_verdict": msg,
         }
 
     u_ref = u_p if (upper and wick_hi >= u_p * 0.998) else float(m["swing_high_4h"])
     if upper and u_ref > 0 and (u_ref * 0.998 <= wick_hi <= u_ref * 1.025) and (u_ref * 0.985 <= cur_p < u_ref) and (cvd < 1.08 or depth < 0.75 or fund_dec >= 0.0001):
+        msg = f"Modelled upper liquidity (${u_ref:,.0f}) swept (wick ${wick_hi:,.0f}) & rejected; Loop B (BTC -> USDT) condition observed."
         return {
-            "status": "UPPER_SWEEP_REJECTION_CONFIRMED",
+            "status": "UPPER_SWEEP_REJECTION_OBSERVED",
             "side": "UPPER",
-            "cluster_tested": f"Upper Shorts (${u_ref:,.0f})",
+            "cluster_tested": f"Modelled Upper Shorts (${u_ref:,.0f})",
             "sweep_depth_pct": round(((wick_hi - u_ref) / cur_p) * 100.0, 2),
             "reclaim_level": round(u_ref, 2),
             "spot_absorption": f"Upper Rejection (CVD {cvd:.2f}, Depth {depth:.2f})",
-            "action_verdict": f"Upper short liquidity (${u_ref:,.0f}) swept (wick ${wick_hi:,.0f}) & rejected. Loop B (BTC -> USDT) active.",
+            "observation": msg,
+            "action_verdict": msg,
         }
 
     if lower:
         dist_l = ((cur_p - l_p) / cur_p) * 100.0
         if abs(cur_p - l_p) / cur_p <= 0.002 or (l_p * 0.990 <= cur_p < l_p):
+            msg = f"Testing modelled ${l_p:,.0f} lower shelf; reclaim > ${l_p:,.0f} + CVD >= 1.05 not yet observed."
             return {
                 "status": "SWEEP_IN_PROGRESS",
                 "side": "LOWER",
-                "cluster_tested": f"Lower Longs (${l_p:,.0f})",
+                "cluster_tested": f"Modelled Lower Longs (${l_p:,.0f})",
                 "sweep_depth_pct": round(dist_l, 2),
                 "reclaim_level": round(l_p, 2),
                 "spot_absorption": f"Testing (CVD {cvd:.2f}, Depth {depth:.2f})",
-                "action_verdict": f"Testing/piercing ${l_p:,.0f} lower shelf. Wait for reclaim > ${l_p:,.0f} + CVD >= 1.05 before firing Loop A.",
+                "observation": msg,
+                "action_verdict": msg,
             }
         if cur_p < l_p * 0.990 or (cur_p < float(m["swing_low_4h"]) and depth < 0.35):
+            msg = f"Modelled lower shelf (${l_p:,.0f}) broke below support; neutral standby observed (thin depth)."
             return {
                 "status": "SWEEP_FAILED_BREAKDOWN",
                 "side": "LOWER",
-                "cluster_tested": f"Lower Longs (${l_p:,.0f})",
+                "cluster_tested": f"Modelled Lower Longs (${l_p:,.0f})",
                 "sweep_depth_pct": round(dist_l, 2),
                 "reclaim_level": round(float(m["swing_low_4h"]), 2),
                 "spot_absorption": f"Thin Bids (Depth {depth:.2f})",
-                "action_verdict": f"Lower shelf (${l_p:,.0f}) broke down. Hold 10% USDT dry; zero forced stop-loss on 10% BTC inventory.",
+                "observation": msg,
+                "action_verdict": msg,
             }
 
     if upper:
         dist_u = ((cur_p - u_p) / cur_p) * 100.0
         if abs(u_p - cur_p) / cur_p <= 0.002 or (u_p < cur_p <= u_p * 1.010):
+            msg = f"Probing modelled upper short pool (${u_p:,.0f}); Loop B (BTC -> USDT) watch zone."
             return {
                 "status": "UPPER_SWEEP_IN_PROGRESS",
                 "side": "UPPER",
-                "cluster_tested": f"Upper Shorts (${u_p:,.0f})",
+                "cluster_tested": f"Modelled Upper Shorts (${u_p:,.0f})",
                 "sweep_depth_pct": round(dist_u, 2),
                 "reclaim_level": round(u_p, 2),
                 "spot_absorption": f"Testing Ceiling (CVD {cvd:.2f}, Depth {depth:.2f})",
-                "action_verdict": f"Probing upper short pool (${u_p:,.0f}). Prepare Loop B (BTC -> USDT) into rejection.",
+                "observation": msg,
+                "action_verdict": msg,
             }
 
     dist_l_pct = ((cur_p - l_p) / cur_p) * 100.0
     dist_u_pct = ((u_p - cur_p) / cur_p) * 100.0
+    msg = f"Spot sits +{dist_l_pct:.2f}% above modelled lower pool (${l_p:,.0f}) and -{dist_u_pct:.2f}% below modelled upper pool (${u_p:,.0f}); neutral standby."
     return {
         "status": "UNTESTED",
         "side": "NONE",
-        "cluster_tested": f"Lower ${l_p:,.0f} | Upper ${u_p:,.0f}",
+        "cluster_tested": f"Modelled Lower ${l_p:,.0f} | Upper ${u_p:,.0f}",
         "sweep_depth_pct": round(dist_l_pct, 2),
         "reclaim_level": round(l_p, 2),
         "spot_absorption": "Balanced / Mid-Range",
-        "action_verdict": f"Spot sits +{dist_l_pct:.2f}% above lower pool (${l_p:,.0f}) and -{dist_u_pct:.2f}% below upper pool (${u_p:,.0f}). Hold both sleeves.",
+        "observation": msg,
+        "action_verdict": msg,
     }
 
 
@@ -524,12 +536,12 @@ def _classify_5_regimes(m: dict[str, Any], lsce: dict[str, Any]) -> dict[str, An
         m1.append(f"Funding & OI controlled (Fund {fund * 100:.3f}%, OI24h {oi24h:+.1f}%)")
     if s_vol >= 1.0:
         m1.append(f"Spot volume confirmed ({s_vol:.2f}x 20D baseline)")
-    if lsce_st == "UPPER_SWEEP_REJECTION_CONFIRMED":
-        s1, sig1, rot1, act1, pb1 = 0.50, "LOOP B: BTC -> USDT", "BTC -> USDT", "Loop B: Harvest 50% of 10% BTC Sleeve into Upper Sweep", "Spot Expansion Exhaustion -> Loop B Trim (0.50x)"
-    elif lsce_st == "SWEEP_AND_RECLAIM_CONFIRMED" or p <= d_vwap * 1.004:
-        s1, sig1, rot1, act1, pb1 = 0.75, "LOOP A: USDT -> BTC", "USDT -> BTC", "Loop A: Deploy 75% of 10% USDT Sleeve on VWAP Pullback", "Spot-Led Pullback -> Loop A Accumulate (0.75x)"
+    if lsce_st == "UPPER_SWEEP_REJECTION_OBSERVED":
+        s1, sig1, rot1, act1, pb1 = 0.50, "LOOP B: BTC -> USDT", "BTC -> USDT", "Modelled Loop B State (0.50x): Upper sweep exhaustion context", "Spot Expansion Exhaustion -> Loop B Regime Context (0.50x)"
+    elif lsce_st == "SWEEP_AND_RECLAIM_OBSERVED" or p <= d_vwap * 1.004:
+        s1, sig1, rot1, act1, pb1 = 0.75, "LOOP A: USDT -> BTC", "USDT -> BTC", "Modelled Loop A State (0.75x): VWAP pullback context", "Spot-Led Pullback -> Loop A Regime Context (0.75x)"
     else:
-        s1, sig1, rot1, act1, pb1 = 0.0, "HOLD BOTH SLEEVES", "Hold Both Sleeves", "Hold Both Sleeves (Zero Upside Stop-Buy)", "Ride 10% BTC Sleeve; Keep 10% USDT Dry"
+        s1, sig1, rot1, act1, pb1 = 0.0, "HOLD BOTH SLEEVES", "Hold Both Sleeves", "Neutral Standby (0.00x · Zero Chase State)", "Passive Sandbox Context: 10% BTC + 10% USDT"
     c1 = {"regime_id": "SPOT_LED_EXPANSION", "name": "Spot-Led Expansion", "priority": 4, "matched": m1, "matches_count": len(m1), "sizing": s1, "dibse": sig1, "rotation": rot1, "action": act1, "playbook": pb1, "suitability": "Trend Environment (Zero Chase Rule)", "diagnosis": "Genuine spot demand supporting upside"}
 
     # 2. Leveraged / Fragile Upside
@@ -542,7 +554,7 @@ def _classify_5_regimes(m: dict[str, Any], lsce: dict[str, Any]) -> dict[str, An
         m2.append(f"Funding elevated ({fund * 100:.3f}%) or basis wide ({basis:+.1f}%)")
     if s_vol < 1.0:
         m2.append(f"Spot volume failing to confirm ({s_vol:.2f}x 20D baseline)")
-    c2 = {"regime_id": "LEVERAGED_FRAGILE_UPSIDE", "name": "Leveraged / Fragile Upside", "priority": 2, "matched": m2, "matches_count": len(m2), "sizing": 1.0, "dibse": "LOOP B: BTC -> USDT", "rotation": "BTC -> USDT", "action": "Loop B: Sell 10% BTC Sleeve into Squeeze", "playbook": "Loop B: Rotate 10% BTC Sleeve -> USDT", "suitability": "Loop B Distribution Harvest Zone", "diagnosis": "Upside driven mainly by futures leverage / crowding"}
+    c2 = {"regime_id": "LEVERAGED_FRAGILE_UPSIDE", "name": "Leveraged / Fragile Upside", "priority": 2, "matched": m2, "matches_count": len(m2), "sizing": 1.0, "dibse": "LOOP B: BTC -> USDT", "rotation": "BTC -> USDT", "action": "Modelled Loop B State (1.00x): Leveraged squeeze risk zone", "playbook": "Modelled Loop B Context: Futures-led crowding", "suitability": "Loop B Crowding Warning Zone", "diagnosis": "Upside driven mainly by futures leverage / crowding"}
 
     # 3. Range / Liquidation Magnet
     m3 = []
@@ -553,14 +565,14 @@ def _classify_5_regimes(m: dict[str, Any], lsce: dict[str, Any]) -> dict[str, An
         m3.append(f"Spot CVD balanced inside range (Ratio {cvd:.2f})")
     if (ls_avail and ls >= 1.6) or fund >= 0.00008 or fund <= -0.00004:
         m3.append(f"Positioning skewed (L/S {ls:.2f}, Fund {fund * 100:.3f}%)" if ls_avail else f"Funding skewed ({fund * 100:.3f}%)")
-    m3.append("Symmetrical liquidation pools active above & below spot")
-    if lsce_st == "SWEEP_AND_RECLAIM_CONFIRMED":
-        s3, sig3, rot3, act3, pb3 = 0.75, "LOOP A: USDT -> BTC", "USDT -> BTC", "Loop A: Buy Spot (75% of 10% USDT Sleeve)", "Range Washout Reclaim -> Loop A Entry"
-    elif lsce_st == "UPPER_SWEEP_REJECTION_CONFIRMED" or p >= sh4 * 0.992:
-        s3, sig3, rot3, act3, pb3 = 0.75, "LOOP B: BTC -> USDT", "BTC -> USDT", "Loop B: Sell Spot (75% of 10% BTC Sleeve)", "Range Ceiling / Upper Squeeze -> Loop B Harvest"
+    m3.append("Modelled symmetrical liquidation pools active above & below spot")
+    if lsce_st == "SWEEP_AND_RECLAIM_OBSERVED":
+        s3, sig3, rot3, act3, pb3 = 0.75, "LOOP A: USDT -> BTC", "USDT -> BTC", "Modelled Loop A State (0.75x): Lower washout reclaim zone", "Range Washout Reclaim -> Loop A Context"
+    elif lsce_st == "UPPER_SWEEP_REJECTION_OBSERVED" or p >= sh4 * 0.992:
+        s3, sig3, rot3, act3, pb3 = 0.75, "LOOP B: BTC -> USDT", "BTC -> USDT", "Modelled Loop B State (0.75x): Range upper ceiling zone", "Range Ceiling / Upper Squeeze -> Loop B Context"
     else:
-        s3, sig3, rot3, act3, pb3 = 0.0, "HOLD BOTH SLEEVES", "Hold Both Sleeves", "Hold Both Sleeves (Wait Range Edge)", "Dual-Sleeve Standby: 10% USDT + 10% BTC"
-    c3 = {"regime_id": "RANGE_LIQUIDATION_MAGNET", "name": "Range / Liquidation Magnet", "priority": 3, "matched": m3, "matches_count": len(m3), "sizing": s3, "dibse": sig3, "rotation": rot3, "action": act3, "playbook": pb3, "suitability": "Core Bidirectional DIBSE Habitat", "diagnosis": "Defined 4H channel with liquidation clusters on both edges"}
+        s3, sig3, rot3, act3, pb3 = 0.0, "HOLD BOTH SLEEVES", "Hold Both Sleeves", "Neutral Standby (0.00x · Mid-Range)", "Dual-Sleeve Standby: 10% USDT + 10% BTC"
+    c3 = {"regime_id": "RANGE_LIQUIDATION_MAGNET", "name": "Range / Liquidation Magnet", "priority": 3, "matched": m3, "matches_count": len(m3), "sizing": s3, "dibse": sig3, "rotation": rot3, "action": act3, "playbook": pb3, "suitability": "Core Bidirectional DIBSE Habitat", "diagnosis": "Defined 4H channel with modelled liquidation clusters on both edges"}
 
     # 4. Cascade / Forced Deleveraging
     m4 = []
@@ -572,7 +584,7 @@ def _classify_5_regimes(m: dict[str, Any], lsce: dict[str, Any]) -> dict[str, An
         m4.append(f"Funding deeply negative ({fund * 100:.3f}%)")
     if basis < 1.0:
         m4.append(f"Basis compressed / backwardation ({basis:+.2f}%)")
-    c4 = {"regime_id": "CASCADE_FORCED_DELEVERAGING", "name": "Cascade / Forced Deleveraging", "priority": 1, "matched": m4, "matches_count": len(m4), "sizing": 0.0, "dibse": "HOLD BOTH SLEEVES", "rotation": "Hold Both Sleeves", "action": "Hold Both Sleeves (Wait Exhaustion)", "playbook": "Pause Loop A Entries; Hold Existing Inventory", "suitability": "Waterfall Protection Mode", "diagnosis": "Forced derivatives unwind in progress"}
+    c4 = {"regime_id": "CASCADE_FORCED_DELEVERAGING", "name": "Cascade / Forced Deleveraging", "priority": 1, "matched": m4, "matches_count": len(m4), "sizing": 0.0, "dibse": "HOLD BOTH SLEEVES", "rotation": "Hold Both Sleeves", "action": "Neutral Standby (0.00x · Cascade Protection)", "playbook": "Cascade Risk State; Loop A Dormant", "suitability": "Waterfall Protection Mode", "diagnosis": "Forced derivatives unwind in progress"}
 
     # 5. Distribution / Bear Continuation
     m5 = []
@@ -584,15 +596,15 @@ def _classify_5_regimes(m: dict[str, Any], lsce: dict[str, Any]) -> dict[str, An
         m5.append(f"Spot volume depressed ({s_vol:.2f}x 20D baseline)")
     if fund >= 0.00002 or basis < 4.0:
         m5.append(f"Funding {fund * 100:+.4f}% / compressed basis ({basis:+.2f}%)")
-    if lsce_st == "UPPER_SWEEP_REJECTION_CONFIRMED" or p >= d_vwap * 0.998:
-        s5, sig5, rot5, act5, pb5 = 0.50, "LOOP B: BTC -> USDT", "BTC -> USDT", "Loop B: Trim 50% of 10% BTC Sleeve into Bounce", "Distribution Bounce -> Loop B Trim (0.50x)"
+    if lsce_st == "UPPER_SWEEP_REJECTION_OBSERVED" or p >= d_vwap * 0.998:
+        s5, sig5, rot5, act5, pb5 = 0.50, "LOOP B: BTC -> USDT", "BTC -> USDT", "Modelled Loop B State (0.50x): Distribution bounce zone", "Distribution Bounce -> Loop B Context (0.50x)"
     else:
-        s5, sig5, rot5, act5, pb5 = 0.0, "HOLD BOTH SLEEVES", "Hold Both Sleeves", "Hold Both Sleeves (Protect 10% USDT Sleeve)", "Guard 10% USDT; Hold BTC Inventory (No Stop-Loss)"
-    c5 = {"regime_id": "DISTRIBUTION_BEAR_CONTINUATION", "name": "Distribution / Bear Continuation", "priority": 2, "matched": m5, "matches_count": len(m5), "sizing": s5, "dibse": sig5, "rotation": rot5, "action": act5, "playbook": pb5, "suitability": "Loop B Bounce Harvest / Loop A Patient", "diagnosis": "Weak spot demand / active overhead distribution"}
+        s5, sig5, rot5, act5, pb5 = 0.0, "HOLD BOTH SLEEVES", "Hold Both Sleeves", "Neutral Standby (0.00x · Defensive State)", "Defensive Regime: 10% USDT + 10% BTC Standby"
+    c5 = {"regime_id": "DISTRIBUTION_BEAR_CONTINUATION", "name": "Distribution / Bear Continuation", "priority": 2, "matched": m5, "matches_count": len(m5), "sizing": s5, "dibse": sig5, "rotation": rot5, "action": act5, "playbook": pb5, "suitability": "Loop B Overhead / Loop A Patient", "diagnosis": "Weak spot demand / active overhead distribution"}
 
     candidates = [c1, c2, c3, c4, c5]
     valid = [c for c in candidates if c["matches_count"] >= 3]
-    has_edge = lsce_st in ("SWEEP_AND_RECLAIM_CONFIRMED", "UPPER_SWEEP_REJECTION_CONFIRMED")
+    has_edge = lsce_st in ("SWEEP_AND_RECLAIM_OBSERVED", "UPPER_SWEEP_REJECTION_OBSERVED")
     is_conflicted = p < d_vwap and p < w_vwap and basis < 0.0 and depth < 0.35 and not has_edge
 
     if is_conflicted and any(c["regime_id"] == "RANGE_LIQUIDATION_MAGNET" for c in valid):
@@ -607,15 +619,15 @@ def _classify_5_regimes(m: dict[str, Any], lsce: dict[str, Any]) -> dict[str, An
             "sizing": 0.0,
             "dibse": "HOLD BOTH SLEEVES",
             "rotation": "Hold Both Sleeves",
-            "action": "Hold Both Sleeves (Conflict Override)",
-            "playbook": "Hold Both Sleeves (10% USDT + 10% BTC)",
+            "action": "Neutral Standby (0.00x · Conflict Override)",
+            "playbook": "Passive Standby (10% USDT + 10% BTC)",
             "suitability": "Neutral Dual-Sleeve Standby",
             "diagnosis": "Conflicted sub-VWAP & negative-basis structure",
             "majority_score": "Conflict Override (Sub-VWAP + Negative Basis)",
         }
     elif valid:
         valid.sort(key=lambda x: (x["priority"], -x["matches_count"]))
-        best = {**valid[0], "majority_score": f"{valid[0]['matches_count']}/4 observations confirmed"}
+        best = {**valid[0], "majority_score": f"{valid[0]['matches_count']}/4 observations matched"}
     else:
         top_c = max(candidates, key=lambda x: x["matches_count"])
         best = {
@@ -623,14 +635,14 @@ def _classify_5_regimes(m: dict[str, Any], lsce: dict[str, Any]) -> dict[str, An
             "name": "Transition / Mixed",
             "matched": [
                 f"Top candidate ({top_c['name']}) scored {top_c['matches_count']}/4 (< 3 required)",
-                f"Spot ${p:,.2f} vs Daily VWAP ${d_vwap:,.2f} | CVD {cvd:.2f} | Basis {basis:+.2f}%",
+                f"Spot ${p:,.2f} vs Daily VWAP ${d_vwap:,.0f} | CVD {cvd:.2f} | Basis {basis:+.2f}%",
             ],
             "matches_count": top_c["matches_count"],
             "sizing": 0.0,
             "dibse": "HOLD BOTH SLEEVES",
             "rotation": "Hold Both Sleeves",
-            "action": "Hold Both Sleeves (Wait Edge)",
-            "playbook": "Hold Both Sleeves (10% USDT + 10% BTC)",
+            "action": "Neutral Standby (0.00x · Mixed Transition)",
+            "playbook": "Passive Standby (10% USDT + 10% BTC)",
             "suitability": "Neutral Dual-Sleeve Standby",
             "diagnosis": "Signals mixed or transitioning (awaiting Loop A/B edge)",
             "majority_score": f"Mixed ({top_c['matches_count']}/4 max)",
@@ -663,7 +675,7 @@ def compute_spot_magnet(
         return {
             "data_quality": "DATA_UNAVAILABLE",
             "metrics": None,
-            "lsce": {"status": "UNAVAILABLE", "side": "NONE", "action_verdict": "Spot taker / candle telemetry unavailable."},
+            "lsce": {"status": "UNAVAILABLE", "side": "NONE", "observation": "Spot taker / candle telemetry unavailable.", "action_verdict": "Spot taker / candle telemetry unavailable."},
             "magnets": None,
             "regime_diagnosis": {
                 "regime_id": "DATA_INCOMPLETE",
@@ -671,13 +683,13 @@ def compute_spot_magnet(
                 "majority_score": "0/4",
                 "matched_criteria": [],
                 "all_5_candidates": [],
-                "plain_english_verdict": "Telemetry incomplete. Holding 10% USDT + 10% BTC sleeves passively.",
+                "plain_english_verdict": "Telemetry incomplete; neutral passive standby state.",
             },
             "dibse": {
                 "dibse_signal": "HOLD BOTH SLEEVES",
                 "rotation": "Hold Both Sleeves",
                 "sizing_factor": 0.0,
-                "actionable_trade_instruction": "DATA UNAVAILABLE — Hold both 10% USDT & 10% BTC sleeves passively.",
+                "actionable_trade_instruction": "DATA UNAVAILABLE — Neutral passive standby (10% USDT & 10% BTC sleeves balanced).",
             },
         }
 
@@ -696,23 +708,23 @@ def compute_spot_magnet(
         tgt_btc = round(10.0 + eq_pct, 1)
         tgt_usdt = round(10.0 - eq_pct, 1)
         deploy_pct = round(sizing * 100.0, 1)
-        instr = f"LOOP A (USDT -> BTC): Deploy {deploy_pct:.0f}% of 10% USDT Sleeve ({eq_pct:.1f}% equity) on reclaim; exit > P_buy."
+        instr = f"LOOP A STATE (USDT -> BTC · {deploy_pct:.0f}% weight / {eq_pct:.1f}% eq): Modelled lower washout / VWAP reclaim context (diagnostic state only; exit ref > P_buy)."
     elif sig_str == "LOOP B: BTC -> USDT" and sizing > 0:
         eq_pct = round(sizing * 10.0, 1)
         tgt_btc = round(10.0 - eq_pct, 1)
         tgt_usdt = round(10.0 + eq_pct, 1)
         deploy_pct = round(sizing * 100.0, 1)
-        instr = f"LOOP B (BTC -> USDT): Rotate {deploy_pct:.0f}% of 10% BTC Sleeve ({eq_pct:.1f}% equity) into USDT; rebuy < P_sell."
+        instr = f"LOOP B STATE (BTC -> USDT · {deploy_pct:.0f}% weight / {eq_pct:.1f}% eq): Modelled upper squeeze / resistance context (diagnostic state only; rebuy ref < P_sell)."
     else:
         tgt_btc, tgt_usdt, deploy_pct = 10.0, 10.0, 0.0
-        instr = "HOLD BOTH SLEEVES: Keep permanent 10% USDT + 10% BTC Sandbox balanced (80% Core untouched) until Loop A/B confirms."
+        instr = "NEUTRAL STANDBY (0.00x): 10% USDT + 10% BTC sandbox balanced; neither Loop A nor Loop B modelled state active."
 
     l_entry = float(lower["price_level"]) if lower else float(m["swing_low_4h"])
     u_entry = float(upper["price_level"]) if upper else float(m["swing_high_4h"])
-    loop_a_zone = f"Washout ${min(l_entry, m['swing_low_4h']):,.0f}–${max(l_entry, m['swing_low_4h']):,.0f} -> Profit Exit > ${max(m['daily_vwap'], m['swing_high_4h']):,.0f}"
-    loop_b_zone = f"Squeeze ${min(u_entry, m['swing_high_4h']):,.0f}–${max(u_entry, m['swing_high_4h']):,.0f} -> Rebuy < ${min(m['daily_vwap'], m['swing_low_4h']):,.0f}"
+    loop_a_zone = f"Modelled Washout ${min(l_entry, m['swing_low_4h']):,.0f}–${max(l_entry, m['swing_low_4h']):,.0f} -> Ref Exit > ${max(m['daily_vwap'], m['swing_high_4h']):,.0f}"
+    loop_b_zone = f"Modelled Squeeze ${min(u_entry, m['swing_high_4h']):,.0f}–${max(u_entry, m['swing_high_4h']):,.0f} -> Ref Rebuy < ${min(m['daily_vwap'], m['swing_low_4h']):,.0f}"
 
-    verdict = f"[{best['name']}] {best['diagnosis']}. {instr}"
+    verdict = f"[{best['name']}] {best['diagnosis']}. Observational context only: {instr}"
     notes = f"{best['diagnosis']}. Rule Score: {best['majority_score']}. LSCE: {lsce['status']}. Dominant Magnet: {magnets['dominant_magnet_reason']}."
 
     return {

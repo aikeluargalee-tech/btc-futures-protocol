@@ -1,7 +1,20 @@
-"""Project G — 8-Cell Funding & OI Positioning Decision Matrix (Context Only)."""
+"""Project G — 8-Cell Funding & OI Positioning Decision Matrix (Context Only).
+
+Source Provenance: Empirical 299 non-overlapping weekly BTCUSDT observations (2021-01-08 -> 2026-09-30)
+curated from `Project G Funding & Positioning Reference by Milo1` (cell n sum: 0+4+92+70+18+14+64+37 = 299).
+Static reference distribution table; live telemetry only selects which cell matches today's state.
+"""
 from __future__ import annotations
 
 from typing import Any
+
+SOURCE_REFERENCE: dict[str, Any] = {
+    "name": "Project G Funding & Positioning Reference by Milo1",
+    "window": "2021-01-08 to 2026-09-30",
+    "weekly_observations": 299,
+    "cell_counts": [0, 4, 92, 70, 18, 14, 64, 37],
+    "note": "Non-overlapping weekly forward 7d/14d return statistics; deterministic reference table only.",
+}
 
 # Empirical 299 non-overlapping weekly observations (2021-01-08 -> 2026-09-30), forward 7d / 14d returns.
 PROJECT_G_MATRIX: list[dict[str, Any]] = [

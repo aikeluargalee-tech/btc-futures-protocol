@@ -404,7 +404,7 @@ function renderSpotTab() {
     </div>
   `;
 
-  const lsceCls = (lsce.status || "").includes("CONFIRMED") ? (lsce.side === "LOWER" ? "up" : "dn") : (lsce.status || "").includes("PROGRESS") ? "warn" : "";
+  const lsceCls = ((lsce.status || "").includes("OBSERVED") || (lsce.status || "").includes("CONFIRMED")) ? (lsce.side === "LOWER" ? "up" : "dn") : (lsce.status || "").includes("PROGRESS") ? "warn" : "";
   const mf = mag.magnet_factors || {};
   $("spotLsceMagnetBox").innerHTML = `
     <h2>LSCE Bidirectional Sweep Gate &amp; 6-Factor Dominant Magnet</h2>
@@ -580,7 +580,7 @@ function renderRhymeTab() {
         <td>${pct(a.median_up_pct, 2)} / ${pct(a.median_down_pct, 2)}</td>
         <td><b>${num(a.tail_skew_ratio, 2)}x</b></td>
         <td>${pct(b.median_pct, 2)} (${num(b.up_share, 1)}% up)</td>
-        <td class="${liftCls}"><b>${(e.up_share_lift_pts ?? 0) >= 0 ? "+" : ""}${num(e.up_share_lift_pts, 1)} pts</b> (${pct(e.median_lift_pct, 2)})</td>
+        <td class="${liftCls}"><b>${(e.up_share_lift_pts ?? 0) >= 0 ? "+" : ""}${num(e.up_share_lift_pts, 1)} pts</b>${e.lift_se_pts != null ? ` <span class="mut">(±${num(e.lift_se_pts, 1)} SE)</span>` : ""} (${pct(e.median_lift_pct, 2)})</td>
       </tr>`;
   }).join("");
 
@@ -1341,14 +1341,15 @@ function activateTab(tabId) {
 }
 
 const SPOT_SHIELD_AI_PROMPT_TEMPLATE = `### ROLE & OBJECTIVE
-Act as a Systematic Quantitative Spot Portfolio Manager reviewing telemetry from **Project F · Spot Shield (80/20 Dual-Sleeve BTCUSDT)**.
-STRICT GUARDRAIL: This is a **strictly causal, closed-bar, unleveraged Spot-Only (BTC <-> USDT)** system using Binance OHLCV candles exclusively (zero leverage, zero shorting, separate capital bucket from DIBSE). Never recommend overriding frozen parameters.
+Act as a Systematic Quantitative Spot Portfolio Manager auditing telemetry from **Project F · Spot Shield (80/20 Dual-Sleeve BTCUSDT)**.
+STRICT GUARDRAIL: This is a **strictly causal, closed-bar, unleveraged Spot-Only (BTC <-> USDT)** system using Binance OHLCV candles exclusively (zero leverage, zero shorting, separate capital bucket from DIBSE). Pre-computed posture/action verdict labels are stripped — derive your assessment strictly from raw indicators and conditions, and note that \`insufficient data\` is a valid conclusion.
 
-Provide a crisp 4-part review strictly from the JSON payload:
-1. **Portfolio Allocation & Bear Shield Verdict:** Summarize \`portfolio.posture_label\`, \`target_btc_pct\` / \`target_usdt_pct\`, and whether the \`120D EMA\` macro shield is open or protecting in USDT.
-2. **Sleeve #1 (80% · 4H Rolling VWAP Shield):** Audit distance to \`macro_120d_ema\` and \`upper_band\` (\`RVWAP90 + 0.5×ATR14\`), \`vwap_slope_12\`, and how much rallies must clear before a \`BUY BTC\` trigger fires.
-3. **Sleeve #2 (20% · 1D TTM Squeeze Experimental):** Audit \`squeeze_on\`, \`squeeze_streak_days\`, \`bb_kc_width_ratio\`, \`mom_ols\` vs \`prev_mom_ols\`, and distance to \`kc_mid_ema20\` / \`sma_21_exit\`.
-4. **Psychology & Rebalance Discipline:** Note current \`days_in_state\`, next Quarterly Rebalance date, and keep realistic expectations (\`~27% WR\` / up to 9 consecutive losses on Sleeve #1; \`18-trade\` cap on Sleeve #2).
+Provide a crisp 5-part review strictly from the JSON payload:
+1. **Freshness & Null Audit:** Check \`updated_at_utc\` age (flag stale if \`> 65m\`) and list every \`null\` / \`unavailable\` field and what it prevents concluding.
+2. **Portfolio Allocation & Bear Shield Audit:** Verify from raw \`sleeve1.indicators\` and \`sleeve2.indicators\` whether \`120D EMA\` macro shield is open or holding USDT, and audit \`target_btc_pct\` / \`target_usdt_pct\`.
+3. **Sleeve #1 (80% · 4H Rolling VWAP Shield):** Audit distance to \`macro_120d_ema\` and \`upper_band\` (\`RVWAP90 + 0.5×ATR14\`), \`vwap_slope_12\`, and how much rallies must clear before entry criteria align.
+4. **Sleeve #2 (20% · 1D TTM Squeeze Experimental):** Audit \`squeeze_on\`, \`squeeze_streak_days\`, \`bb_kc_width_ratio\`, \`mom_ols\` vs \`prev_mom_ols\`, and distance to \`kc_mid_ema20\` / \`sma_21_exit\`.
+5. **Discipline & Falsification Condition:** Note \`days_in_state\`, next Quarterly Rebalance date, realistic stats (\`~27% WR\` / up to 9 consecutive losses on Sleeve #1; \`18-trade\` cap on Sleeve #2), and state the exact price/close condition that falsifies the current regime.
 
 ### LIVE SPOT SHIELD (80/20) TELEMETRY (JSON)
 \`\`\`json
@@ -1357,14 +1358,15 @@ Provide a crisp 4-part review strictly from the JSON payload:
 
 const NEWS_MACRO_AI_PROMPT_TEMPLATE = `### ROLE & OBJECTIVE
 Act as an Institutional Cross-Asset Macro & Bitcoin Catalyst Strategist auditing the live **News & Macro Packet**.
-STRICT GUARDRAIL: Separate hard macro/flow catalysts from media noise using ONLY the telemetry provided below. Never invent prices, economic prints, or headlines.
+STRICT GUARDRAIL: Separate hard macro/flow catalysts from media noise using ONLY the telemetry provided below. Never invent prices, economic prints, or headlines. Audit and independently verify any summary status labels (\`macro_bias.status\`, driver tones) directly from raw \`cross_asset\` and \`crypto_pulse\` values — explicitly state where you disagree, and conclude \`insufficient data\` if feeds are stale or sparse.
 
-Deliver a concise 5-part briefing:
-1. **Macro Risk Backdrop (\`macro_bias\` & \`cross_asset\`):** Assess \`DXY\`, \`US10Y\`, \`VIX\`, \`SPX\`, and \`NDX\` alongside \`macro_bias.status\` (\`RISK_ON\` / \`MIXED\` / \`RISK_OFF\`). Is macro acting as a tailwind or headwind for Bitcoin?
-2. **Event Risk & Blackout Audit (\`calendar_usd\`):** Highlight the next HIGH-impact USD release (forecast vs. previous, countdown), whether \`blackout_active\` is triggered, and expected volatility timing.
-3. **Crypto Capital Flows (\`crypto_pulse\`):** Audit CMC Global Metrics (\`btc_dominance_pct\`, \`total_market_cap_24h_pct\`), CMC Fear & Greed, Altcoin Season Index, CMC/Farside BTC & ETH Spot ETF flows, 7D stablecoin liquidity, and Deribit DVOL.
-4. **Headline Catalyst Synthesis (\`headlines\`):** Group the top price-moving catalysts (ETF flows, Fed/rates, derivatives liquidations, regulation) and flag any conflicting narratives.
-5. **Tactical Desk Takeaway (<= 80 words):** Summarize whether macro catalysts argue for trend continuation, fade/mean-reversion, or waiting through an upcoming USD data release.
+Deliver a concise 6-part briefing:
+1. **Freshness & Null Audit:** Check \`updated_at_utc\` age (warn if \`> 65m\`) and list any \`null\` / missing fields and what they prevent concluding.
+2. **Macro Risk Backdrop (\`cross_asset\` vs \`macro_bias\`):** Independently assess \`DXY\`, \`US10Y\`, \`VIX\`, \`SPX\`, and \`NDX\` 1D/ROC10 moves and state whether you agree or disagree with \`macro_bias.status\`.
+3. **Event Risk & Blackout Audit (\`calendar_usd\`):** Highlight the next HIGH-impact USD release (forecast vs. previous, countdown), whether \`blackout_active\` is triggered, and expected volatility timing.
+4. **Crypto Capital Flows (\`crypto_pulse\`):** Audit CMC Global Metrics (\`btc_dominance_pct\`, \`total_market_cap_24h_pct\`), CMC Fear & Greed, Altcoin Season Index, CMC/Farside BTC & ETH Spot ETF flows, \`etf_flow_regime\`, 7D stablecoin liquidity, and Deribit DVOL.
+5. **Headline Catalyst Synthesis (\`headlines\`):** Group the top price-moving catalysts (ETF flows, Fed/rates, derivatives liquidations, regulation) and flag conflicting narratives.
+6. **Tactical Desk Takeaway & Falsification (<= 90 words):** Summarize whether macro catalysts argue for continuation, mean-reversion, waiting through USD releases, or \`insufficient data\`, and state what macro print or cross-asset break would falsify your view.
 
 ### LIVE NEWS & MACRO TELEMETRY (JSON)
 \`\`\`json
@@ -1373,13 +1375,13 @@ Deliver a concise 5-part briefing:
 
 const CORTEX_RHYME_AI_PROMPT_TEMPLATE = `### ROLE & OBJECTIVE
 Act as an Empirical Quantitative Microstructure Statistician auditing telemetry from **S2 CORTEX-RHYME v1.2.0 (MOD 63)**.
-STRICT GUARDRAIL: Publish ONLY observational historical conditioning statistics and tail-risk interpretation. **NEVER issue a trade directive, leverage size, or entry permission.**
+STRICT GUARDRAIL: Publish ONLY observational historical conditioning statistics and tail-risk interpretation. **NEVER issue a trade directive, leverage size, or entry permission.** Conclude \`insufficient data\` or \`pure noise\` when statistical separation fails.
 
 Evaluate the state-space payload strictly using these rules:
-1. **Freshness & Sample Quality Gate:** Check \`meta.as_of_utc\`, \`diagnostics.sample_quality\` (\`solid\` / \`moderate\` / \`thin\`), \`diagnostics.analogues_found\`, \`diagnostics.history_days\`, \`diagnostics.avg_vector_distance\`, and whether \`diagnostics.fallback_triggered\` promoted \`3D_DEEP_CARRY_VOL\`. If \`thin\`, lead with a clear warning that the sample is indicative only.
-2. **Baseline-Adjusted Horizons (+4h, +24h, +72h):** Compare \`after_similar_setups\` (\`median_pct\`, \`up_share\`) side-by-side against \`baseline_all_hours\` via \`edge_vs_baseline\` (\`up_share_lift_pts\`, \`median_lift_pct\`). Explicitly note if outcomes differ materially from random hours or look like noise.
+1. **Freshness, Nulls & Sample Quality Gate:** Check \`meta.as_of_utc\` age (warn if \`> 65m\`), list any \`null\`/\`UNKNOWN\` fields, verify \`diagnostics.sample_quality\` (\`solid\` / \`moderate\` / \`thin\`), \`diagnostics.analogues_found\`, \`diagnostics.total_archive_bars\`, \`diagnostics.history_days\`, \`diagnostics.avg_vector_distance\`, and \`diagnostics.fallback_triggered\`. If \`thin\` or \`UNKNOWN\` regime, lead with a clear warning.
+2. **Baseline-Adjusted Horizons (+4h, +24h, +72h):** Compare \`after_similar_setups\` (\`median_pct\`, \`up_share\`) side-by-side against \`baseline_all_hours\` via \`edge_vs_baseline\` (\`up_share_lift_pts\`, \`lift_se_pts\`, \`lift_z_score\`, \`median_lift_pct\`). Explicitly note if outcomes differ materially from random hours (\`|lift_z_score| >= 2.0\`) or look like sampling noise.
 3. **Payoff & Tail Asymmetry:** Contrast \`median_up_pct\` vs. \`median_down_pct\` and \`tail_skew_ratio\` to flag upside or downside fat-tail cliffs.
-4. **200D SMA Regime Context & 5D Vector:** Interpret \`current_state.raw_metrics\`, \`z_vector\`, live L2 skew, and whether conditioning inside \`current_state.regime_context.trend_regime\` aligns with or diverges from the full archive.
+4. **200D SMA Regime Context & Falsification:** Interpret \`current_state.raw_metrics\`, \`z_vector\`, \`patient_money_h\` (including \`carry_apr_pct\`), whether \`current_state.regime_context.trend_regime\` aligns with the archive, and what shift would falsify any historical skew.
 
 ### LIVE CORTEX-RHYME TELEMETRY (JSON)
 \`\`\`json
@@ -1387,15 +1389,16 @@ Evaluate the state-space payload strictly using these rules:
 \`\`\``;
 
 const SPOT_MAGNET_AI_PROMPT_TEMPLATE = `### ROLE & OBJECTIVE
-Act as an Institutional Quantitative Spot Bitcoin Strategist executing the **BTC Magnet Monitor (DIBSE Dual-Sleeve Protocol)**.
-Evaluate the raw unleveraged Spot telemetry packet below (Strict **1.0x Spot-Only**: zero margin, zero perpetual futures, zero forced stop-losses; rotating between a **10% USDT Sleeve** and a **10% BTC Sleeve** with **80% Untouched Core Reserve**).
+Act as an Institutional Quantitative Spot Bitcoin Strategist auditing **BTC Magnet Monitor (DIBSE Dual-Sleeve Protocol)**.
+Pre-computed DIBSE conclusions (\`dibse\`, \`lsce.action_verdict\`, \`regime_diagnosis\`) are intentionally stripped so you derive your own independent state classification strictly from raw metrics (Strict **1.0x Spot-Only**: 10% USDT Sleeve + 10% BTC Sleeve, 80% Core untouched). If feeds are stale or ambiguous, state \`HOLD BOTH SLEEVES / INSUFFICIENT DATA\`.
 
-Answer these 5 audit questions strictly from the JSON telemetry:
-1. **Regime & 4-Criteria Majority Audit:** Does price vs. Daily/Weekly VWAP, Spot CVD (Ratio + 7D/14D slopes), Coinbase Premium (bps), Funding/OI, and Book Depth support **Loop A (\`USDT -> BTC\`)**, **Loop B (\`BTC -> USDT\`)**, or **Hold Both Sleeves**?
-2. **Bidirectional LSCE & 10x–100x Magnet Pull:** Which liquidity cluster exerts dominant pull (\`Upper Short Pool\` vs. \`Lower Long Pool\` vs. CMC ±8% clusters), and is LSCE confirming absorption or warning of a fakeout?
-3. **Futures Trap Check:** Compare Spot CVD against Perp Funding/OI/Basis — is upside Spot-Led or Fragile Leverage?
-4. **DIBSE Execution Plan:** State exact Loop A accumulation zone (\`Exit > P_buy\`) or Loop B distribution zone (\`Rebuy < P_sell\`), sizing factor (\`0.0x–1.0x\` of the 10% sleeve), and what invalidates waiting.
-5. **Quick Mobile Summary (<= 80 words):** Crisp bullet summary for Spot inventory execution.
+Answer these 6 audit questions strictly from the raw JSON telemetry:
+1. **Freshness & Null Audit:** Check \`updated_at_utc\` age (flag stale if \`> 65m\`) and list every \`null\` / \`unavailable\` field and what it prevents concluding.
+2. **Independent Regime Derivation:** Evaluate \`metrics\` (price vs. Daily/Weekly VWAP, Spot CVD Ratio + 7D/14D slopes, Coinbase Premium bps, Funding/OI, and L2 Book Depth) — does raw evidence independently support **Loop A (\`USDT -> BTC\`)**, **Loop B (\`BTC -> USDT\`)**, or **Hold Both Sleeves**?
+3. **Modelled LSCE & 10x–100x Magnet Pull:** Inspect \`lsce\` (side, sweep_depth_pct, spot_absorption on modelled shelves) and \`magnets\` / \`cmc_liquidations\` — which liquidity cluster exerts dominant pull, and is sweep absorption genuine or fragile?
+4. **Futures Trap Check:** Compare Spot CVD against Perp Funding/OI/Basis — is upside Spot-Led or Fragile Leverage?
+5. **DIBSE Execution Zones & Falsification:** Propose Loop A accumulation or Loop B trim zones with sizing factor (\`0.0x–1.0x\` of the 10% sleeve), plus the exact invalidation condition that falsifies your read.
+6. **Quick Mobile Summary (<= 80 words):** Crisp bullet summary of your independent verdict.
 
 ### LIVE SPOT MAGNET TELEMETRY (JSON)
 \`\`\`json
@@ -1403,7 +1406,7 @@ Answer these 5 audit questions strictly from the JSON telemetry:
 \`\`\``;
 
 const MASTER_QUANT_PROMPT_TEMPLATE = `### ROLE & OBJECTIVE
-Act as an Institutional Quantitative Bitcoin Swing Strategist and Risk Officer. Below is a raw, unopinionated market telemetry packet from the **BTC Short-Term Futures Protocol (v4.1)**. Your job is to analyze the raw data independently from first principles (Auction Market Theory, 4H/1D price structure, 7D/30D Volume Profile, momentum exhaustion vs. impulse, multi-venue derivatives positioning, liquidation magnets, L2 order book imbalance, and institutional ETF/stablecoin flows) and issue an unbiased Long, Short, or Stand-Aside execution verdict.
+Act as an Institutional Quantitative Bitcoin Swing Strategist and Risk Officer. Below is a compact market telemetry packet from **BTC Short-Term Futures Protocol (v4.1)** with pre-computed DIBSE spot instructions stripped; some upstream diagnostic tags (e.g., \`state_of_regime\`, \`macro_bias_status\`) remain for audit comparison — treat those tags as hypotheses to audit and challenge from raw numbers, never repeat them blindly, and explicitly state everywhere you disagree.
 
 ---
 
@@ -1412,7 +1415,7 @@ Every trade idea you evaluate MUST strictly obey these guardrails:
 1. **Evaluation Cadence & Hold Window:** Signals are evaluated on **4H candle closes** with a **maximum hold window of 24 hours** (time-stop reduction at 8h, hard exit at 12–24h if stagnant).
 2. **Leverage & Capital Risk:**
    - Maximum Futures Leverage: **1:2 (2.0x Isolated)**.
-   - Maximum Risk per Trade: **0.40% of Account Equity** on weekdays; **0.20% (halved)** on weekends (\`is_weekend_utc: true\`).
+   - Maximum Risk per Trade: **0.40% of Account Equity** on weekdays; **0.20% (halved)** on weekends (\`is_weekend_utc: true\`). If \`is_weekend_utc\` is \`null\`, assume conservative weekday uncertainty and flag it.
    - Maximum Portfolio Heat: **<= 1.50%** across all open risk.
    - Maximum Concurrent Futures Positions: **1** (LONG or SHORT only).
 3. **Structural Geometry & R:R:**
@@ -1423,26 +1426,27 @@ Every trade idea you evaluate MUST strictly obey these guardrails:
    - **DO NOT** recommend market shorting into extreme oversold capitulation (\`rsi_4h < 25\`, \`rsi_d < 30\`, \`fng_value < 15\`, or price sitting directly on top of a primary 4H/1D support level where R:R to the next support is \`< 1.6:1\`).
    - **DO NOT** recommend market longing into extreme overbought exhaustion (\`rsi_4h > 75\`) or directly beneath a major resistance ceiling.
    - When trend and momentum are aligned in a strong impulse but price is overextended, your verdict MUST be **\`STAND ASIDE / CONDITIONAL LIMIT ORDER\`** at a mean-reversion structural pullback level (e.g., 4H EMA20, \`7D Tactical VPOC\`, or prior broken S/R).
-6. **Data Integrity & Live Price-Drift Guardrails (Travel Anti-Chase Rule):**
-   - If \`meta.completeness_score\` is \`< 0.80\`, flag degraded data integrity and require higher structural confluence before risking capital.
-   - Compare \`ticker.live_spot_price\` against the last 4H close (\`meta.price_drift_from_4h_close_atr\`). If live price has already drifted \`> 0.35 * ATR_4H\` away from the 4H close in the trade direction (or compressed R:R to Target 1 below \`1.6:1\`), downgrade any immediate market execution to **\`PLACE CONDITIONAL LIMIT ORDER\`** at a structural retest level.
-7. **Timezone Discipline:** All time-based evaluations MUST reference **UTC only**. Never assume local traveler time.
+6. **Data Integrity, Staleness & Null Guardrail (CRITICAL):**
+   - Check \`meta.updated_at_utc\` age right away; if older than **65 minutes** or \`meta.completeness_score < 0.80\`, flag degraded freshness/completeness and default to \`STAND ASIDE / INSUFFICIENT DATA\` unless live data confirms structure.
+   - List every \`null\`, \`unavailable\`, or \`UNKNOWN\` telemetry field and state explicitly what it prevents you from concluding.
+   - Compare \`ticker.live_spot_price\` against \`meta.price_drift_from_4h_close_atr\`. If live price drifted \`> 0.35 * ATR_4H\` in the trade direction, downgrade market execution to **\`PLACE CONDITIONAL LIMIT ORDER\`**.
+7. **Timezone & Falsification Discipline:** Evaluate strictly in **UTC** and explicitly state what price/close falsifies your thesis (including \`STAND ASIDE / INSUFFICIENT DATA\`).
 
 ---
 
 ### REQUIRED 5-STEP ANALYTICAL OUTPUT FORMAT
 
 #### 1. EXECUTIVE DIRECTIVE (3-Second Summary)
-- **Verdict:** \`[STAND ASIDE — WAIT]\` | \`[PLACE CONDITIONAL LIMIT ORDER]\` | \`[EXECUTE LONG/SHORT ON 4H CLOSE]\`
-- **Directional Bias:** \`BULLISH\` | \`BEARISH\` | \`NEUTRAL / RANGE-BOUND\` (State 1D structural bias vs. 4H tactical state).
+- **Verdict:** \`[STAND ASIDE — WAIT]\` | \`[INSUFFICIENT DATA]\` | \`[PLACE CONDITIONAL LIMIT ORDER]\` | \`[EXECUTE LONG/SHORT ON 4H CLOSE]\`
+- **Directional Bias:** \`BULLISH\` | \`BEARISH\` | \`NEUTRAL / RANGE-BOUND\` (State 1D structural bias vs. 4H tactical state, and note any disagreement with \`state_of_regime\`).
 - **Primary Rationale:** 2 concise sentences explaining *why* with concrete prices, RSI/ATR figures, and R:R math.
 
 #### 2. 5-PILLAR TELEMETRY AUDIT
-- **A. Price Structure, Kline Primitives & Volume Profile:** Analyze \`charts_ohlcv_last30\` (\`[ts, O, H, L, C, Vol]\`), EMA alignment (\`ema20_4h\`, \`ema50_4h\`, \`ema50_d\`, \`ema200_d\`), tactical **\`7D Tactical VPOC / VAH / VAL\`**, macro **\`30D VPOC / VAH / VAL\`**, Layer-1 **\`kline_patterns\`** (\`1H/4H/1D\` triggers & structural confluence), Layer-2 **\`cortex_11p.pattern_state_flags\`** (\`P01\`–\`P11\` symmetrical setups & Gate 1 POIs), and nearest swing highs/lows.
-- **B. Momentum, State of Regime & Volatility:** Evaluate \`state_of_regime\` (5-state \`R1\`–\`R5\` classification, \`volatility_modifier\`, \`flow_modifier\`, \`spot_taker_buy_ratio_24h\`), \`rsi_4h\`, \`rsi_d\`, \`roc6/12/20_4h_pct\`, \`atr_4h_usd\` (\`atr_4h_percentile\`), and \`dvol\`. Classify as **Compression**, **Early Expansion**, or **Late Climax / Exhaustion**.
-- **C. Multi-Venue Derivatives, CMC Liquidation Map & Microstructure:** Evaluate \`funding_rate_pct\` across OKX, Kraken Futures, Deribit, and Hyperliquid, \`oi_btc\` / \`venue_oi_btc\`, **\`derivatives.cmc_liquidations\`** (tactical ±8% dollar-weighted Long & Short liquidation magnet clusters, ±2%/±5% cumulative squeeze fuel, and realized 4H/24H long vs. short liquidation wipeouts in $M), **\`cortex_11p.microstructure_rulebook_3\`** (\`R3.1\` Spot vs Perp CVD divergence, \`R3.2\` 1H/4H BTC OI + funding timing, \`R3.3\` P-Shape FRVP, \`R3.4\` Anchored VWAP), **\`derivatives.liquidation_magnets\`**, and **\`derivatives.orderbook_1pct\`** (±1% bid/ask depth ratio & spread bps). Flag stop-hunt zones and whether a 4H long/short liquidation flush has already exhausted momentum.
-- **D. Institutional Flows & Macro Context:** Evaluate 5-day ETF flows (\`etf.sum5_usd_m\`), 7d stablecoin liquidity (\`stables.chg7d_pct\`), \`dxy\`, \`vix\`, Fear & Greed (\`fng_value\`), and session liquidity (\`session_name\`).
-- **E. Telemetry Integrity Check:** Verify \`meta.completeness_score\`, inspect \`fetch_errors\`, and check live spot drift (\`meta.price_drift_from_4h_close_atr\`).
+- **A. Price Structure, Kline Primitives & Volume Profile:** Analyze \`charts_ohlcv_last30\` (\`[ts, O, H, L, C, Vol]\`), EMA alignment (\`ema20_4h\`, \`ema50_4h\`, \`ema50_d\`, \`ema200_d\`), tactical **\`7D Tactical VPOC / VAH / VAL\`**, macro **\`30D VPOC / VAH / VAL\`**, Layer-1 **\`kline_patterns\`**, Layer-2 **\`cortex_11p.pattern_state_flags\`**, and nearest swing highs/lows.
+- **B. Momentum, State of Regime & Volatility:** Audit \`rsi_4h\`, \`rsi_d\`, \`roc6/12/20_4h_pct\`, \`atr_4h_usd\` (\`atr_4h_percentile\`), \`dvol\`, and \`derivatives.context_overlays.market_time_l\` against \`state_of_regime\` — state where raw indicators confirm or contradict the regime label.
+- **C. Multi-Venue Derivatives, CMC Liquidation Map & Microstructure:** Evaluate multi-venue \`funding_rate_pct\`, \`oi_btc\` / \`venue_oi_btc\`, **\`derivatives.cmc_liquidations\`**, **\`cortex_11p.microstructure_rulebook_3\`**, **\`derivatives.liquidation_magnets\`**, **\`derivatives.positioning_matrix_g\`**, **\`derivatives.context_overlays.patient_money_h\`**, and **\`derivatives.orderbook_1pct\`**.
+- **D. Institutional Flows & Macro Context:** Evaluate 5-day ETF flows (\`etf.sum5_usd_m\`), \`derivatives.context_overlays.etf_flow_regime\`, 7d stablecoin liquidity (\`stables.chg7d_pct\`), \`dxy\`, \`vix\`, Fear & Greed (\`fng_value\`), and session liquidity (\`session_name\`).
+- **E. Telemetry Integrity, Freshness & Null Inventory:** State exact age of \`meta.updated_at_utc\`, verify \`meta.completeness_score\`, list \`null\`/\`unavailable\`/\`UNKNOWN\` fields, inspect \`fetch_errors\`, and check live spot drift.
 
 #### 3. FUTURES EXECUTION VERDICT (1:2 ISOLATED LONG / SHORT)
 State clearly whether an immediate **4H Close Long**, **4H Close Short**, or **Flat / Wait** setup passes all v4.1 rules right now, listing which rules pass or block.
@@ -1457,8 +1461,8 @@ State clearly whether an immediate **4H Close Long**, **4H Close Short**, or **F
 - **Target 2 ($ & R:R):** \`$XX,XXX\` (\`X.XX : 1\`)
 - **Dynamic Position Sizing (1:2 Capped):** Using \`risk_constraints_reference.account_equity_usd\`, calculate exact size enforcing the 2.0x leverage cap: \`BTC_Size = min((Account_Equity * Risk_Pct) / abs(Entry - Stop), (Account_Equity * 2.0) / Entry)\`. Output **USD Notional**, **BTC Quantity**, and **Effective Leverage**.
 - **Contingency / Plan B:** Immediate action required if price bypasses the Conditional Limit and closes a 4H bar beyond the Hard Invalidation Stop.
-- **What Invalidates Waiting for This Setup:** Exact price level or candle close that cancels the plan.
-- **Spot Positioning Note (1.0x Unleveraged):** Concise DCA/accumulation or hedging zones for Spot holders with zero funding drag.
+- **What Invalidates / Falsifies This Setup:** Exact price level or candle close that cancels or falsifies the thesis.
+- **Spot Positioning Note (1.0x Unleveraged):** Concise DCA/accumulation or hedging zones derived independently from raw \`spot_magnet.metrics\` & \`magnets\`.
 
 #### 5. MOBILE EXECUTION TL;DR (Copy-Paste Block)
 *(Strictly under 100 words, raw execution parameters for quick mobile reading — no narrative)*:
@@ -1466,11 +1470,11 @@ State clearly whether an immediate **4H Close Long**, **4H Close Short**, or **F
 [DIR] | TYPE: [Market/Limit] | ENTRY: $X | STOP: $X (X%) | T1: $X (X:1) | T2: $X | SIZE: $X / X.XXXX BTC (X.XXx) | RISK: X% | PLAN B: [Action if Stop breaks] | INVALID IF: [Condition]
 \`\`\`
 
-After issuing your structured output above, remain grounded strictly in the telemetry packet below and answer any follow-up Q&A—whether for **Spot positioning** (1.0x unleveraged accumulation/hedging levels with no funding drag) or **Futures leverage decisions** (1:2 max isolated sizing, invalidation distance, funding/slippage sensitivity, or custom equity sizing)—without inventing external prices.
+After issuing your structured output above, remain grounded strictly in the telemetry packet below and answer any follow-up Q&A without inventing external prices.
 
 ---
 
-### LIVE RAW TELEMETRY PACKET (JSON)
+### LIVE TELEMETRY PACKET (JSON)
 \`\`\`json
 {{RAW_JSON_PAYLOAD}}
 \`\`\``;
@@ -1482,6 +1486,46 @@ function topHeadlines5(fullState) {
     published_utc: h.published_utc,
     title: h.title,
   }));
+}
+
+function stripSpotMagnetVerdicts(sm) {
+  if (!sm || typeof sm !== "object") return sm ?? null;
+  const lsce = sm.lsce && typeof sm.lsce === "object" ? sm.lsce : null;
+  const mag = sm.magnets && typeof sm.magnets === "object" ? sm.magnets : null;
+  return {
+    data_quality: sm.data_quality ?? null,
+    metrics: sm.metrics ?? null,
+    lsce: lsce
+      ? {
+          side: lsce.side ?? null,
+          cluster_tested: lsce.cluster_tested ?? null,
+          sweep_depth_pct: lsce.sweep_depth_pct ?? null,
+          reclaim_level: lsce.reclaim_level ?? null,
+          spot_absorption: lsce.spot_absorption ?? null,
+        }
+      : null,
+    magnets: mag
+      ? {
+          immediate_imbalance_ratio: mag.immediate_imbalance_ratio ?? null,
+          total_ladder_lower_vol_m: mag.total_ladder_lower_vol_m ?? null,
+          total_ladder_upper_vol_m: mag.total_ladder_upper_vol_m ?? null,
+          total_ladder_imbalance_ratio: mag.total_ladder_imbalance_ratio ?? null,
+          magnet_factors: mag.magnet_factors ?? null,
+          liquidation_ladder: mag.liquidation_ladder ?? null,
+        }
+      : null,
+  };
+}
+
+function stripSpotShieldVerdicts(sh) {
+  if (!sh || typeof sh !== "object") return sh ?? null;
+  const pf = sh.portfolio && typeof sh.portfolio === "object" ? { ...sh.portfolio } : {};
+  delete pf.posture_label;
+  const s1 = sh.sleeve1 && typeof sh.sleeve1 === "object" ? { ...sh.sleeve1 } : null;
+  if (s1) delete s1.action;
+  const s2 = sh.sleeve2 && typeof sh.sleeve2 === "object" ? { ...sh.sleeve2 } : null;
+  if (s2) delete s2.action;
+  return { ...sh, portfolio: pf, sleeve1: s1, sleeve2: s2 };
 }
 
 function compactMatrixG(fullState) {
@@ -1557,6 +1601,14 @@ function buildRawTelemetryPacket(fullState) {
     recent_4h_swing_high_pool: swHigh,
   };
 
+  const { cmc_exact_clusters: _dupCmc, ...cleanLiqMagnets } = liqMagnets;
+  const cleanSor = fullState.state_of_regime && typeof fullState.state_of_regime === "object"
+    ? (() => {
+        const { all_regimes: _ar, summary: _sum, ...rest } = fullState.state_of_regime;
+        return rest;
+      })()
+    : null;
+
   const eqVal = +$("cEq")?.value;
   const accountEquityUsd = Number.isFinite(eqVal) && eqVal > 0 ? +eqVal.toFixed(2) : +(fullState.portfolio?.equity_usd ?? 100000).toFixed(2);
 
@@ -1609,7 +1661,7 @@ function buildRawTelemetryPacket(fullState) {
       ...(fullState.derivatives || {}),
       orderbook_1pct: fullState.derivatives?.orderbook_1pct ?? null,
       cmc_liquidations: fullState.derivatives?.cmc_liquidations ?? null,
-      liquidation_magnets: liqMagnets,
+      liquidation_magnets: cleanLiqMagnets,
       funding_30d_percentile: vl.funding_30d_percentile ?? null,
       positioning_matrix_g: compactMatrixG(fullState),
       context_overlays: fullState.context_overlays ?? null,
@@ -1632,7 +1684,7 @@ function buildRawTelemetryPacket(fullState) {
       h4: h4All.slice(-30),
       d1: d1All.slice(-30),
     },
-    state_of_regime: fullState.state_of_regime ?? null,
+    state_of_regime: cleanSor,
     kline_patterns: fullState.kline_patterns ? {
       active_count: fullState.kline_patterns.active_count,
       by_timeframe: fullState.kline_patterns.by_timeframe,
@@ -1644,7 +1696,7 @@ function buildRawTelemetryPacket(fullState) {
       pattern_state_flags: fullState.cortex_11p.pattern_state_flags,
       microstructure_rulebook_3: fullState.cortex_11p.microstructure_rulebook_3,
     } : null,
-    spot_magnet: fullState.spot_magnet ?? null,
+    spot_magnet: stripSpotMagnetVerdicts(fullState.spot_magnet),
     cortex_rhyme_prior: fullState.cortex_rhyme ? {
       as_of_utc: fullState.cortex_rhyme.meta?.as_of_utc ?? null,
       active_lens: fullState.cortex_rhyme.meta?.active_lens ?? null,
@@ -1732,13 +1784,11 @@ function bindEvents() {
   if ($("btnCopyShieldAi")) {
     $("btnCopyShieldAi").onclick = () => {
       if (!STATE?.spot_shield) return;
-      let promptText = SPOT_SHIELD_AI_PROMPT_TEMPLATE.replace("{{SHIELD_JSON_PAYLOAD}}", JSON.stringify(STATE.spot_shield, null, 2));
+      const cleanShield = stripSpotShieldVerdicts(STATE.spot_shield);
+      let promptText = SPOT_SHIELD_AI_PROMPT_TEMPLATE.replace("{{SHIELD_JSON_PAYLOAD}}", JSON.stringify(cleanShield, null, 2));
       const meta = window.DeskI18n?.getMeta();
       if (meta && meta.code !== "en") {
-        promptText = promptText.replace(
-          "### LIVE SPOT SHIELD (80/20) TELEMETRY (JSON)",
-          `**Response Language:** Respond strictly in ${meta.aiName} while keeping all BTC prices and JSON values exact.\n\n### LIVE SPOT SHIELD (80/20) TELEMETRY (JSON)`
-        );
+        promptText = `**Response Language:** Respond strictly in ${meta.aiName} while keeping all BTC prices and JSON values exact.\n\n` + promptText;
       }
       copyTextWithFeedback(promptText, "Copied Spot Shield (80/20) AI Prompt + JSON!", "shieldActionMsg");
     };
@@ -1776,10 +1826,7 @@ function bindEvents() {
       let promptText = NEWS_MACRO_AI_PROMPT_TEMPLATE.replace("{{NEWS_JSON_PAYLOAD}}", JSON.stringify(packet, null, 2));
       const meta = window.DeskI18n?.getMeta();
       if (meta && meta.code !== "en") {
-        promptText = promptText.replace(
-          "### LIVE NEWS & MACRO TELEMETRY (JSON)",
-          `**Response Language:** Respond strictly in ${meta.aiName} while keeping all macro numbers, dates, and headline facts exact.\n\n### LIVE NEWS & MACRO TELEMETRY (JSON)`
-        );
+        promptText = `**Response Language:** Respond strictly in ${meta.aiName} while keeping all macro numbers, dates, and headline facts exact.\n\n` + promptText;
       }
       copyTextWithFeedback(promptText, "Copied News & Macro AI Prompt + JSON!", "newsActionMsg");
     };
@@ -1813,10 +1860,7 @@ function bindEvents() {
       let promptText = CORTEX_RHYME_AI_PROMPT_TEMPLATE.replace("{{RHYME_JSON_PAYLOAD}}", JSON.stringify(rhymePayload, null, 2));
       const meta = window.DeskI18n?.getMeta();
       if (meta && meta.code !== "en") {
-        promptText = promptText.replace(
-          "### LIVE CORTEX-RHYME TELEMETRY (JSON)",
-          `**Response Language:** Respond strictly in ${meta.aiName} while keeping all historical numbers and JSON values exact.\n\n### LIVE CORTEX-RHYME TELEMETRY (JSON)`
-        );
+        promptText = `**Response Language:** Respond strictly in ${meta.aiName} while keeping all historical numbers and JSON values exact.\n\n` + promptText;
       }
       copyTextWithFeedback(promptText, "Copied S2 CORTEX-RHYME AI Prompt + JSON!", "rhymeActionMsg");
     };
@@ -1832,7 +1876,7 @@ function bindEvents() {
   $("btnCopyRaw").onclick = () => {
     const raw = buildRawTelemetryPacket(STATE);
     if (!raw) return;
-    const msg = window.DeskI18n ? window.DeskI18n.t("raw_copied") : "Copied compact Raw JSON (no pre-computed verdicts).";
+    const msg = window.DeskI18n ? window.DeskI18n.t("raw_copied") : "Copied compact Telemetry JSON (spot/shield verdicts stripped).";
     copyTextWithFeedback(serializeTelemetryCompact(raw), msg, "auditExportMsg");
   };
   $("btnCopyAi").onclick = () => {
@@ -1841,10 +1885,7 @@ function bindEvents() {
     let promptText = MASTER_QUANT_PROMPT_TEMPLATE.replace("{{RAW_JSON_PAYLOAD}}", serializeTelemetryCompact(raw));
     const meta = window.DeskI18n?.getMeta();
     if (meta && meta.code !== "en") {
-      promptText = promptText.replace(
-        "### LIVE RAW TELEMETRY PACKET (JSON)",
-        `**Response Language:** Respond strictly in ${meta.aiName} while keeping all BTC prices, levels, and JSON field values exact.\n\n### LIVE RAW TELEMETRY PACKET (JSON)`
-      );
+      promptText = `**Response Language:** Respond strictly in ${meta.aiName} while keeping all BTC prices, levels, and JSON field values exact.\n\n` + promptText;
     }
     const msg = window.DeskI18n ? window.DeskI18n.t("ai_copied") : "Copied! Paste into ChatGPT, Gemini, Claude, Grok, DeepSeek, or Kimi.";
     copyTextWithFeedback(promptText, msg);
@@ -1855,7 +1896,7 @@ function bindEvents() {
       const payload = {
         updated_at_utc: STATE.updated_at_utc,
         live_spot_price: activePrice(),
-        spot_magnet: STATE.spot_magnet,
+        spot_magnet: stripSpotMagnetVerdicts(STATE.spot_magnet),
         cmc_liquidations: STATE.derivatives?.cmc_liquidations ?? null,
         positioning_matrix_g: compactMatrixG(STATE),
         etf_flow_regime: STATE.context_overlays?.etf_flow_regime ?? null,
@@ -1871,10 +1912,7 @@ function bindEvents() {
       let promptText = SPOT_MAGNET_AI_PROMPT_TEMPLATE.replace("{{SPOT_JSON_PAYLOAD}}", JSON.stringify(payload, null, 2));
       const meta = window.DeskI18n?.getMeta();
       if (meta && meta.code !== "en") {
-        promptText = promptText.replace(
-          "### LIVE SPOT MAGNET TELEMETRY (JSON)",
-          `**Response Language:** Respond strictly in ${meta.aiName} while keeping all BTC prices and JSON values exact.\n\n### LIVE SPOT MAGNET TELEMETRY (JSON)`
-        );
+        promptText = `**Response Language:** Respond strictly in ${meta.aiName} while keeping all BTC prices and JSON values exact.\n\n` + promptText;
       }
       copyTextWithFeedback(promptText, "Copied Spot Magnet DIBSE Prompt + JSON!", "spotActionMsg");
     };

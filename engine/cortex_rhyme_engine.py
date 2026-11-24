@@ -327,15 +327,15 @@ def sync_and_load_rows() -> tuple[list[dict[str, Any]], str]:
     return aligned, sync_status
 
 
-def _causal_z_scores(values: list[float], window: int = 168) -> list[float]:
-    z_out: list[float] = []
+def _causal_z_scores(values: list[float], window: int = 168) -> list[float | None]:
+    z_out: list[float | None] = []
     for i in range(len(values)):
-        slice_vals = values[max(0, i - window) : i + 1]
-        if len(slice_vals) < 24:
-            z_out.append(0.0)
+        prior = values[max(0, i - window) : i]
+        if len(prior) < 24:
+            z_out.append(None)
             continue
-        mu = statistics.fmean(slice_vals)
-        sigma = statistics.stdev(slice_vals)
+        mu = statistics.fmean(prior)
+        sigma = statistics.stdev(prior)
         raw_z = (values[i] - mu) / sigma if sigma > 1e-12 else 0.0
         z_out.append(max(-4.0, min(4.0, raw_z)))
     return z_out
@@ -350,7 +350,10 @@ def _compute_causal_sma_regimes(closes: list[float], window: int = SMA_200D_HOUR
     for i in range(n):
         start = max(0, i - window + 1)
         sma_val = (prefix[i + 1] - prefix[start]) / (i - start + 1)
-        out.append((sma_val, "ABOVE_200D_SMA" if closes[i] >= sma_val else "BELOW_200D_SMA"))
+        if i < window - 1:
+            out.append((sma_val, "UNKNOWN"))
+        else:
+            out.append((sma_val, "ABOVE_200D_SMA" if closes[i] >= sma_val else "BELOW_200D_SMA"))
     return out
 
 
@@ -439,14 +442,26 @@ def _summarize_horizon(returns: list[float]) -> dict[str, Any]:
     }
 
 
-def _derive_posture(quality: str, summary_24h: dict[str, Any], lift_24h: float) -> tuple[float, str]:
+def _lift_se_pts(n_sub: int, n_base: int) -> float | None:
+    if n_sub <= 0 or n_base <= 0:
+        return None
+    return round(100.0 * math.sqrt(0.25 * ((1.0 / n_sub) + (1.0 / n_base))), 2)
+
+
+def _derive_posture(
+    quality: str,
+    summary_24h: dict[str, Any],
+    lift_24h: float,
+    lift_se_24h: float | None = None,
+) -> tuple[float, str]:
     if quality == "thin":
         return 0.0, "OUTLIER_THIN_ZERO_WEIGHT"
     p_up = summary_24h["up_share"] / 100.0
     ev = round((p_up * summary_24h["median_up_pct"]) + ((1.0 - p_up) * summary_24h["median_down_pct"]), 3)
-    if ev >= 0.25 and lift_24h >= 5.0 and summary_24h["tail_skew_ratio"] >= 0.90:
+    min_sig_lift = max(5.0, 2.0 * lift_se_24h) if lift_se_24h is not None else 22.4
+    if ev >= 0.25 and lift_24h >= min_sig_lift and summary_24h["tail_skew_ratio"] >= 0.90:
         return ev, "POSITIVE_SKEW_LOOP_A"
-    if ev <= -0.25 and lift_24h <= -5.0:
+    if ev <= -0.25 and lift_24h <= -min_sig_lift:
         return ev, "NEGATIVE_SKEW_LOOP_B"
     return ev, "NEUTRAL_CHOP"
 
@@ -466,7 +481,7 @@ def _evaluate_lens(
     features: list[str],
     scales: list[float],
     rows: list[dict[str, Any]],
-    z_matrix: dict[str, list[float]],
+    z_matrix: dict[str, list[float | None]],
     sma_regimes: list[tuple[float, str]],
     eligible_mask: list[bool],
     current_idx: int,
@@ -480,11 +495,15 @@ def _evaluate_lens(
     dim = len(features)
 
     def get_vec(idx: int) -> list[float]:
-        return [z_matrix[f][idx] * s for f, s in zip(features, scales)]
+        return [float(z_matrix[f][idx] if z_matrix[f][idx] is not None else 0.0) * s for f, s in zip(features, scales)]
 
     cur_vec = get_vec(current_idx)
     cur_reg = sma_regimes[current_idx][1]
-    eligible = [i for i in range(z_window, cutoff_idx) if eligible_mask[i]]
+    eligible = [
+        i
+        for i in range(z_window, cutoff_idx)
+        if eligible_mask[i] and all(z_matrix[f][i] is not None for f in features)
+    ]
     cov_stats = _precision_matrix([get_vec(i) for i in eligible], dim_fallback=dim, ridge=0.05)
     inv_cov = cov_stats["inv_cov"]
 
@@ -504,7 +523,7 @@ def _evaluate_lens(
         base_all[4].append(r4)
         base_all[24].append(r24)
         base_all[72].append(r72)
-        if r_reg == cur_reg:
+        if cur_reg != "UNKNOWN" and r_reg == cur_reg:
             base_reg[4].append(r4)
             base_reg[24].append(r24)
             base_reg[72].append(r72)
@@ -521,7 +540,7 @@ def _evaluate_lens(
                 "ret_72h": r72,
             }
             cand_all.append(item)
-            if r_reg == cur_reg:
+            if cur_reg != "UNKNOWN" and r_reg == cur_reg:
                 cand_reg.append(item)
 
     sel_all = _decluster_select(cand_all, k, declustering_hours)
@@ -538,25 +557,36 @@ def _evaluate_lens(
 
     after_all = {h_k: _summarize_horizon([s[f"ret_{h_k}"] for s in sel_all]) for h_k in ("4h", "24h", "72h")}
     b_all = {h_k: _summarize_horizon(base_all[int(h_k[:-1])]) for h_k in ("4h", "24h", "72h")}
-    edge_all = {
-        h_k: {
-            "up_share_lift_pts": round(after_all[h_k]["up_share"] - b_all[h_k]["up_share"], 1),
+    edge_all = {}
+    for h_k in ("4h", "24h", "72h"):
+        lift_pts = round(after_all[h_k]["up_share"] - b_all[h_k]["up_share"], 1)
+        se_pts = _lift_se_pts(n_found, len(base_all[int(h_k[:-1])]))
+        edge_all[h_k] = {
+            "up_share_lift_pts": lift_pts,
+            "lift_se_pts": se_pts,
+            "lift_z_score": round(lift_pts / se_pts, 2) if se_pts else 0.0,
             "median_lift_pct": round(after_all[h_k]["median_pct"] - b_all[h_k]["median_pct"], 2),
         }
-        for h_k in ("4h", "24h", "72h")
-    }
 
     after_reg = {h_k: _summarize_horizon([s[f"ret_{h_k}"] for s in sel_reg]) for h_k in ("4h", "24h", "72h")}
     b_reg = {h_k: _summarize_horizon(base_reg[int(h_k[:-1])]) for h_k in ("4h", "24h", "72h")}
-    edge_reg = {
-        h_k: {
-            "up_share_lift_pts": round(after_reg[h_k]["up_share"] - b_reg[h_k]["up_share"], 1),
+    edge_reg = {}
+    for h_k in ("4h", "24h", "72h"):
+        lift_pts = round(after_reg[h_k]["up_share"] - b_reg[h_k]["up_share"], 1)
+        se_pts = _lift_se_pts(n_reg, len(base_reg[int(h_k[:-1])]))
+        edge_reg[h_k] = {
+            "up_share_lift_pts": lift_pts,
+            "lift_se_pts": se_pts,
+            "lift_z_score": round(lift_pts / se_pts, 2) if se_pts else 0.0,
             "median_lift_pct": round(after_reg[h_k]["median_pct"] - b_reg[h_k]["median_pct"], 2),
         }
-        for h_k in ("4h", "24h", "72h")
-    }
 
-    ev24, posture = _derive_posture(quality, after_all["24h"], edge_all["24h"]["up_share_lift_pts"])
+    ev24, posture = _derive_posture(
+        quality,
+        after_all["24h"],
+        edge_all["24h"]["up_share_lift_pts"],
+        edge_all["24h"]["lift_se_pts"],
+    )
     return {
         "lens_id": lens_id,
         "dimensions": features,
@@ -564,6 +594,7 @@ def _evaluate_lens(
             "analogues_found": n_found,
             "target_k": k,
             "history_days": hist_days,
+            "total_archive_bars": len(rows),
             "baseline_hours_evaluated": len(base_all[24]),
             "sample_quality": quality,
             "avg_vector_distance": round(avg_dist, 3),
@@ -681,7 +712,11 @@ def compute_cortex_rhyme(
                 "taker_buy_ratio": round(float(current_row["taker_buy_ratio"]), 4),
                 "live_l2_imbalance": current_row.get("live_l2_imbalance"),
             },
-            "z_vector": {feat: round(z_matrix[feat][current_idx], 3) for feat in FEATURES_5D},
+            "z_vector": {
+                feat: round(v, 3) if isinstance(v, (int, float)) else None
+                for feat in FEATURES_5D
+                for v in (z_matrix[feat][current_idx],)
+            },
         },
         "diagnostics": active_diag,
         "after_similar_setups": active_lens["after_similar_setups"],

@@ -150,10 +150,14 @@
     "fng_label": "Extreme Fear"
   },
   "etf": {
-    "latest_date": "24 Nov 2026",
-    "latest_usd_m": 0.0,
-    "sum5_usd_m": -2127.7,
+    "latest_date": "23 Nov 2026",
+    "latest_usd_m": -569.7,
+    "sum5_usd_m": -2367.6,
     "last5": [
+      [
+        "17 Nov 2026",
+        -239.9
+      ],
       [
         "18 Nov 2026",
         -306.5
@@ -169,10 +173,6 @@
       [
         "23 Nov 2026",
         -569.7
-      ],
-      [
-        "24 Nov 2026",
-        0.0
       ]
     ]
   },
@@ -3202,11 +3202,11 @@
         },
         "regime_baseline_hours": {
           "4h": {
-            "median_pct": 0.01,
-            "up_share": 50.4,
-            "median_up_pct": 0.43,
-            "median_down_pct": -0.44,
-            "tail_skew_ratio": 0.98
+            "median_pct": -0.01,
+            "up_share": 49.6,
+            "median_up_pct": 0.4,
+            "median_down_pct": -0.42,
+            "tail_skew_ratio": 0.94
           },
           "24h": {
             "median_pct": -0.01,
@@ -3598,7 +3598,7 @@
         },
         {
           "label": "BTC Spot ETF 5D",
-          "value": "-$2,127.7M",
+          "value": "-$2,367.6M",
           "tone": "bear"
         },
         {
@@ -3708,10 +3708,14 @@
         ]
       },
       "farside_etf": {
-        "latest_date": "24 Nov 2026",
-        "latest_usd_m": 0.0,
-        "sum5_usd_m": -2127.7,
+        "latest_date": "23 Nov 2026",
+        "latest_usd_m": -569.7,
+        "sum5_usd_m": -2367.6,
         "last5": [
+          [
+            "17 Nov 2026",
+            -239.9
+          ],
           [
             "18 Nov 2026",
             -306.5
@@ -3727,10 +3731,6 @@
           [
             "23 Nov 2026",
             -569.7
-          ],
-          [
-            "24 Nov 2026",
-            0.0
           ]
         ]
       },

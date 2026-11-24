@@ -86,8 +86,19 @@ def _parse_okx_candles(rows: list[list[str]], closed_only: bool = True) -> list[
     return out
 
 
-def _parse_binance_candles(rows: list[list[Any]], closed_only: bool = True) -> list[dict[str, Any]]:
-    items = rows[:-1] if closed_only and len(rows) > 1 else rows
+def _parse_binance_candles(
+    rows: list[list[Any]],
+    closed_only: bool = True,
+    now_ms: int | None = None,
+) -> list[dict[str, Any]]:
+    if closed_only and rows:
+        if len(rows[0]) > 6 and rows[0][6] is not None:
+            ref_ms = now_ms if now_ms is not None else int(time.time() * 1000)
+            items = [x for x in rows if int(x[6]) <= ref_ms]
+        else:
+            items = rows[:-1] if len(rows) > 1 else rows
+    else:
+        items = rows
     return [
         {
             "ts": int(x[0]),
@@ -589,30 +600,47 @@ def fetch_macro(errors: list[str]) -> dict[str, Any]:
     return out
 
 
+def _parse_farside_etf_html(s: str) -> dict[str, Any] | None:
+    """Parse Farside BTC Spot ETF HTML table, dropping unsettled today $0 rows and mismatched sums."""
+    rows = [
+        [_html.unescape(re.sub(r"<[^>]+>", "", c)).strip() for c in re.findall(r"<t[dh][^>]*>(.*?)</t[dh]>", r, re.S)]
+        for r in re.findall(r"<tr[^>]*>(.*?)</tr>", s, re.S)
+    ]
+    hdr = next((r for r in rows if "IBIT" in r), None)
+    num = lambda t: None if t in ("", "-") else -float(t.strip("()").replace(",", "")) if t.startswith("(") else float(t.replace(",", ""))
+    raw_days = [r for r in rows if r and re.match(r"\d{2} \w{3} \d{4}$", r[0]) and len(r) >= 3]
+    settled_days: list[tuple[str, float]] = []
+    for idx, r in enumerate(raw_days):
+        total = num(r[-1])
+        if total is None:
+            continue
+        issuer_vals = [num(c) for c in r[1:-1]]
+        non_null = [v for v in issuer_vals if v is not None]
+        if total == 0.0 and (len(non_null) == 0 or (idx == len(raw_days) - 1 and len(non_null) < 3)):
+            continue
+        if hdr and len(r) == len(hdr) and len(non_null) >= 2:
+            if abs(sum(non_null) - total) > 0.6:
+                continue
+        settled_days.append((r[0], total))
+    if not settled_days or not hdr:
+        return None
+    last_date, last_total = settled_days[-1]
+    last5 = [[d, t] for d, t in settled_days[-5:]]
+    return {
+        "latest_date": last_date,
+        "latest_usd_m": last_total,
+        "sum5_usd_m": round(sum(x[1] for x in last5), 1),
+        "last5": last5,
+    }
+
+
 def fetch_etf_flows(errors: list[str]) -> dict[str, Any] | None:
     """Parse Farside daily BTC Spot ETF flows."""
     s = _get_text("https://farside.co.uk/btc/", "Farside ETF", errors, timeout=20)
     if not s:
         return None
     try:
-        rows = [
-            [_html.unescape(re.sub(r"<[^>]+>", "", c)).strip() for c in re.findall(r"<t[dh][^>]*>(.*?)</t[dh]>", r, re.S)]
-            for r in re.findall(r"<tr[^>]*>(.*?)</tr>", s, re.S)
-        ]
-        hdr = next((r for r in rows if "IBIT" in r), None)
-        num = lambda t: None if t in ("", "-") else -float(t.strip("()").replace(",", "")) if t.startswith("(") else float(t.replace(",", ""))
-        days = [r for r in rows if r and re.match(r"\d{2} \w{3} \d{4}$", r[0]) and len(r) >= 3]
-        days = [r for r in days if num(r[-1]) is not None]
-        if not days or not hdr:
-            return None
-        last = days[-1]
-        last5 = [[d[0], num(d[-1])] for d in days[-5:]]
-        return {
-            "latest_date": last[0],
-            "latest_usd_m": num(last[-1]),
-            "sum5_usd_m": round(sum(x[1] for x in last5 if x[1] is not None), 1),
-            "last5": last5,
-        }
+        return _parse_farside_etf_html(s)
     except Exception as exc:
         errors.append(f"Farside parse: {exc}")
         return None

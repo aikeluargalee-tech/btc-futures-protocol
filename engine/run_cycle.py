@@ -33,18 +33,26 @@ STATE_PATH = ROOT / "data" / "state.json"
 AUDIT_PATH = ROOT / "data" / "audit_log.json"
 
 
-def _load_json(path: Path) -> dict[str, Any] | None:
+def _load_json(path: Path, *, abort_on_corrupt: bool = False) -> dict[str, Any] | None:
     if not path.exists():
         return None
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
+    except Exception as exc:
+        if abort_on_corrupt:
+            raise RuntimeError(f"Corrupted JSON at {path}: {exc}") from exc
         return None
 
 
 def _save_json(path: Path, data: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    payload = json.dumps(data, indent=2)
+    tmp = path.with_name(f"{path.name}.{os.getpid()}.tmp")
+    with tmp.open("w", encoding="utf-8", newline="\n") as fh:
+        fh.write(payload)
+        fh.flush()
+        os.fsync(fh.fileno())
+    os.replace(tmp, path)
 
 
 def main() -> int:
@@ -53,7 +61,7 @@ def main() -> int:
     prev_state = _load_json(STATE_PATH)
     prev_regime = prev_state.get("regime") if prev_state else None
 
-    ledger = _load_json(LEDGER_PATH)
+    ledger = _load_json(LEDGER_PATH, abort_on_corrupt=True)
     if not ledger:
         ledger = init_ledger(cfg, now)
     else:
