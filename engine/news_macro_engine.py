@@ -590,6 +590,32 @@ def _compact_cross_asset(macro: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
+def _fallback_calendar_from_market(market: dict[str, Any]) -> list[dict[str, Any]]:
+    """Reuse already-fetched USD HIGH-impact calendar entries if extended ForexFactory query rate-limits."""
+    raw = market.get("macro_calendar")
+    if not isinstance(raw, list):
+        return []
+    out: list[dict[str, Any]] = []
+    for ev in raw:
+        if not isinstance(ev, dict):
+            continue
+        mins = ev.get("minutes_away")
+        diff_min = float(mins) if isinstance(mins, (int, float)) else 9999.0
+        out.append(
+            {
+                "title": str(ev.get("title") or "USD High Impact"),
+                "impact": str(ev.get("impact") or "HIGH").upper(),
+                "time_utc": str(ev.get("time_utc") or ""),
+                "ts_ms": ev.get("ts_ms"),
+                "minutes_away": round(diff_min, 1) if isinstance(mins, (int, float)) else None,
+                "forecast": str(ev.get("forecast") or ""),
+                "previous": str(ev.get("previous") or ""),
+                "blackout_60m": abs(diff_min) <= 60.0,
+            }
+        )
+    return out[:16]
+
+
 def compute_news_macro(market: dict[str, Any], now_utc: dt.datetime | None = None) -> dict[str, Any]:
     """Assemble live News & Macro desk telemetry from CMC keyless endpoints, RSS feeds, Yahoo, and ForexFactory."""
     now = now_utc or dt.datetime.now(dt.timezone.utc)
@@ -602,6 +628,11 @@ def compute_news_macro(market: dict[str, Any], now_utc: dt.datetime | None = Non
     cmc_alt = fetch_cmc_altseason(now_ts, errors, ok_list)
     cmc_etf = fetch_cmc_etf_netflow(errors, ok_list)
     calendar_usd = fetch_usd_calendar_full(now, errors, ok_list)
+    if not calendar_usd:
+        fallback_cal = _fallback_calendar_from_market(market)
+        if fallback_cal:
+            calendar_usd = fallback_cal
+            ok_list.append("ForexFactory USD (fallback)")
 
     all_items: list[dict[str, Any]] = []
 

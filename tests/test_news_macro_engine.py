@@ -164,6 +164,29 @@ class TestNewsMacroEngine(unittest.TestCase):
         self.assertEqual(res["sources_ok"], [])
         self.assertGreater(len(res["sources_failed"]), 0)
 
+    def test_compute_news_macro_calendar_fallback_on_429(self) -> None:
+        market = {
+            "macro": {},
+            "extras": {},
+            "macro_calendar": [
+                {
+                    "title": "Core PCE Price Index m/m",
+                    "time_utc": "2026-11-24T14:00:00Z",
+                    "ts_ms": 1795528800000,
+                    "minutes_away": 30.0,
+                    "forecast": "0.3%",
+                    "previous": "0.3%",
+                }
+            ],
+        }
+        with patch("urllib.request.urlopen", side_effect=urllib.error.URLError("429")):
+            res = compute_news_macro(market, now_utc=self.now)
+        self.assertEqual(len(res["calendar_usd"]), 1)
+        self.assertEqual(res["calendar_usd"][0]["impact"], "HIGH")
+        self.assertTrue(res["calendar_usd"][0]["blackout_60m"])
+        self.assertTrue(res["macro_bias"]["blackout_active"])
+        self.assertIn("ForexFactory USD (fallback)", res["sources_ok"])
+
 
 if __name__ == "__main__":
     unittest.main()

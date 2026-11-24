@@ -1092,6 +1092,15 @@ After issuing your structured output above, remain grounded strictly in the tele
 {{RAW_JSON_PAYLOAD}}
 \`\`\``;
 
+function topHeadlines5(fullState) {
+  return (fullState?.news_macro?.headlines || []).slice(0, 5).map((h) => ({
+    category: h.category,
+    source: h.source,
+    published_utc: h.published_utc,
+    title: h.title,
+  }));
+}
+
 function buildRawTelemetryPacket(fullState) {
   if (!fullState) return null;
   const g = fullState.regime?.groups || {};
@@ -1204,6 +1213,7 @@ function buildRawTelemetryPacket(fullState) {
     macro_and_flows: {
       vix: sc.vix ?? null,
       dxy: sc.dxy ?? null,
+      macro_bias_status: fullState.news_macro?.macro_bias?.status ?? null,
       fng_value: fullState.extras?.fng_value ?? null,
       fng_label: fullState.extras?.fng_label ?? null,
       etf: fullState.etf ?? null,
@@ -1211,6 +1221,7 @@ function buildRawTelemetryPacket(fullState) {
       macro_calendar: fullState.macro_calendar || [],
       next_macro_event: sc.next_macro_event ?? null,
       next_macro_minutes: sc.next_macro_minutes ?? null,
+      top_headlines_5: topHeadlines5(fullState),
     },
     charts_ohlcv_last30: {
       schema: "[timestamp_ms, open, high, low, close, volume]",
@@ -1411,6 +1422,13 @@ function bindEvents() {
         live_spot_price: activePrice(),
         spot_magnet: STATE.spot_magnet,
         cmc_liquidations: STATE.derivatives?.cmc_liquidations ?? null,
+        news_macro_brief: STATE.news_macro
+          ? {
+              macro_bias_status: STATE.news_macro.macro_bias?.status ?? null,
+              next_high_impact: STATE.news_macro.macro_bias?.next_high_impact ?? null,
+              top_headlines_5: topHeadlines5(STATE),
+            }
+          : null,
       };
       let promptText = SPOT_MAGNET_AI_PROMPT_TEMPLATE.replace("{{SPOT_JSON_PAYLOAD}}", JSON.stringify(payload, null, 2));
       const meta = window.DeskI18n?.getMeta();
