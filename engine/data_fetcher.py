@@ -179,8 +179,13 @@ def fetch_funding_and_oi(errors: list[str]) -> dict[str, Any]:
         "history_pct": [],
         "oi_btc": None,
         "total_oi_btc": None,
+        "mark_price": None,
         "btc_oi_change_pct_1h": None,
         "btc_oi_change_pct_4h": None,
+        "btc_oi_change_pct_24h": None,
+        "btc_oi_change_pct_3d": None,
+        "long_short_account_ratio": None,
+        "ls_ratio_percentile_72h": None,
         "venues": {},
         "venue_oi_btc": {},
     }
@@ -247,10 +252,21 @@ def fetch_funding_and_oi(errors: list[str]) -> dict[str, Any]:
         if out["oi_btc"] is None:
             out["oi_btc"] = tot
 
-    # Soft-probe OKX 1H BTC open-interest history for Rulebook 3.2 (1H / 4H OI change %)
+    # Soft-probe OKX 1H BTC open-interest history (75h), mark price & L/S account ratio
     soft_errs: list[str] = []
+    mk = _get_json(
+        f"{OKX_BASE}/public/mark-price?instType=SWAP&instId=BTC-USDT-SWAP",
+        "OKX mark price",
+        soft_errs,
+    )
+    if mk and mk.get("data"):
+        try:
+            out["mark_price"] = round(float(mk["data"][0]["markPx"]), 2)
+        except Exception:
+            pass
+
     oi_hist = _get_json(
-        f"{OKX_BASE}/rubik/stat/contracts/open-interest-history?instId=BTC-USDT-SWAP&period=1H&limit=6",
+        f"{OKX_BASE}/rubik/stat/contracts/open-interest-history?instId=BTC-USDT-SWAP&period=1H&limit=75",
         "OKX OI history",
         soft_errs,
     )
@@ -265,8 +281,79 @@ def fetch_funding_and_oi(errors: list[str]) -> dict[str, Any]:
                 prev_4h_oi = float(chron[-5][2])
                 if prev_4h_oi > 0:
                     out["btc_oi_change_pct_4h"] = round((latest_oi / prev_4h_oi - 1.0) * 100.0, 2)
+            if len(chron) >= 25:
+                prev_24h_oi = float(chron[-25][2])
+                if prev_24h_oi > 0:
+                    out["btc_oi_change_pct_24h"] = round((latest_oi / prev_24h_oi - 1.0) * 100.0, 2)
+            if len(chron) >= 48:
+                prev_3d_oi = float(chron[0][2])
+                if prev_3d_oi > 0:
+                    out["btc_oi_change_pct_3d"] = round((latest_oi / prev_3d_oi - 1.0) * 100.0, 2)
         except Exception:
             pass
+
+    ls_hist = _get_json(
+        f"{OKX_BASE}/rubik/stat/contracts/long-short-account-ratio?ccy=BTC&period=1H",
+        "OKX L/S ratio",
+        soft_errs,
+    )
+    if ls_hist and isinstance(ls_hist.get("data"), list) and ls_hist["data"]:
+        try:
+            ls_chron = sorted(ls_hist["data"], key=lambda row: int(row[0]))
+            ls_vals = [float(r[1]) for r in ls_chron[-72:]]
+            if ls_vals:
+                cur_ls = ls_vals[-1]
+                out["long_short_account_ratio"] = round(cur_ls, 2)
+                if len(ls_vals) >= 5:
+                    below = sum(1 for v in ls_vals if v <= cur_ls)
+                    out["ls_ratio_percentile_72h"] = round((below / len(ls_vals)) * 100.0, 1)
+        except Exception:
+            pass
+
+    return out
+
+
+def fetch_spot_cross_venue(errors: list[str]) -> dict[str, Any]:
+    """Fetch un-geoblocked BinanceVision/Coinbase/OKX spot tickers and Coinbase premium."""
+    out: dict[str, Any] = {
+        "binance_spot_price": None,
+        "spot_vol_24h_btc": None,
+        "spot_chg_24h_pct": None,
+        "coinbase_spot_price": None,
+        "okx_spot_price": None,
+        "coinbase_premium_usd": None,
+        "coinbase_premium_bps": None,
+    }
+    soft_errs: list[str] = []
+    bz = _get_json(f"{BINANCE_VISION}/ticker/24hr?symbol=BTCUSDT", "BinanceVision spot 24hr", soft_errs)
+    if bz and "lastPrice" in bz:
+        try:
+            out["binance_spot_price"] = round(float(bz["lastPrice"]), 2)
+            out["spot_vol_24h_btc"] = round(float(bz["volume"]), 2)
+            out["spot_chg_24h_pct"] = round(float(bz["priceChangePercent"]), 2)
+        except Exception:
+            pass
+
+    cb = _get_json("https://api.exchange.coinbase.com/products/BTC-USD/ticker", "Coinbase spot ticker", soft_errs)
+    if cb and cb.get("price"):
+        try:
+            out["coinbase_spot_price"] = round(float(cb["price"]), 2)
+        except Exception:
+            pass
+
+    okx_s = _get_json(f"{OKX_BASE}/market/ticker?instId=BTC-USDT", "OKX spot ticker", soft_errs)
+    if okx_s and okx_s.get("data"):
+        try:
+            out["okx_spot_price"] = round(float(okx_s["data"][0]["last"]), 2)
+        except Exception:
+            pass
+
+    bz_px = out["binance_spot_price"]
+    cb_px = out["coinbase_spot_price"]
+    if bz_px and cb_px and bz_px > 0:
+        prem_usd = cb_px - bz_px
+        out["coinbase_premium_usd"] = round(prem_usd, 2)
+        out["coinbase_premium_bps"] = round((prem_usd / bz_px) * 10000.0, 2)
 
     return out
 
@@ -625,8 +712,10 @@ def fetch_all_market_data() -> dict[str, Any]:
     h4, h4_src = fetch_klines("BTC-USDT-SWAP", "BTCUSDT", "4H", "4h", 200, errors)
     h1, h1_src = fetch_klines("BTC-USDT-SWAP", "BTCUSDT", "1H", "1h", 168, errors)
     m15, m15_src = fetch_klines("BTC-USDT-SWAP", "BTCUSDT", "15m", "15m", 120, errors)
+    spot_d1 = fetch_spot_klines_with_taker("1d", 60, errors)
     spot_h1 = fetch_spot_klines_with_taker("1h", 120, errors)
     spot_h4 = fetch_spot_klines_with_taker("4h", 90, errors)
+    spot_xv = fetch_spot_cross_venue(errors)
     eth_d1, _ = fetch_klines("ETH-USDT-SWAP", "ETHUSDT", "1Dutc", "1d", 40, errors)
 
     if ticker.get("price") is None and h1:
@@ -651,11 +740,13 @@ def fetch_all_market_data() -> dict[str, Any]:
             "4h": h4,
             "1h": h1,
             "15m": m15,
+            "spot_1d": spot_d1,
             "spot_1h": spot_h1,
             "spot_4h": spot_h4,
             "eth_1d": eth_d1,
             "sources": {"1d": d1_src, "4h": h4_src, "1h": h1_src, "15m": m15_src},
         },
+        "spot_cross_venue": spot_xv,
         "derivatives": funding,
         "macro": macro,
         "etf": etf,

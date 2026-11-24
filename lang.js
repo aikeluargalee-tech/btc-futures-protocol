@@ -13,7 +13,7 @@
 
   const DICT = {
     en: {
-      sys_meta: "SYS: 4H-SWING · MAX LEV 1:2 · KEYS [1-4]",
+      sys_meta: "SYS: 4H-SWING · MAX LEV 1:2 · KEYS [1-5]",
       brand_title: "BTC Short-Term Futures Protocol",
       brand_badge: "v4.0 · 4H · MAX 1:2 LEV",
       copy_ai: "[Copy AI Analysis Prompt + JSON]",
@@ -21,6 +21,7 @@
       ai_copied: "Copied! Paste into ChatGPT, Gemini, Claude, Grok, DeepSeek, or Kimi.",
       tab_f1: "Signal Tab",
       tab_f2: "Regime & Kline Patterns",
+      tab_spot: "Spot Magnet (DIBSE)",
       tab_f3: "Paper Ledger & Risk Calc",
       tab_f4: "Audit Log & Config",
       vid_title: "Protocol Briefing Video (vGUZF.mp4)",
@@ -60,7 +61,7 @@
       live_word: "live",
     },
     zh: {
-      sys_meta: "系统: 4H波段 · 最大杠杆 1:2 · 快捷键 [1-4]",
+      sys_meta: "系统: 4H波段 · 最大杠杆 1:2 · 快捷键 [1-5]",
       brand_title: "BTC 短线期货协议",
       brand_badge: "v4.0 · 4H · 最高 1:2 杠杆",
       copy_ai: "[复制 AI 分析提示词 + JSON]",
@@ -68,6 +69,7 @@
       ai_copied: "已复制！请直接粘贴至 ChatGPT、Gemini、Claude、Grok、DeepSeek 或 Kimi。",
       tab_f1: "信号面板",
       tab_f2: "状态与 K 线形态",
+      tab_spot: "现货磁力雷达 (SPOT)",
       tab_f3: "模拟账本与风险计算",
       tab_f4: "审计日志与配置",
       vid_title: "协议简报视频 (vGUZF.mp4)",
@@ -107,7 +109,7 @@
       live_word: "实时",
     },
     id: {
-      sys_meta: "SYS: 4H-SWING · MAKS LEV 1:2 · TOMBOL [1-4]",
+      sys_meta: "SYS: 4H-SWING · MAKS LEV 1:2 · TOMBOL [1-5]",
       brand_title: "Protokol Futures Jangka Pendek BTC",
       brand_badge: "v4.0 · 4H · MAKS 1:2 LEV",
       copy_ai: "[Salin Prompt Analisis AI + JSON]",
@@ -115,6 +117,7 @@
       ai_copied: "Tersalin! Tempel ke ChatGPT, Gemini, Claude, Grok, DeepSeek, atau Kimi.",
       tab_f1: "Tab Sinyal",
       tab_f2: "Regim & Pola Kline",
+      tab_spot: "Spot Magnet (DIBSE)",
       tab_f3: "Buku Simulasi & Kalkulator",
       tab_f4: "Log Audit & Konfig",
       vid_title: "Video Ringkasan Protokol (vGUZF.mp4)",
@@ -154,7 +157,7 @@
       live_word: "langsung",
     },
     ko: {
-      sys_meta: "시스템: 4H-SWING · 최대 레버리지 1:2 · 키 [1-4]",
+      sys_meta: "시스템: 4H-SWING · 최대 레버리지 1:2 · 키 [1-5]",
       brand_title: "BTC 단기 선물 프로토콜",
       brand_badge: "v4.0 · 4H · 최대 1:2 레버리지",
       copy_ai: "[AI 분석 프롬프트 + JSON 복사]",
@@ -162,6 +165,7 @@
       ai_copied: "복사됨! ChatGPT, Gemini, Claude, Grok, DeepSeek 또는 Kimi에 붙여넣으세요.",
       tab_f1: "시그널 탭",
       tab_f2: "레짐 & 캔들 패턴",
+      tab_spot: "현물 마그넷 (SPOT)",
       tab_f3: "모의 원장 및 리스크 계산기",
       tab_f4: "감사 로그 및 설정",
       vid_title: "프로토콜 브리핑 영상 (vGUZF.mp4)",
@@ -201,7 +205,7 @@
       live_word: "실시간",
     },
     ja: {
-      sys_meta: "SYS: 4H-SWING · 最大レバ 1:2 · キー [1-4]",
+      sys_meta: "SYS: 4H-SWING · 最大レバ 1:2 · キー [1-5]",
       brand_title: "BTC 短期先物プロトコル",
       brand_badge: "v4.0 · 4H · 最大 1:2 レバ",
       copy_ai: "[AI分析プロンプト + JSON をコピー]",
@@ -209,6 +213,7 @@
       ai_copied: "コピー完了！ChatGPT・Gemini・Claude・Grok・DeepSeek・Kimi に貼り付けてください。",
       tab_f1: "シグナルタブ",
       tab_f2: "状態 & ローソク足",
+      tab_spot: "現物マグネット (SPOT)",
       tab_f3: "模擬台帳・リスク計算機",
       tab_f4: "監査ログ・設定",
       vid_title: "プロトコル解説動画 (vGUZF.mp4)",
@@ -248,7 +253,7 @@
       live_word: "live",
     },
     fr: {
-      sys_meta: "SYS : 4H-SWING · LEV MAX 1:2 · TOUCHES [1-4]",
+      sys_meta: "SYS : 4H-SWING · LEV MAX 1:2 · TOUCHES [1-5]",
       brand_title: "Protocole Futures Court Terme BTC",
       brand_badge: "v4.0 · 4H · LEV MAX 1:2",
       copy_ai: "[Copier Prompt IA + JSON]",
@@ -256,6 +261,7 @@
       ai_copied: "Copié ! Collez dans ChatGPT, Gemini, Claude, Grok, DeepSeek ou Kimi.",
       tab_f1: "Onglet Signal",
       tab_f2: "Régime & Chandeliers",
+      tab_spot: "Spot Magnet (DIBSE)",
       tab_f3: "Registre Papier & Calculateur",
       tab_f4: "Audit & Paramètres",
       vid_title: "Vidéo Briefing Protocole (vGUZF.mp4)",
@@ -295,7 +301,7 @@
       live_word: "direct",
     },
     es: {
-      sys_meta: "SYS: 4H-SWING · APAL. MÁX 1:2 · TECLAS [1-4]",
+      sys_meta: "SYS: 4H-SWING · APAL. MÁX 1:2 · TECLAS [1-5]",
       brand_title: "Protocolo de Futuros Corto Plazo BTC",
       brand_badge: "v4.0 · 4H · APAL. MÁX 1:2",
       copy_ai: "[Copiar Prompt IA + JSON]",
@@ -303,6 +309,7 @@
       ai_copied: "¡Copiado! Pégalo en ChatGPT, Gemini, Claude, Grok, DeepSeek o Kimi.",
       tab_f1: "Pestaña Señal",
       tab_f2: "Régimen y Patrones",
+      tab_spot: "Spot Magnet (DIBSE)",
       tab_f3: "Libro Papel y Calculadora",
       tab_f4: "Auditoría y Config",
       vid_title: "Video Resumen del Protocolo (vGUZF.mp4)",

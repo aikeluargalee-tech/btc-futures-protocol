@@ -1,50 +1,50 @@
 {
   "protocol_version": "4.0",
   "protocol_name": "BTC Short-Term Futures Protocol",
-  "updated_at_utc": "2026-11-24T08:23:04Z",
-  "updated_at_ms": 1795508584280,
+  "updated_at_utc": "2026-11-24T09:24:16Z",
+  "updated_at_ms": 1795512256793,
   "last_4h_close_utc": "2026-11-24T04:00:00Z",
   "ticker": {
-    "price": 60393.4,
+    "price": 59880.5,
     "high24": 64570.0,
     "low24": 59419.0,
-    "chg24_pct": -1.39,
+    "chg24_pct": -2.95,
     "source": "OKX BTC-USDT-SWAP"
   },
   "derivatives": {
-    "current_rate_pct": 0.00195,
-    "oi_btc": 30409.9,
-    "total_oi_btc": 84265.7,
+    "current_rate_pct": 0.00131,
+    "oi_btc": 30462.5,
+    "total_oi_btc": 84466.8,
     "venues": {
-      "okx": 0.00195,
-      "kraken_futures": -0.0054,
+      "okx": 0.00131,
+      "kraken_futures": -0.01388,
       "deribit": -6e-05,
-      "hyperliquid": 0.00051
+      "hyperliquid": -0.00615
     },
     "venue_oi_btc": {
-      "okx": 30409.9,
-      "kraken_futures": 2106.7,
-      "deribit": 14244.5,
-      "hyperliquid": 37504.6
+      "okx": 30462.5,
+      "kraken_futures": 2124.2,
+      "deribit": 14431.5,
+      "hyperliquid": 37448.6
     },
     "orderbook_1pct": {
-      "bid_depth_1pct_usd": 15062389.0,
-      "ask_depth_1pct_usd": 15429463.0,
-      "imbalance_ratio": 0.98,
-      "imbalance_pct": -1.2,
-      "spread_bps": 0.0166,
+      "bid_depth_1pct_usd": 16649259.0,
+      "ask_depth_1pct_usd": 14646365.0,
+      "imbalance_ratio": 1.14,
+      "imbalance_pct": 6.4,
+      "spread_bps": 0.0167,
       "source": "OKX BTC-USDT-SWAP"
     },
     "cmc_liquidations": {
       "source": "CoinMarketCap (Hyperliquid Exact Map + Multi-Exchange Realized)",
-      "mark_price": 60350.9,
+      "mark_price": 59940.9,
       "cumulative_fuel": {
-        "total_long_below_usd_m": 1015.44,
-        "total_short_above_usd_m": 878.87,
-        "longs_within_2pct_usd_m": 79.66,
-        "shorts_within_2pct_usd_m": 14.41,
-        "longs_within_5pct_usd_m": 169.52,
-        "shorts_within_5pct_usd_m": 56.81,
+        "total_long_below_usd_m": 1004.43,
+        "total_short_above_usd_m": 873.51,
+        "longs_within_2pct_usd_m": 82.33,
+        "shorts_within_2pct_usd_m": 9.41,
+        "longs_within_5pct_usd_m": 203.54,
+        "shorts_within_5pct_usd_m": 55.65,
         "squeeze_bias_2pct": "LONG_FLUSH_HEAVY"
       },
       "tactical_long_clusters_within_8pct": [
@@ -54,9 +54,9 @@
             59700.0,
             59750.0
           ],
-          "usd_m": 49.3,
-          "leverage": 43,
-          "distance_pct": -1.04
+          "usd_m": 49.04,
+          "leverage": 61,
+          "distance_pct": -0.36
         },
         {
           "price": 57125.0,
@@ -64,9 +64,9 @@
             57100.0,
             57150.0
           ],
-          "usd_m": 34.02,
-          "leverage": 15,
-          "distance_pct": -5.35
+          "usd_m": 34.01,
+          "leverage": 17,
+          "distance_pct": -4.7
         },
         {
           "price": 57975.0,
@@ -74,9 +74,9 @@
             57950.0,
             58000.0
           ],
-          "usd_m": 22.37,
-          "leverage": 19,
-          "distance_pct": -3.94
+          "usd_m": 22.44,
+          "leverage": 22,
+          "distance_pct": -3.28
         }
       ],
       "tactical_short_clusters_within_8pct": [
@@ -86,19 +86,19 @@
             64450.0,
             64500.0
           ],
-          "usd_m": 17.24,
-          "leverage": 12,
-          "distance_pct": 6.83
+          "usd_m": 19.96,
+          "leverage": 11,
+          "distance_pct": 7.56
         },
         {
-          "price": 62775.0,
+          "price": 62575.0,
           "range": [
-            62750.0,
-            62800.0
+            62550.0,
+            62600.0
           ],
-          "usd_m": 16.81,
-          "leverage": 19,
-          "distance_pct": 4.02
+          "usd_m": 15.96,
+          "leverage": 18,
+          "distance_pct": 4.39
         },
         {
           "price": 64675.0,
@@ -106,46 +106,46 @@
             64650.0,
             64700.0
           ],
-          "usd_m": 5.79,
-          "leverage": 12,
-          "distance_pct": 7.17
+          "usd_m": 5.76,
+          "leverage": 11,
+          "distance_pct": 7.9
         }
       ],
       "largest_macro_long_cluster": {
-        "price": 43425.0,
+        "price": 43225.0,
         "range": [
-          43400.0,
-          43450.0
+          43200.0,
+          43250.0
         ],
-        "usd_m": 66.28,
+        "usd_m": 59.74,
         "leverage": 3,
-        "distance_pct": -28.05
+        "distance_pct": -27.89
       },
       "largest_macro_short_cluster": {
-        "price": 72525.0,
+        "price": 72075.0,
         "range": [
-          72500.0,
-          72550.0
+          72050.0,
+          72100.0
         ],
-        "usd_m": 81.8,
+        "usd_m": 78.76,
         "leverage": 5,
-        "distance_pct": 20.17
+        "distance_pct": 20.24
       },
       "realized": {
-        "h4_long_usd_m": 1.0,
-        "h4_short_usd_m": 1.14,
-        "h4_total_usd_m": 2.14,
-        "h4_long_flush_pct": 46.6,
-        "h24_long_usd_m": 575.98,
-        "h24_short_usd_m": 191.49,
-        "h24_total_usd_m": 767.47,
-        "h24_long_flush_pct": 75.0,
-        "global_btc_oi_usd_b": 64.05
+        "h4_long_usd_m": 6.91,
+        "h4_short_usd_m": 1.32,
+        "h4_total_usd_m": 8.23,
+        "h4_long_flush_pct": 83.9,
+        "h24_long_usd_m": 581.94,
+        "h24_short_usd_m": 191.12,
+        "h24_total_usd_m": 773.06,
+        "h24_long_flush_pct": 75.3,
+        "global_btc_oi_usd_b": 66.74
       }
     }
   },
   "extras": {
-    "dvol": 52.72,
+    "dvol": 53.51,
     "fng_value": 11,
     "fng_label": "Extreme Fear"
   },
@@ -177,7 +177,7 @@
     ]
   },
   "stables": {
-    "total_usd_b": 243.71,
+    "total_usd_b": 243.72,
     "chg7d_pct": -0.38
   },
   "macro_calendar": [
@@ -185,7 +185,7 @@
       "title": "Core PCE Price Index m/m",
       "time_utc": "2026-11-25T13:30:00Z",
       "ts_ms": 1795613400000,
-      "minutes_away": 1746.7,
+      "minutes_away": 1685.5,
       "forecast": "0.3%",
       "previous": "0.3%"
     },
@@ -193,7 +193,7 @@
       "title": "Prelim GDP q/q",
       "time_utc": "2026-11-25T13:30:00Z",
       "ts_ms": 1795613400000,
-      "minutes_away": 1746.7,
+      "minutes_away": 1685.5,
       "forecast": "3.5%",
       "previous": "3.4%"
     }
@@ -1697,34 +1697,34 @@
         "atr_4h_pct": 2.39,
         "atr_4h_percentile": 90.0,
         "rel_volume_4h": 0.51,
-        "funding_rate_pct": 0.00195,
-        "funding_30d_percentile": 25.56,
+        "funding_rate_pct": 0.00131,
+        "funding_30d_percentile": 23.33,
         "components": {
           "atr_4h_percentile_score": 37.0,
           "rel_volume_4h_score": 35.5,
           "funding_score": 72.0
         },
-        "summary": "ATR4Hp=90.0, RelVol4H=0.51x, Fund=0.00195%",
+        "summary": "ATR4Hp=90.0, RelVol4H=0.51x, Fund=0.00131%",
         "score": 56.54
       },
       "session_context": {
         "weight": 0.2,
         "quality_score": 72.0,
-        "external_context_score": 13.0,
+        "external_context_score": 13.2,
         "session_name": "LONDON_OR_NY",
         "is_weekend_utc": false,
         "next_macro_event": "Core PCE Price Index m/m",
-        "next_macro_minutes": 1746.7,
-        "vix": 26.62,
-        "dxy": 104.3,
+        "next_macro_minutes": 1685.5,
+        "vix": 27.6,
+        "dxy": 104.24,
         "etf_5d_usd_m": -2367.6,
         "components": {
           "session_quality": 72.0,
           "event_proximity": 72.0,
-          "external_context": 13.0
+          "external_context": 13.2
         },
-        "summary": "LONDON_OR_NY, NextEv=1747m",
-        "score": 41.52
+        "summary": "LONDON_OR_NY, NextEv=1686m",
+        "score": 41.5
       }
     },
     "contributions": [
@@ -1745,7 +1745,7 @@
       {
         "key": "session_context",
         "label": "Session / Context",
-        "score": 41.52,
+        "score": 41.5,
         "weight": 0.2,
         "weighted_impact_vs_50": -1.7
       },
@@ -1764,9 +1764,9 @@
     "last_4h_close_ts": 1795492800000,
     "last_4h_close_utc": "2026-11-24T04:00:00Z",
     "recalc_utc_day": "2026-11-24",
-    "recalc_at_utc": "2026-11-24T08:23:04Z",
+    "recalc_at_utc": "2026-11-24T09:24:16Z",
     "is_weekend_utc": false,
-    "htf_structural_break": true,
+    "htf_structural_break": false,
     "state_of_regime": {
       "code": "R5",
       "id": "R5_DISTRIBUTION_BEAR",
@@ -1874,28 +1874,7 @@
   },
   "kline_patterns": {
     "by_timeframe": {
-      "1h": [
-        {
-          "id": "NR4_NR7",
-          "name": "NR7 Squeeze",
-          "timeframe": "1H",
-          "direction": "NEUTRAL",
-          "detail": "Narrowest 1H range of last 7 bars ($294.2)",
-          "bar_ts": 1795503600000,
-          "confluence_level": "Prior Daily Low ($60,339.6)",
-          "conviction": "STRUCTURAL_CONFLUENCE"
-        },
-        {
-          "id": "TIGHT_COIL_3BAR",
-          "name": "Tight 3-Bar Coil",
-          "timeframe": "1H",
-          "direction": "NEUTRAL",
-          "detail": "3-bar span $493.0 (< 1.4x ATR $631.7)",
-          "bar_ts": 1795503600000,
-          "confluence_level": "Prior Daily Low ($60,339.6)",
-          "conviction": "STRUCTURAL_CONFLUENCE"
-        }
-      ],
+      "1h": [],
       "4h": [
         {
           "id": "INSIDE_BAR",
@@ -1931,7 +1910,7 @@
         }
       ]
     },
-    "active_count": 5,
+    "active_count": 3,
     "catalog_10": [
       {
         "id": "ENGULFING",
@@ -2002,8 +1981,7 @@
         "name": "NR4 / NR7 Range Squeeze",
         "category": "Volatility",
         "active_tfs": [
-          "4H",
-          "1H"
+          "4H"
         ],
         "direction": "NEUTRAL",
         "detail": "Narrowest 4H range of last 7 bars ($499.3)",
@@ -2014,13 +1992,11 @@
         "id": "TIGHT_COIL_3BAR",
         "name": "Tight 3-Bar Coil",
         "category": "Volatility",
-        "active_tfs": [
-          "1H"
-        ],
-        "direction": "NEUTRAL",
-        "detail": "3-bar span $493.0 (< 1.4x ATR $631.7)",
-        "confluence_level": "Prior Daily Low ($60,339.6)",
-        "conviction": "STRUCTURAL_CONFLUENCE"
+        "active_tfs": [],
+        "direction": "INACTIVE",
+        "detail": null,
+        "confluence_level": null,
+        "conviction": "INACTIVE"
       },
       {
         "id": "RSI_DIVERGENCE",
@@ -2062,7 +2038,7 @@
       "avwap": "OK"
     },
     "price_and_pois": {
-      "last_close": 60400.1,
+      "last_close": 60223.1,
       "htf_supply_cluster": {
         "low": 64209.3,
         "high": 64930.7,
@@ -2074,7 +2050,7 @@
         "status": "TESTING"
       },
       "range_high": 64570.0,
-      "range_low": 59050.0,
+      "range_low": 59419.0,
       "first_test_high": 60744.3,
       "poor_highs_cluster": {
         "level": 64570.0,
@@ -2097,7 +2073,7 @@
       },
       "p04_double_top_no_sweep": {
         "front_run_high": null,
-        "footprint_ask_absorption": true
+        "footprint_ask_absorption": false
       },
       "p05_rounded_retest_long": {
         "in_demand_cluster": true,
@@ -2139,7 +2115,7 @@
         "rotation": "USDT -> BTC",
         "tier": "Range Extreme",
         "status": "INACTIVE",
-        "detail": "RangeLow $59,050.0 \u00b7 Wick $60,251.3"
+        "detail": "RangeLow $59,419.0 \u00b7 Wick $60,034.0"
       },
       {
         "num": 2,
@@ -2149,7 +2125,7 @@
         "rotation": "BTC -> USDT",
         "tier": "Range Extreme",
         "status": "INACTIVE",
-        "detail": "RangeHigh $64,570.0 \u00b7 Wick $60,744.3"
+        "detail": "RangeHigh $64,570.0 \u00b7 Wick $60,616.5"
       },
       {
         "num": 3,
@@ -2169,7 +2145,7 @@
         "rotation": "BTC -> USDT",
         "tier": "Range Extreme",
         "status": "INACTIVE",
-        "detail": "FrontRun=No \u00b7 DeltaAbs=True"
+        "detail": "FrontRun=No \u00b7 DeltaAbs=False"
       },
       {
         "num": 5,
@@ -2245,34 +2221,271 @@
     "microstructure_rulebook_3": {
       "r3_1_cvd": {
         "spot_cvd_last_two_highs": [
-          928.7,
-          911.5
+          630.4,
+          613.3
         ],
         "perp_cvd_last_two_highs": [
-          72064.0,
-          -226234.9
+          -576633.5,
+          -874932.4
         ],
         "spot_lag_or_divergence_flag": false
       },
       "r3_2_oi_funding": {
-        "btc_oi_change_pct_1h": -0.16,
-        "btc_oi_change_pct_4h": 0.97,
-        "funding_rate_current": 0.00195,
+        "btc_oi_change_pct_1h": 0.18,
+        "btc_oi_change_pct_4h": 1.07,
+        "funding_rate_current": 0.00131,
         "sweep_oi_spike_flag": false
       },
       "r3_3_p_shape_frvp": {
         "frvp_poc": 60325.0,
         "frvp_vah": 60700.0,
-        "frvp_val": 59900.0,
+        "frvp_val": 60000.0,
         "closed_below_upper_val": false
       },
       "r3_4_avwap": {
         "anchor_type": "PRIMARY_SWING_LOW_1H",
-        "anchor_price": 59050.0,
-        "avwap_value": 61499.2,
+        "anchor_price": 59419.0,
+        "avwap_value": 60235.8,
         "price_vs_avwap": "BELOW",
         "failed_retest_flag": false
       }
+    }
+  },
+  "spot_magnet": {
+    "data_quality": "LIVE",
+    "metrics": {
+      "price": 59913.37,
+      "price_change_1h_pct": -0.56,
+      "price_change_24h_pct": -2.91,
+      "daily_vwap": 60487.29,
+      "weekly_vwap": 61741.02,
+      "vwap_30d": 69641.36,
+      "vpoc_30d_primary": 64500.0,
+      "vpoc_30d_secondary": 77500.0,
+      "spot_vol_24h": 28367.36,
+      "spot_vol_ma20": 22915.2,
+      "spot_vol_ratio": 1.24,
+      "spot_cvd_ratio": 1.019,
+      "spot_cvd_slope_7d": -5031.0,
+      "spot_cvd_slope_14d": -9930.1,
+      "perp_cvd_slope_24h": -36.77,
+      "perp_cvd_trend": "surging",
+      "open_interest_btc": 30462.5,
+      "oi_change_1h_pct": 0.18,
+      "oi_change_4h_pct": 1.07,
+      "oi_change_24h_pct": -3.24,
+      "oi_change_3d_pct": -8.13,
+      "funding_rate_8h_pct": 0.00131,
+      "funding_rate_decimal": 1.31e-05,
+      "funding_rate_annualized_pct": 1.43,
+      "futures_basis_annualized_pct": -0.75,
+      "long_short_account_ratio": 2.49,
+      "ls_ratio_percentile_72h": 73.6,
+      "ls_ratio_available": true,
+      "oi_history_available": true,
+      "bids_asks_depth_ratio": 1.14,
+      "swing_low_4h": 59455.31,
+      "swing_high_4h": 64603.12,
+      "base_floor": 57381.45,
+      "base_ceiling": 64603.12,
+      "capitulation_wick_low": 59455.31,
+      "euphoria_wick_high": 64603.12,
+      "coinbase_spot_price": 59842.18,
+      "okx_spot_price": 59906.0,
+      "coinbase_premium_usd": -71.19,
+      "coinbase_premium_bps": -11.88,
+      "realized_vol_30d_pct": 46.86,
+      "implied_vol_dvol_pct": 53.51,
+      "variance_premium_pts": 6.65,
+      "etf_net_inflow_latest_m": -569.7,
+      "etf_sum5_usd_m": -2367.6
+    },
+    "lsce": {
+      "status": "UPPER_SWEEP_REJECTION_CONFIRMED",
+      "side": "UPPER",
+      "cluster_tested": "Upper Shorts ($60,200)",
+      "sweep_depth_pct": 7.35,
+      "reclaim_level": 60200.0,
+      "spot_absorption": "Upper Rejection (CVD 1.02, Depth 1.14)",
+      "action_verdict": "Upper short liquidity ($60,200) swept (wick $64,603) & rejected. Loop B (BTC -> USDT) active."
+    },
+    "magnets": {
+      "dominant_magnet": "Lower Long Sweep Magnet",
+      "dominant_magnet_reason": "LOWER ($59,600, Immediate 12.3x / Ladder 4.49x; 71.3% long crowded)",
+      "nearest_upper_cluster": {
+        "price_level": 60200.0,
+        "distance_pct": 0.48,
+        "estimated_vol_usd": 10950666.0,
+        "side": "upper",
+        "cluster_type": "Modeled Short Liquidity Pool"
+      },
+      "nearest_lower_cluster": {
+        "price_level": 59600.0,
+        "distance_pct": 0.52,
+        "estimated_vol_usd": 135058216.0,
+        "side": "lower",
+        "cluster_type": "Modeled Long Liquidity Pool"
+      },
+      "immediate_imbalance_ratio": 12.3,
+      "total_ladder_upper_vol_m": 69.6,
+      "total_ladder_lower_vol_m": 312.2,
+      "total_ladder_imbalance_ratio": 4.49,
+      "magnet_factors": {
+        "factor_1_size": "Immediate L vs S: $135.1M vs $11.0M (12.3x) | 10x\u2013100x Ladder: $312.2M vs $69.6M (4.49x)",
+        "factor_2_spot_leadership": "Spot CVD Ratio 1.02 vs Perp Trend surging",
+        "factor_3_crowding_fuel": "Funding +0.0013% | Retail L/S 2.49 (71.3% long)",
+        "factor_4_regime_structure": "Sub-Daily-VWAP structure (overhead supply active)",
+        "factor_5_asymmetry": "LOWER -0.52% away vs UPPER +0.48% away",
+        "factor_6_range_compression": "Closed 4H Range 8.59% | 24H Wick Span 8.59% | Depth 1.14"
+      },
+      "liquidation_ladder": [
+        {
+          "tier": "10x Shorts",
+          "leverage": "10x",
+          "side": "upper",
+          "price": 66218.2,
+          "distance_pct": 10.52,
+          "estimated_vol_m": 25.1,
+          "is_nearest": false
+        },
+        {
+          "tier": "25x Shorts",
+          "leverage": "25x",
+          "side": "upper",
+          "price": 65378.36,
+          "distance_pct": 9.12,
+          "estimated_vol_m": 33.5,
+          "is_nearest": false
+        },
+        {
+          "tier": "50-100x Shorts",
+          "leverage": "50-100x",
+          "side": "upper",
+          "price": 60200.0,
+          "distance_pct": 0.48,
+          "estimated_vol_m": 11.0,
+          "is_nearest": true
+        },
+        {
+          "tier": "100x Longs",
+          "leverage": "100x",
+          "side": "lower",
+          "price": 59600.0,
+          "distance_pct": -0.52,
+          "estimated_vol_m": 135.1,
+          "is_nearest": true
+        },
+        {
+          "tier": "25x Longs",
+          "leverage": "25x",
+          "side": "lower",
+          "price": 58741.85,
+          "distance_pct": -1.96,
+          "estimated_vol_m": 104.2,
+          "is_nearest": false
+        },
+        {
+          "tier": "10x Longs",
+          "leverage": "10x",
+          "side": "lower",
+          "price": 57968.93,
+          "distance_pct": -3.25,
+          "estimated_vol_m": 72.9,
+          "is_nearest": false
+        }
+      ]
+    },
+    "regime_diagnosis": {
+      "regime_id": "DISTRIBUTION_BEAR_CONTINUATION",
+      "name": "Distribution / Bear Continuation",
+      "diagnosis": "Weak spot demand / active overhead distribution",
+      "playbook": "Distribution Bounce -> Loop B Trim (0.50x)",
+      "suitability": "Loop B Bounce Harvest / Loop A Patient",
+      "majority_score": "3/4 observations confirmed",
+      "matched_criteria": [
+        "Price trapped below Daily VWAP, Weekly VWAP & closed 4H ceiling",
+        "Spot CVD persistently negative (7D -5031 / Ratio 1.02)",
+        "Funding +0.0013% / compressed basis (-0.75%)"
+      ],
+      "all_5_candidates": [
+        {
+          "id": "SPOT_LED_EXPANSION",
+          "name": "Spot-Led Expansion",
+          "matches_count": 2,
+          "required": 3,
+          "matched": [
+            "Funding & OI controlled (Fund 0.001%, OI24h -3.2%)",
+            "Spot volume confirmed (1.24x 20D baseline)"
+          ],
+          "active": false
+        },
+        {
+          "id": "LEVERAGED_FRAGILE_UPSIDE",
+          "name": "Leveraged / Fragile Upside",
+          "matches_count": 1,
+          "required": 3,
+          "matched": [
+            "Futures leverage expanding (OI24h -3.24%, Perp surging)"
+          ],
+          "active": false
+        },
+        {
+          "id": "RANGE_LIQUIDATION_MAGNET",
+          "name": "Range / Liquidation Magnet",
+          "matches_count": 3,
+          "required": 3,
+          "matched": [
+            "Spot CVD balanced inside range (Ratio 1.02)",
+            "Positioning skewed (L/S 2.49, Fund 0.001%)",
+            "Symmetrical liquidation pools active above & below spot"
+          ],
+          "active": false
+        },
+        {
+          "id": "CASCADE_FORCED_DELEVERAGING",
+          "name": "Cascade / Forced Deleveraging",
+          "matches_count": 1,
+          "required": 3,
+          "matched": [
+            "Basis compressed / backwardation (-0.75%)"
+          ],
+          "active": false
+        },
+        {
+          "id": "DISTRIBUTION_BEAR_CONTINUATION",
+          "name": "Distribution / Bear Continuation",
+          "matches_count": 3,
+          "required": 3,
+          "matched": [
+            "Price trapped below Daily VWAP, Weekly VWAP & closed 4H ceiling",
+            "Spot CVD persistently negative (7D -5031 / Ratio 1.02)",
+            "Funding +0.0013% / compressed basis (-0.75%)"
+          ],
+          "active": true
+        }
+      ],
+      "notes": "Weak spot demand / active overhead distribution. Rule Score: 3/4 observations confirmed. LSCE: UPPER_SWEEP_REJECTION_CONFIRMED. Dominant Magnet: LOWER ($59,600, Immediate 12.3x / Ladder 4.49x; 71.3% long crowded).",
+      "plain_english_verdict": "[Distribution / Bear Continuation] Weak spot demand / active overhead distribution. LOOP B (BTC -> USDT): Rotate 50% of 10% BTC Sleeve (5.0% equity) into USDT; rebuy < P_sell."
+    },
+    "dibse": {
+      "dibse_signal": "LOOP B: BTC -> USDT",
+      "dibse_headline": "Loop B: Trim 50% of 10% BTC Sleeve into Bounce",
+      "rotation": "BTC -> USDT",
+      "sizing_factor": 0.5,
+      "recommended_cash_deploy_pct": 50.0,
+      "active_sandbox_pct": 20.0,
+      "usdt_sleeve_pct": 10.0,
+      "btc_sleeve_pct": 10.0,
+      "untouched_core_pct": 80.0,
+      "target_btc_allocation_pct": 5.0,
+      "target_usdt_reserve_pct": 15.0,
+      "loop_a_zone": "Washout $59,455\u2013$59,600 -> Profit Exit > $64,603",
+      "loop_b_zone": "Squeeze $60,200\u2013$64,603 -> Rebuy < $59,455",
+      "sleeve_allocation": "10% USDT Sleeve + 10% BTC Sleeve (20% Active Sandbox | 80% Untouched Core)",
+      "actionable_trade_instruction": "LOOP B (BTC -> USDT): Rotate 50% of 10% BTC Sleeve (5.0% equity) into USDT; rebuy < P_sell.",
+      "stop_rule": "ZERO STOP-LOSSES (DIBSE Asymmetric Self-Healing Inventory)",
+      "structural_invalidation_level": 59455.31,
+      "failure_protocol": "Underwater Loop A holds Spot BTC inventory (> P_buy); bypassed Loop B holds Spot USDT (< P_sell)."
     }
   },
   "signal": {
@@ -2282,7 +2495,7 @@
       "FLAT"
     ],
     "direction": null,
-    "price": 60393.4,
+    "price": 59880.5,
     "atr_4h": 1442.8,
     "structural_levels": [
       {
@@ -2362,7 +2575,7 @@
         "id": 2,
         "rule": "4H Level Aligned w/ Daily Bias",
         "passed": true,
-        "detail": "At Prior Daily Low (60,339.6, dist $54) aligned w/ Daily BEAR"
+        "detail": "At 7D VAL (59,750.0, dist $130) aligned w/ Daily BEAR"
       },
       {
         "id": 3,
@@ -2374,13 +2587,13 @@
         "id": 4,
         "rule": "Risk-Reward \u2265 1.6 : 1",
         "passed": false,
-        "detail": "R:R 0.96:1 (adj 0.96:1) to 7D VAL (59,750.0) < 1.6:1 min"
+        "detail": "R:R 0.97:1 (adj 0.97:1) to 4H Swing Low #2 (58,731.0) < 1.6:1 min"
       },
       {
         "id": 5,
         "rule": "Stop Distance \u2264 2.2%",
         "passed": true,
-        "detail": "Stop distance 1.11% \u2264 2.2% max"
+        "detail": "Stop distance 1.97% \u2264 2.2% max"
       },
       {
         "id": 6,
@@ -2410,31 +2623,31 @@
     "rejection_reasons": [
       "Score 43.9 in Flat Zone (32\u201368); no exceptions",
       "No 4H bearish BOS (< 59419.0) or qualifying rejection candle (vol 0.51x)",
-      "R:R 0.96:1 (adj 0.96:1) to 7D VAL (59,750.0) < 1.6:1 min"
+      "R:R 0.97:1 (adj 0.97:1) to 4H Swing Low #2 (58,731.0) < 1.6:1 min"
     ],
     "proposal": {
       "direction": "SHORT",
       "entry_method": "LIMIT_AT_LEVEL",
-      "entry_price": 60393.4,
+      "entry_price": 59880.5,
       "stop_price": 61061.5,
-      "target1_price": 59750.0,
-      "target1_label": "7D VAL",
-      "raw_rr": 0.96,
-      "funding_adjusted_rr": 0.96,
-      "level_label": "Prior Daily Low",
-      "level_price": 60339.6,
+      "target1_price": 58731.0,
+      "target1_label": "4H Swing Low #2",
+      "raw_rr": 0.97,
+      "funding_adjusted_rr": 0.97,
+      "level_label": "7D VAL",
+      "level_price": 59750.0,
       "confirmation_type": null,
       "weekend_halved": false,
       "valid": true,
-      "size_btc": 0.598713,
-      "notional_usd": 36158.3,
-      "leverage": 0.362,
+      "size_btc": 0.338696,
+      "notional_usd": 20281.29,
+      "leverage": 0.203,
       "leverage_capped": false,
       "target_risk_pct": 0.4,
       "actual_risk_pct": 0.4,
       "actual_risk_usd": 400.0,
-      "stop_distance_usd": 668.1,
-      "stop_distance_pct": 1.106
+      "stop_distance_usd": 1181.0,
+      "stop_distance_pct": 1.972
     },
     "liquidation_magnets": {
       "basis": "CoinMarketCap Exact Liquidation Map ($50 bins) + 4H/24H Realized Liquidations + 25x/50x Pivot Bands",
@@ -2446,14 +2659,14 @@
       "recent_4h_swing_high_pool": 64570.0,
       "cmc_exact_clusters": {
         "source": "CoinMarketCap (Hyperliquid Exact Map + Multi-Exchange Realized)",
-        "mark_price": 60350.9,
+        "mark_price": 59940.9,
         "cumulative_fuel": {
-          "total_long_below_usd_m": 1015.44,
-          "total_short_above_usd_m": 878.87,
-          "longs_within_2pct_usd_m": 79.66,
-          "shorts_within_2pct_usd_m": 14.41,
-          "longs_within_5pct_usd_m": 169.52,
-          "shorts_within_5pct_usd_m": 56.81,
+          "total_long_below_usd_m": 1004.43,
+          "total_short_above_usd_m": 873.51,
+          "longs_within_2pct_usd_m": 82.33,
+          "shorts_within_2pct_usd_m": 9.41,
+          "longs_within_5pct_usd_m": 203.54,
+          "shorts_within_5pct_usd_m": 55.65,
           "squeeze_bias_2pct": "LONG_FLUSH_HEAVY"
         },
         "tactical_long_clusters_within_8pct": [
@@ -2463,9 +2676,9 @@
               59700.0,
               59750.0
             ],
-            "usd_m": 49.3,
-            "leverage": 43,
-            "distance_pct": -1.04
+            "usd_m": 49.04,
+            "leverage": 61,
+            "distance_pct": -0.36
           },
           {
             "price": 57125.0,
@@ -2473,9 +2686,9 @@
               57100.0,
               57150.0
             ],
-            "usd_m": 34.02,
-            "leverage": 15,
-            "distance_pct": -5.35
+            "usd_m": 34.01,
+            "leverage": 17,
+            "distance_pct": -4.7
           },
           {
             "price": 57975.0,
@@ -2483,9 +2696,9 @@
               57950.0,
               58000.0
             ],
-            "usd_m": 22.37,
-            "leverage": 19,
-            "distance_pct": -3.94
+            "usd_m": 22.44,
+            "leverage": 22,
+            "distance_pct": -3.28
           }
         ],
         "tactical_short_clusters_within_8pct": [
@@ -2495,19 +2708,19 @@
               64450.0,
               64500.0
             ],
-            "usd_m": 17.24,
-            "leverage": 12,
-            "distance_pct": 6.83
+            "usd_m": 19.96,
+            "leverage": 11,
+            "distance_pct": 7.56
           },
           {
-            "price": 62775.0,
+            "price": 62575.0,
             "range": [
-              62750.0,
-              62800.0
+              62550.0,
+              62600.0
             ],
-            "usd_m": 16.81,
-            "leverage": 19,
-            "distance_pct": 4.02
+            "usd_m": 15.96,
+            "leverage": 18,
+            "distance_pct": 4.39
           },
           {
             "price": 64675.0,
@@ -2515,41 +2728,41 @@
               64650.0,
               64700.0
             ],
-            "usd_m": 5.79,
-            "leverage": 12,
-            "distance_pct": 7.17
+            "usd_m": 5.76,
+            "leverage": 11,
+            "distance_pct": 7.9
           }
         ],
         "largest_macro_long_cluster": {
-          "price": 43425.0,
+          "price": 43225.0,
           "range": [
-            43400.0,
-            43450.0
+            43200.0,
+            43250.0
           ],
-          "usd_m": 66.28,
+          "usd_m": 59.74,
           "leverage": 3,
-          "distance_pct": -28.05
+          "distance_pct": -27.89
         },
         "largest_macro_short_cluster": {
-          "price": 72525.0,
+          "price": 72075.0,
           "range": [
-            72500.0,
-            72550.0
+            72050.0,
+            72100.0
           ],
-          "usd_m": 81.8,
+          "usd_m": 78.76,
           "leverage": 5,
-          "distance_pct": 20.17
+          "distance_pct": 20.24
         },
         "realized": {
-          "h4_long_usd_m": 1.0,
-          "h4_short_usd_m": 1.14,
-          "h4_total_usd_m": 2.14,
-          "h4_long_flush_pct": 46.6,
-          "h24_long_usd_m": 575.98,
-          "h24_short_usd_m": 191.49,
-          "h24_total_usd_m": 767.47,
-          "h24_long_flush_pct": 75.0,
-          "global_btc_oi_usd_b": 64.05
+          "h4_long_usd_m": 6.91,
+          "h4_short_usd_m": 1.32,
+          "h4_total_usd_m": 8.23,
+          "h4_long_flush_pct": 83.9,
+          "h24_long_usd_m": 581.94,
+          "h24_short_usd_m": 191.12,
+          "h24_total_usd_m": 773.06,
+          "h24_long_flush_pct": 75.3,
+          "global_btc_oi_usd_b": 66.74
         }
       }
     },

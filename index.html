@@ -9,13 +9,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=12">
+  <link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
   <div class="wrap">
     <div class="ws-titlebar">
       <span>&#9632; QUANT-WORKSTATION // BTC-PROTOCOL REV 4.0</span>
-      <span class="ws-sysmeta" data-i18n="sys_meta">SYS: 4H-SWING · MAX LEV 1:2 · KEYS [1-4]</span>
+      <span class="ws-sysmeta" data-i18n="sys_meta">SYS: 4H-SWING · MAX LEV 1:2 · KEYS [1-5]</span>
     </div>
 
     <div class="lang-bar" id="langBar" role="group" aria-label="Language Selector">
@@ -51,8 +51,9 @@
     <nav class="tabs" id="tabNav">
       <button class="tab-btn active" data-tab="signal"><kbd>F1</kbd> <span data-i18n="tab_f1">Signal Tab</span></button>
       <button class="tab-btn" data-tab="regime"><kbd>F2</kbd> <span data-i18n="tab_f2">Regime &amp; Kline Patterns</span></button>
-      <button class="tab-btn" data-tab="ledger"><kbd>F3</kbd> <span data-i18n="tab_f3">Paper Ledger &amp; Risk Calc</span></button>
-      <button class="tab-btn" data-tab="audit"><kbd>F4</kbd> <span data-i18n="tab_f4">Audit Log &amp; Config</span></button>
+      <button class="tab-btn" data-tab="spot"><kbd>F3</kbd> <span data-i18n="tab_spot">Spot Magnet (DIBSE)</span></button>
+      <button class="tab-btn" data-tab="ledger"><kbd>F4</kbd> <span data-i18n="tab_f3">Paper Ledger &amp; Risk Calc</span></button>
+      <button class="tab-btn" data-tab="audit"><kbd>F5</kbd> <span data-i18n="tab_f4">Audit Log &amp; Config</span></button>
     </nav>
 
     <!-- TAB 1: SIGNAL TAB -->
@@ -128,7 +129,21 @@
       </div>
     </section>
 
-    <!-- TAB 3: PAPER LEDGER & RISK CALCULATOR -->
+    <!-- TAB 3: SPOT MAGNET MONITOR (DIBSE) -->
+    <section class="tab-panel" id="tab-spot">
+      <div class="actions" style="margin-bottom:10px;">
+        <button class="btn btn-primary" id="btnCopySpotAi">[Copy Spot Magnet AI Prompt + JSON]</button>
+        <span class="mut" id="spotActionMsg" style="align-self:center;">Strict 1.0x Spot-Only (USDT &harr; BTC) DIBSE Dual-Sleeve Audit &amp; Q&amp;A Prompt.</span>
+      </div>
+      <div class="card" id="spotDibseHeroBox"></div>
+      <div class="grid-2">
+        <div class="card" id="spotLsceMagnetBox"></div>
+        <div class="card" id="spotLadderBox"></div>
+      </div>
+      <div class="grid-2" id="spotTelemetryFeedsBox"></div>
+    </section>
+
+    <!-- TAB 4: PAPER LEDGER & RISK CALCULATOR -->
     <section class="tab-panel" id="tab-ledger">
       <div class="card">
         <h2 data-i18n="h_calc">Interactive v4.0 Position Sizing Calculator</h2>
@@ -187,7 +202,7 @@
       </div>
     </section>
   </div>
-  <script src="lang.js?v=2"></script>
-  <script src="app.js?v=12"></script>
+  <script src="lang.js?v=3"></script>
+  <script src="app.js?v=13"></script>
 </body>
 </html>

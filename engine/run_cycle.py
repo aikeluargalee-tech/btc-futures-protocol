@@ -20,6 +20,7 @@ from .paper_ledger import (
 )
 from .regime_engine import compute_regime
 from .signal_engine import evaluate_signal
+from .spot_magnet_engine import compute_spot_magnet
 
 ROOT = Path(__file__).resolve().parent.parent
 LEDGER_PATH = ROOT / "data" / "ledger.json"
@@ -69,6 +70,7 @@ def main() -> int:
 
     playbook_bundle = compute_regime_and_kline_playbook(market, regime, signal)
     regime["state_of_regime"] = playbook_bundle["state_of_regime"]
+    spot_magnet = compute_spot_magnet(market, regime, signal)
 
     _save_json(LEDGER_PATH, ledger)
     _save_json(AUDIT_PATH, ledger["audit_log"][-100:])
@@ -190,6 +192,7 @@ def main() -> int:
         "state_of_regime": playbook_bundle["state_of_regime"],
         "kline_patterns": playbook_bundle["kline_patterns"],
         "cortex_11p": playbook_bundle["cortex_11p"],
+        "spot_magnet": spot_magnet,
         "signal": signal,
         "portfolio": portfolio,
         "audit_log_recent": list(reversed(ledger["audit_log"][-40:])),
@@ -198,7 +201,7 @@ def main() -> int:
     }
     _save_json(STATE_PATH, state)
     print(
-        f"[OK] BTC={market['ticker']['price']} | v4.0 Regime={regime['score']} ({regime['bias']}, 1D={regime.get('daily_bias')}, {playbook_bundle['state_of_regime']['code']}) | KlineHits={playbook_bundle['kline_patterns']['active_count']} | Signal={signal['status']} | Eq=${eq:,.2f}"
+        f"[OK] BTC={market['ticker']['price']} | v4.0 Regime={regime['score']} ({regime['bias']}, 1D={regime.get('daily_bias')}, {playbook_bundle['state_of_regime']['code']}) | Spot={(spot_magnet.get('regime_diagnosis') or {}).get('name')} | KlineHits={playbook_bundle['kline_patterns']['active_count']} | Signal={signal['status']} | Eq=${eq:,.2f}"
     )
     return 0
 

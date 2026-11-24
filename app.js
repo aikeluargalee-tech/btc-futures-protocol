@@ -335,6 +335,141 @@ function renderRegimeTab() {
     : `<p class="mut">No USD High-Impact events inside the upcoming window.</p>`;
 }
 
+function renderSpotTab() {
+  const sm = STATE?.spot_magnet;
+  if (!$("spotDibseHeroBox")) return;
+  if (!sm || sm.data_quality !== "LIVE" || !sm.metrics) {
+    $("spotDibseHeroBox").innerHTML = `<h2>Spot Magnet (DIBSE Dual-Sleeve Radar)</h2><p class="mut">Spot telemetry unavailable (${esc(sm?.data_quality || "NO DATA")}).</p>`;
+    if ($("spotLsceMagnetBox")) $("spotLsceMagnetBox").innerHTML = `<h2>LSCE Sweep Gate &amp; 6-Factor Magnet</h2><p class="mut">Unavailable</p>`;
+    if ($("spotLadderBox")) $("spotLadderBox").innerHTML = `<h2>Modeled 10x–100x Liquidation Ladder</h2><p class="mut">Unavailable</p>`;
+    if ($("spotTelemetryFeedsBox")) $("spotTelemetryFeedsBox").innerHTML = "";
+    return;
+  }
+
+  const m = sm.metrics;
+  const diag = sm.regime_diagnosis || {};
+  const dibse = sm.dibse || {};
+  const lsce = sm.lsce || {};
+  const mag = sm.magnets || {};
+  const sig = dibse.dibse_signal || "HOLD BOTH SLEEVES";
+  const sigCls = sig.startsWith("LOOP A") ? "up" : sig.startsWith("LOOP B") ? "dn" : "warn";
+
+  const candRows = (diag.all_5_candidates || []).map((c) => `
+    <div class="row">
+      <div>
+        <div class="title">${esc(c.name)}</div>
+        <div class="mut">${esc((c.matched || []).join(" · ") || "0 criteria met")}</div>
+      </div>
+      <span class="badge ${c.active ? sigCls : ""}">${c.matches_count}/4 · ${c.active ? "ACTIVE" : "STANDBY"}</span>
+    </div>`).join("");
+
+  $("spotDibseHeroBox").innerHTML = `
+    <h2>DIBSE Spot Action &amp; Majority-Voting 5-Regime Spot Radar</h2>
+    <div class="signal-head" style="margin-bottom:8px;">
+      <div>
+        <div class="big-num ${sigCls}">${esc(sig)} (${num((dibse.sizing_factor ?? 0), 2)}x)</div>
+        <div class="mut">Regime: <b>${esc(diag.name || "—")}</b> (${esc(diag.majority_score || "—")}) · Playbook: <b>${esc(diag.playbook || "—")}</b></div>
+      </div>
+      <div>
+        <span class="badge ${sigCls}">${esc(dibse.rotation || "Hold Both Sleeves")}</span>
+        <span class="badge">SANDBOX: 10% USDT + 10% BTC · 80% CORE</span>
+      </div>
+    </div>
+    <p style="margin:6px 0 8px;">${esc(dibse.actionable_trade_instruction || diag.plain_english_verdict || "")}</p>
+    <div class="grid-2" style="margin-bottom:8px;">
+      <div>${candRows}</div>
+      <dl class="kv">${kv([
+        ["Target Active Sleeve Mix", `BTC Sleeve ${dibse.target_btc_allocation_pct ?? 10}% | USDT Sleeve ${dibse.target_usdt_reserve_pct ?? 10}% (80% Core)`],
+        ["Loop A (Buy -> > P_buy)", dibse.loop_a_zone || "—"],
+        ["Loop B (Sell -> < P_sell)", dibse.loop_b_zone || "—"],
+        ["Failure / Stop Rule", dibse.stop_rule || "ZERO STOP-LOSSES (Self-Healing Spot Inventory)"],
+        ["Failure Protocol", dibse.failure_protocol || "—"],
+      ])}</dl>
+    </div>
+  `;
+
+  const lsceCls = (lsce.status || "").includes("CONFIRMED") ? (lsce.side === "LOWER" ? "up" : "dn") : (lsce.status || "").includes("PROGRESS") ? "warn" : "";
+  const mf = mag.magnet_factors || {};
+  $("spotLsceMagnetBox").innerHTML = `
+    <h2>LSCE Bidirectional Sweep Gate &amp; 6-Factor Dominant Magnet</h2>
+    <div class="signal-head" style="margin-bottom:8px;">
+      <div class="big-num ${lsceCls}">${esc(lsce.status || "UNTESTED")}</div>
+      <span class="badge ${lsceCls}">${esc(mag.dominant_magnet || "—")}</span>
+    </div>
+    <p class="mut" style="margin:0 0 8px;">${esc(lsce.action_verdict || "")}</p>
+    <dl class="kv">${kv([
+      ["Sweep Side & Shelf", `${lsce.side || "NONE"} · ${lsce.cluster_tested || "—"}`],
+      ["Absorption / Depth", lsce.spot_absorption || "—"],
+      ["Dominant Reason", mag.dominant_magnet_reason || "—"],
+      ["1. Pool Size (10x–100x)", mf.factor_1_size || "—"],
+      ["2. Spot vs Perp Flow", mf.factor_2_spot_leadership || "—"],
+      ["3. Crowding Fuel", mf.factor_3_crowding_fuel || "—"],
+      ["4. VWAP Structure", mf.factor_4_regime_structure || "—"],
+      ["5. Distance Asymmetry", mf.factor_5_asymmetry || "—"],
+      ["6. Range / Volatility", mf.factor_6_range_compression || "—"],
+    ])}</dl>
+  `;
+
+  const ladder = mag.liquidation_ladder || [];
+  $("spotLadderBox").innerHTML = `
+    <h2>Modeled 10x–100x Liquidation Magnet Ladder (BTC Magnet)</h2>
+    <p class="mut" style="margin:0 0 8px;">Immediate Imbalance L/S: <b>${mag.immediate_imbalance_ratio ?? "—"}x</b> · Full Ladder L vs S: <b>$${mag.total_ladder_lower_vol_m ?? 0}M vs $${mag.total_ladder_upper_vol_m ?? 0}M (${mag.total_ladder_imbalance_ratio ?? 1}x)</b></p>
+    ${ladder.map((row) => {
+      const bCls = row.side === "upper" ? "dn" : "up";
+      return `
+        <div class="row">
+          <div>
+            <div class="title">${esc(row.tier)} ${row.is_nearest ? "★ NEAREST" : ""}</div>
+            <div class="mut">${esc(row.leverage)} leverage · Modeled ~$${row.estimated_vol_m}M</div>
+          </div>
+          <span class="badge ${bCls}">${usd(row.price, 0)} (${pct(row.distance_pct, 2)})</span>
+        </div>`;
+    }).join("")}
+  `;
+
+  const feedCards = [
+    ["1. Price Anchors & 4H Structural Bounds", [
+      ["Spot Execution Price", `${usd(m.price, 2)} (${pct(m.price_change_1h_pct, 2)} 1H · ${pct(m.price_change_24h_pct, 2)} 24H)`],
+      ["Daily VWAP (00:00Z)", `${usd(m.daily_vwap, 2)} (${m.price >= m.daily_vwap ? "ABOVE" : "BELOW"})`],
+      ["Weekly VWAP (Mon 00Z)", `${usd(m.weekly_vwap, 2)} (${m.price >= m.weekly_vwap ? "ABOVE" : "BELOW"})`],
+      ["30D VWAP / Primary VPOC", `${usd(m.vwap_30d, 0)} / ${usd(m.vpoc_30d_primary, 0)}`],
+      ["Closed 4H Range", `${usd(m.swing_low_4h, 0)} – ${usd(m.swing_high_4h, 0)}`],
+      ["3D Base Floor / Ceiling", `${usd(m.base_floor, 0)} – ${usd(m.base_ceiling, 0)}`],
+    ]],
+    ["2. Order Flow, Spot CVD & Coinbase Premium", [
+      ["24H Spot CVD Ratio", `${num(m.spot_cvd_ratio, 3)} (${m.spot_cvd_ratio >= 1.0 ? "Buyers Active" : "Sellers Dominant"})`],
+      ["Spot CVD Slope 7D / 14D", `${num(m.spot_cvd_slope_7d, 0)} / ${num(m.spot_cvd_slope_14d, 0)} BTC`],
+      ["Spot 24H Vol / 20D MA", `${num(m.spot_vol_24h, 0)} BTC (${num(m.spot_vol_ratio, 2)}x 20D MA)`],
+      ["Perp CVD 24H Trend", `${m.perp_cvd_trend} (Mark Prem ${usd(m.perp_cvd_slope_24h, 2)})`],
+      ["Coinbase Spot Premium", m.coinbase_premium_bps != null ? `${usd(m.coinbase_premium_usd, 2)} (${m.coinbase_premium_bps >= 0 ? "+" : ""}${m.coinbase_premium_bps} bps)` : "UNAVAILABLE"],
+      ["L2 ±1% Book Depth Ratio", `${m.bids_asks_depth_ratio}x Bids/Asks`],
+    ]],
+    ["3. Derivatives Crowding & Leverage Basis", [
+      ["Open Interest (BTC)", m.open_interest_btc != null ? `${num(m.open_interest_btc, 1)} BTC` : "UNAVAILABLE"],
+      ["OI Change 1H / 4H / 24H", `${pct(m.oi_change_1h_pct, 2)} / ${pct(m.oi_change_4h_pct, 2)} / ${pct(m.oi_change_24h_pct, 2)}`],
+      ["8H / Annualized Funding", `${pct(m.funding_rate_8h_pct, 4)} (${pct(m.funding_rate_annualized_pct, 2)} ann.)`],
+      ["Futures Annualized Basis", `${pct(m.futures_basis_annualized_pct, 2)}`],
+      ["Retail L/S Account Ratio", m.ls_ratio_available ? `${m.long_short_account_ratio} (${m.ls_ratio_percentile_72h ?? "—"}th pctile 72h)` : "UNAVAILABLE"],
+      ["ETF 1D / 5D Flows", m.etf_sum5_usd_m != null ? `Latest $${m.etf_net_inflow_latest_m ?? "—"}M · 5D $${m.etf_sum5_usd_m}M` : "UNAVAILABLE"],
+    ]],
+    ["4. Options Variance Premium & Spot Directives", [
+      ["30D Realized Volatility", m.realized_vol_30d_pct != null ? `${num(m.realized_vol_30d_pct, 2)}%` : "UNAVAILABLE"],
+      ["Deribit Implied DVOL", m.implied_vol_dvol_pct != null ? `${num(m.implied_vol_dvol_pct, 2)}%` : "UNAVAILABLE"],
+      ["Variance Premium (IV-RV)", m.variance_premium_pts != null ? `${pct(m.variance_premium_pts, 2)} pts` : "UNAVAILABLE"],
+      ["24H Sweep Extremes", `Low ${usd(m.capitulation_wick_low, 0)} · High ${usd(m.euphoria_wick_high, 0)}`],
+      ["Spot Leverage Limit", "1.0x UNLEVERAGED ONLY (Zero Margin / Zero Liq Risk)"],
+      ["Zero-Stop Invariant", "80% Core Untouched · Dual-Sleeve Self-Healing Inventory"],
+    ]],
+  ];
+
+  $("spotTelemetryFeedsBox").innerHTML = feedCards.map(([title, rows]) => `
+    <div class="card">
+      <h2>${esc(title)}</h2>
+      <dl class="kv">${kv(rows)}</dl>
+    </div>
+  `).join("");
+}
+
 function renderChart() {
   const bars = (STATE?.charts?.[CHART_TF] || []).slice(-60);
   if (bars.length < 2) {
@@ -537,6 +672,22 @@ function activateTab(tabId) {
   document.querySelectorAll("#tabNav .tab-btn").forEach((x) => x.classList.toggle("active", x.dataset.tab === tabId));
   document.querySelectorAll(".tab-panel").forEach((p) => p.classList.toggle("active", p.id === `tab-${tabId}`));
 }
+
+const SPOT_MAGNET_AI_PROMPT_TEMPLATE = `### ROLE & OBJECTIVE
+Act as an Institutional Quantitative Spot Bitcoin Strategist executing the **BTC Magnet Monitor (DIBSE Dual-Sleeve Protocol)**.
+Evaluate the raw unleveraged Spot telemetry packet below (Strict **1.0x Spot-Only**: zero margin, zero perpetual futures, zero forced stop-losses; rotating between a **10% USDT Sleeve** and a **10% BTC Sleeve** with **80% Untouched Core Reserve**).
+
+Answer these 5 audit questions strictly from the JSON telemetry:
+1. **Regime & 4-Criteria Majority Audit:** Does price vs. Daily/Weekly VWAP, Spot CVD (Ratio + 7D/14D slopes), Coinbase Premium (bps), Funding/OI, and Book Depth support **Loop A (`USDT -> BTC`)**, **Loop B (`BTC -> USDT`)**, or **Hold Both Sleeves**?
+2. **Bidirectional LSCE & 10x–100x Magnet Pull:** Which liquidity cluster exerts dominant pull (`Upper Short Pool` vs. `Lower Long Pool` vs. CMC ±8% clusters), and is LSCE confirming absorption or warning of a fakeout?
+3. **Futures Trap Check:** Compare Spot CVD against Perp Funding/OI/Basis — is upside Spot-Led or Fragile Leverage?
+4. **DIBSE Execution Plan:** State exact Loop A accumulation zone (`Exit > P_buy`) or Loop B distribution zone (`Rebuy < P_sell`), sizing factor (`0.0x–1.0x` of the 10% sleeve), and what invalidates waiting.
+5. **Quick Mobile Summary (<= 80 words):** Crisp bullet summary for Spot inventory execution.
+
+### LIVE SPOT MAGNET TELEMETRY (JSON)
+\`\`\`json
+{{SPOT_JSON_PAYLOAD}}
+\`\`\``;
 
 const MASTER_QUANT_PROMPT_TEMPLATE = `### ROLE & OBJECTIVE
 Act as an Institutional Quantitative Bitcoin Swing Strategist and Risk Officer. Below is a raw, unopinionated market telemetry packet from the **BTC Short-Term Futures Protocol (v4.1)**. Your job is to analyze the raw data independently from first principles (Auction Market Theory, 4H/1D price structure, 7D/30D Volume Profile, momentum exhaustion vs. impulse, multi-venue derivatives positioning, liquidation magnets, L2 order book imbalance, and institutional ETF/stablecoin flows) and issue an unbiased Long, Short, or Stand-Aside execution verdict.
@@ -748,6 +899,7 @@ function buildRawTelemetryPacket(fullState) {
       pattern_state_flags: fullState.cortex_11p.pattern_state_flags,
       microstructure_rulebook_3: fullState.cortex_11p.microstructure_rulebook_3,
     } : null,
+    spot_magnet: fullState.spot_magnet ?? null,
     risk_constraints_reference: {
       account_equity_usd: accountEquityUsd,
       max_leverage: lr.max_leverage ?? 2.0,
@@ -810,7 +962,7 @@ function bindEvents() {
   document.addEventListener("keydown", (e) => {
     if (e.altKey || e.ctrlKey || e.metaKey) return;
     if (/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName || "")) return;
-    const map = { "1": "signal", "2": "regime", "3": "ledger", "4": "audit" };
+    const map = { "1": "signal", "2": "regime", "3": "spot", "4": "ledger", "5": "audit" };
     if (map[e.key]) activateTab(map[e.key]);
   });
   $("chartSeg").addEventListener("click", (e) => {
@@ -841,6 +993,26 @@ function bindEvents() {
     const msg = window.DeskI18n ? window.DeskI18n.t("ai_copied") : "Copied! Paste into ChatGPT, Gemini, Claude, Grok, DeepSeek, or Kimi.";
     copyTextWithFeedback(promptText, msg);
   };
+  if ($("btnCopySpotAi")) {
+    $("btnCopySpotAi").onclick = () => {
+      if (!STATE?.spot_magnet) return;
+      const payload = {
+        updated_at_utc: STATE.updated_at_utc,
+        live_spot_price: activePrice(),
+        spot_magnet: STATE.spot_magnet,
+        cmc_liquidations: STATE.derivatives?.cmc_liquidations ?? null,
+      };
+      let promptText = SPOT_MAGNET_AI_PROMPT_TEMPLATE.replace("{{SPOT_JSON_PAYLOAD}}", JSON.stringify(payload, null, 2));
+      const meta = window.DeskI18n?.getMeta();
+      if (meta && meta.code !== "en") {
+        promptText = promptText.replace(
+          "### LIVE SPOT MAGNET TELEMETRY (JSON)",
+          `**Response Language:** Respond strictly in ${meta.aiName} while keeping all BTC prices and JSON values exact.\n\n### LIVE SPOT MAGNET TELEMETRY (JSON)`
+        );
+      }
+      copyTextWithFeedback(promptText, "Copied Spot Magnet DIBSE Prompt + JSON!", "spotActionMsg");
+    };
+  }
   window.onDeskLangChanged = () => {
     renderHeaderLive();
   };
@@ -862,6 +1034,7 @@ async function init() {
   renderHeaderLive();
   renderSignalTab();
   renderRegimeTab();
+  renderSpotTab();
   renderLedgerTab();
   renderAuditTab();
   seedCalcFromState();
