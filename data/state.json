@@ -1,43 +1,43 @@
 {
   "protocol_version": "4.0",
   "protocol_name": "BTC Short-Term Futures Protocol",
-  "updated_at_utc": "2026-11-24T00:55:36Z",
-  "updated_at_ms": 1795481736915,
+  "updated_at_utc": "2026-11-24T01:01:37Z",
+  "updated_at_ms": 1795482097275,
   "last_4h_close_utc": "2026-11-23T20:00:00Z",
   "ticker": {
-    "price": 61211.2,
+    "price": 61366.3,
     "high24": 64570.0,
     "low24": 60339.6,
-    "chg24_pct": 0.02,
+    "chg24_pct": 0.43,
     "source": "OKX BTC-USDT-SWAP"
   },
   "derivatives": {
-    "current_rate_pct": 0.00588,
-    "oi_btc": 29622.0,
-    "total_oi_btc": 82744.5,
+    "current_rate_pct": 0.00573,
+    "oi_btc": 29625.0,
+    "total_oi_btc": 82732.2,
     "venues": {
-      "okx": 0.00588,
-      "kraken_futures": 0.00761,
+      "okx": 0.00573,
+      "kraken_futures": 0.00716,
       "deribit": 0.0011,
-      "hyperliquid": 0.00957
+      "hyperliquid": 0.0005
     },
     "venue_oi_btc": {
-      "okx": 29622.0,
-      "kraken_futures": 2172.8,
-      "deribit": 13999.3,
-      "hyperliquid": 36950.4
+      "okx": 29625.0,
+      "kraken_futures": 2174.1,
+      "deribit": 13949.1,
+      "hyperliquid": 36984.0
     },
     "orderbook_1pct": {
-      "bid_depth_1pct_usd": 11010691.0,
-      "ask_depth_1pct_usd": 12722113.0,
-      "imbalance_ratio": 0.87,
-      "imbalance_pct": -7.2,
+      "bid_depth_1pct_usd": 11377421.0,
+      "ask_depth_1pct_usd": 10859969.0,
+      "imbalance_ratio": 1.05,
+      "imbalance_pct": 2.3,
       "spread_bps": 0.0163,
       "source": "OKX BTC-USDT-SWAP"
     }
   },
   "extras": {
-    "dvol": 52.08,
+    "dvol": 51.94,
     "fng_value": 11,
     "fng_label": "Extreme Fear"
   },
@@ -77,7 +77,7 @@
       "title": "Core PCE Price Index m/m",
       "time_utc": "2026-11-25T13:30:00Z",
       "ts_ms": 1795613400000,
-      "minutes_away": 2194.1,
+      "minutes_away": 2188.3,
       "forecast": "0.3%",
       "previous": "0.3%"
     },
@@ -85,7 +85,7 @@
       "title": "Prelim GDP q/q",
       "time_utc": "2026-11-25T13:30:00Z",
       "ts_ms": 1795613400000,
-      "minutes_away": 2194.1,
+      "minutes_away": 2188.3,
       "forecast": "3.5%",
       "previous": "3.4%"
     }
@@ -1589,14 +1589,14 @@
         "atr_4h_pct": 2.38,
         "atr_4h_percentile": 90.83,
         "rel_volume_4h": 0.35,
-        "funding_rate_pct": 0.00588,
+        "funding_rate_pct": 0.00573,
         "funding_30d_percentile": 50.0,
         "components": {
           "atr_4h_percentile_score": 35.2,
           "rel_volume_4h_score": 25.3,
           "funding_score": 72.0
         },
-        "summary": "ATR4Hp=90.83, RelVol4H=0.35x, Fund=0.00588%",
+        "summary": "ATR4Hp=90.83, RelVol4H=0.35x, Fund=0.00573%",
         "score": 60.91
       },
       "session_context": {
@@ -1606,7 +1606,7 @@
         "session_name": "ASIA_OR_OFFHOURS",
         "is_weekend_utc": false,
         "next_macro_event": "Core PCE Price Index m/m",
-        "next_macro_minutes": 2194.1,
+        "next_macro_minutes": 2188.3,
         "vix": 26.62,
         "dxy": 104.3,
         "etf_5d_usd_m": -1871.6,
@@ -1615,7 +1615,7 @@
           "event_proximity": 72.0,
           "external_context": 13.0
         },
-        "summary": "ASIA_OR_OFFHOURS, NextEv=2194m",
+        "summary": "ASIA_OR_OFFHOURS, NextEv=2188m",
         "score": 45.52
       }
     },
@@ -1656,7 +1656,7 @@
     "last_4h_close_ts": 1795464000000,
     "last_4h_close_utc": "2026-11-23T20:00:00Z",
     "recalc_utc_day": "2026-11-24",
-    "recalc_at_utc": "2026-11-24T00:55:36Z",
+    "recalc_at_utc": "2026-11-24T01:01:37Z",
     "is_weekend_utc": false,
     "htf_structural_break": false
   },
@@ -1667,7 +1667,7 @@
       "FLAT"
     ],
     "direction": null,
-    "price": 61211.2,
+    "price": 61366.3,
     "atr_4h": 1459.3,
     "structural_levels": [
       {
@@ -1752,7 +1752,7 @@
         "id": 2,
         "rule": "4H Level Aligned w/ Daily Bias",
         "passed": true,
-        "detail": "At Daily Open (61,240.0, dist $29) aligned w/ Daily BEAR"
+        "detail": "At 7D Tactical VPOC (61,375.0, dist $9) aligned w/ Daily BEAR"
       },
       {
         "id": 3,
@@ -1763,14 +1763,14 @@
       {
         "id": 4,
         "rule": "Risk-Reward \u2265 1.6 : 1",
-        "passed": true,
-        "detail": "R:R 1.66:1 (funding-adj 1.66:1) to Prior Daily Low (60,339.6) \u2265 1.6:1"
+        "passed": false,
+        "detail": "R:R 1.07:1 (adj 1.07:1) to 4H Swing High #3 (60,970.0) < 1.6:1 min"
       },
       {
         "id": 5,
         "rule": "Stop Distance \u2264 2.2%",
         "passed": true,
-        "detail": "Stop distance 0.86% \u2264 2.2% max"
+        "detail": "Stop distance 0.60% \u2264 2.2% max"
       },
       {
         "id": 6,
@@ -1799,31 +1799,32 @@
     ],
     "rejection_reasons": [
       "Score 46.2 in Flat Zone (32\u201368); no exceptions",
-      "No 4H bearish BOS (< 60339.6) or qualifying rejection candle (vol 0.35x)"
+      "No 4H bearish BOS (< 60339.6) or qualifying rejection candle (vol 0.35x)",
+      "R:R 1.07:1 (adj 1.07:1) to 4H Swing High #3 (60,970.0) < 1.6:1 min"
     ],
     "proposal": {
       "direction": "SHORT",
       "entry_method": "LIMIT_AT_LEVEL",
-      "entry_price": 61211.2,
+      "entry_price": 61366.3,
       "stop_price": 61737.4,
-      "target1_price": 60339.6,
-      "target1_label": "Prior Daily Low",
-      "raw_rr": 1.66,
-      "funding_adjusted_rr": 1.66,
-      "level_label": "Daily Open",
-      "level_price": 61240.0,
+      "target1_price": 60970.0,
+      "target1_label": "4H Swing High #3",
+      "raw_rr": 1.07,
+      "funding_adjusted_rr": 1.07,
+      "level_label": "7D Tactical VPOC",
+      "level_price": 61375.0,
       "confirmation_type": null,
       "weekend_halved": false,
       "valid": true,
-      "size_btc": 0.760167,
-      "notional_usd": 46530.75,
-      "leverage": 0.465,
+      "size_btc": 1.077877,
+      "notional_usd": 66145.3,
+      "leverage": 0.661,
       "leverage_capped": false,
       "target_risk_pct": 0.4,
       "actual_risk_pct": 0.4,
       "actual_risk_usd": 400.0,
-      "stop_distance_usd": 526.2,
-      "stop_distance_pct": 0.86
+      "stop_distance_usd": 371.1,
+      "stop_distance_pct": 0.605
     },
     "liquidation_magnets": {
       "basis": "Deterministic 25x/50x isolated liquidation bands anchored to 7D VPOC & recent 4H swing pivots",
