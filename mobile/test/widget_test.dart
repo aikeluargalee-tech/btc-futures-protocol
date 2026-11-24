@@ -252,8 +252,13 @@ void main() {
     await tester.tap(find.text('F2 REGIME'));
     await tester.pump();
     expect(vm.hasVisitedTab(1), isTrue);
-    expect(find.text('CMC LIQUIDATION CLUSTERS & 4H/24H FLUSH'), findsOneWidget);
     final regimeScrollable = find.byType(Scrollable).first;
+    await tester.scrollUntilVisible(
+      find.textContaining('CMC LIQUIDATION CLUSTERS & 4H/24H FLUSH'),
+      250,
+      scrollable: regimeScrollable,
+    );
+    expect(find.textContaining('CMC LIQUIDATION CLUSTERS & 4H/24H FLUSH'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('AdMob Banner Slot (320x50 · Test Mode)'),
       250,
