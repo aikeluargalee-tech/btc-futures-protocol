@@ -28,19 +28,69 @@ def sma(values: list[float], period: int) -> float | None:
 
 def rsi(closes: list[float], period: int = 14) -> float | None:
     """Wilder RSI(14) on closed prices."""
+    series = rsi_series(closes, period=period)
+    return series[-1] if series else None
+
+
+def rsi_series(closes: list[float], period: int = 14) -> list[float]:
+    """Wilder RSI(14) series aligned to closed prices (starts at index `period`)."""
     if len(closes) <= period:
-        return None
+        return []
     gains = [max(0.0, closes[i] - closes[i - 1]) for i in range(1, len(closes))]
     losses = [max(0.0, closes[i - 1] - closes[i]) for i in range(1, len(closes))]
     avg_g = sum(gains[:period]) / period
     avg_l = sum(losses[:period]) / period
+    out: list[float] = []
+    if avg_l == 0.0:
+        out.append(100.0)
+    else:
+        rs = avg_g / avg_l
+        out.append(round(100.0 - 100.0 / (1.0 + rs), 2))
     for g, l in zip(gains[period:], losses[period:]):
         avg_g = (avg_g * (period - 1) + g) / period
         avg_l = (avg_l * (period - 1) + l) / period
-    if avg_l == 0.0:
-        return 100.0
-    rs = avg_g / avg_l
-    return round(100.0 - 100.0 / (1.0 + rs), 2)
+        if avg_l == 0.0:
+            out.append(100.0)
+        else:
+            rs = avg_g / avg_l
+            out.append(round(100.0 - 100.0 / (1.0 + rs), 2))
+    return out
+
+
+def awesome_oscillator_series(
+    candles: list[dict[str, float]], fast: int = 5, slow: int = 34
+) -> list[float | None]:
+    """Awesome Oscillator: SMA(median, fast) - SMA(median, slow), aligned with `candles`."""
+    if not candles or fast <= 0 or slow <= fast:
+        return [None] * len(candles)
+    medians = [(c["high"] + c["low"]) / 2.0 for c in candles]
+    out: list[float | None] = []
+    for i in range(len(medians)):
+        if i < slow - 1:
+            out.append(None)
+            continue
+        sma_fast = sum(medians[i - fast + 1 : i + 1]) / fast
+        sma_slow = sum(medians[i - slow + 1 : i + 1]) / slow
+        out.append(round(sma_fast - sma_slow, 2))
+    return out
+
+
+def anchored_vwap(candles: list[dict[str, float]], anchor_idx: int) -> float | None:
+    """Compute Anchored VWAP from `anchor_idx` through the end of `candles`."""
+    if not candles or anchor_idx < 0 or anchor_idx >= len(candles):
+        return None
+    pv_sum = 0.0
+    vol_sum = 0.0
+    for c in candles[anchor_idx:]:
+        vol = float(c.get("volume") or 0.0)
+        if vol <= 0:
+            continue
+        tp = (float(c["high"]) + float(c["low"]) + float(c["close"])) / 3.0
+        pv_sum += tp * vol
+        vol_sum += vol
+    if vol_sum <= 0:
+        return None
+    return round(pv_sum / vol_sum, 1)
 
 
 def atr(candles: list[dict[str, float]], period: int = 14) -> float | None:

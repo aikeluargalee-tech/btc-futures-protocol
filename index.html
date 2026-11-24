@@ -50,7 +50,7 @@
 
     <nav class="tabs" id="tabNav">
       <button class="tab-btn active" data-tab="signal"><kbd>F1</kbd> <span data-i18n="tab_f1">Signal Tab</span></button>
-      <button class="tab-btn" data-tab="regime"><kbd>F2</kbd> <span data-i18n="tab_f2">4H Multi-Factor Regime</span></button>
+      <button class="tab-btn" data-tab="regime"><kbd>F2</kbd> <span data-i18n="tab_f2">Regime &amp; Kline Patterns</span></button>
       <button class="tab-btn" data-tab="ledger"><kbd>F3</kbd> <span data-i18n="tab_f3">Paper Ledger &amp; Risk Calc</span></button>
       <button class="tab-btn" data-tab="audit"><kbd>F4</kbd> <span data-i18n="tab_f4">Audit Log &amp; Config</span></button>
     </nav>
@@ -99,8 +99,14 @@
       </div>
     </section>
 
-    <!-- TAB 2: 4H MULTI-FACTOR REGIME -->
+    <!-- TAB 2: REGIME & KLINE PATTERNS -->
     <section class="tab-panel" id="tab-regime">
+      <div class="card" id="stateOfRegimeBox"></div>
+      <div class="grid-2">
+        <div class="card" id="kline10Box"></div>
+        <div class="card" id="playbook11Box"></div>
+      </div>
+      <div class="card" id="rulebook3Box"></div>
       <div class="grid-2" id="factorCards"></div>
       <div class="card">
         <h2 data-i18n="h_chart">Structural Price Map</h2>

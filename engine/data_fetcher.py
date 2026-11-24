@@ -86,7 +86,7 @@ def _parse_okx_candles(rows: list[list[str]], closed_only: bool = True) -> list[
     return out
 
 
-def _parse_binance_candles(rows: list[list[Any]], closed_only: bool = True) -> list[dict[str, float]]:
+def _parse_binance_candles(rows: list[list[Any]], closed_only: bool = True) -> list[dict[str, Any]]:
     items = rows[:-1] if closed_only and len(rows) > 1 else rows
     return [
         {
@@ -96,9 +96,24 @@ def _parse_binance_candles(rows: list[list[Any]], closed_only: bool = True) -> l
             "low": float(x[3]),
             "close": float(x[4]),
             "volume": float(x[5]),
+            "taker_buy_volume": float(x[9]) if len(x) > 9 else None,
         }
         for x in items
     ]
+
+
+def fetch_spot_klines_with_taker(
+    interval: str, limit: int, errors: list[str]
+) -> list[dict[str, Any]]:
+    """Fetch closed spot BTCUSDT klines including taker buy base volume from Binance Vision."""
+    r = _get_json(
+        f"{BINANCE_VISION}/klines?symbol=BTCUSDT&interval={interval}&limit={min(limit + 1, 1000)}",
+        f"BinanceVision spot taker {interval}",
+        errors,
+    )
+    if isinstance(r, list) and len(r) > 5:
+        return _parse_binance_candles(r, closed_only=True)
+    return []
 
 
 def fetch_klines(
@@ -164,6 +179,8 @@ def fetch_funding_and_oi(errors: list[str]) -> dict[str, Any]:
         "history_pct": [],
         "oi_btc": None,
         "total_oi_btc": None,
+        "btc_oi_change_pct_1h": None,
+        "btc_oi_change_pct_4h": None,
         "venues": {},
         "venue_oi_btc": {},
     }
@@ -229,6 +246,27 @@ def fetch_funding_and_oi(errors: list[str]) -> dict[str, Any]:
         out["total_oi_btc"] = tot
         if out["oi_btc"] is None:
             out["oi_btc"] = tot
+
+    # Soft-probe OKX 1H BTC open-interest history for Rulebook 3.2 (1H / 4H OI change %)
+    soft_errs: list[str] = []
+    oi_hist = _get_json(
+        f"{OKX_BASE}/rubik/stat/contracts/open-interest-history?instId=BTC-USDT-SWAP&period=1H&limit=6",
+        "OKX OI history",
+        soft_errs,
+    )
+    if oi_hist and isinstance(oi_hist.get("data"), list) and len(oi_hist["data"]) >= 2:
+        try:
+            chron = sorted(oi_hist["data"], key=lambda row: int(row[0]))
+            latest_oi = float(chron[-1][2])
+            prev_1h_oi = float(chron[-2][2])
+            if prev_1h_oi > 0:
+                out["btc_oi_change_pct_1h"] = round((latest_oi / prev_1h_oi - 1.0) * 100.0, 2)
+            if len(chron) >= 5:
+                prev_4h_oi = float(chron[-5][2])
+                if prev_4h_oi > 0:
+                    out["btc_oi_change_pct_4h"] = round((latest_oi / prev_4h_oi - 1.0) * 100.0, 2)
+        except Exception:
+            pass
 
     return out
 
@@ -586,6 +624,9 @@ def fetch_all_market_data() -> dict[str, Any]:
     d1, d1_src = fetch_klines("BTC-USDT-SWAP", "BTCUSDT", "1Dutc", "1d", 265, errors)
     h4, h4_src = fetch_klines("BTC-USDT-SWAP", "BTCUSDT", "4H", "4h", 200, errors)
     h1, h1_src = fetch_klines("BTC-USDT-SWAP", "BTCUSDT", "1H", "1h", 168, errors)
+    m15, m15_src = fetch_klines("BTC-USDT-SWAP", "BTCUSDT", "15m", "15m", 120, errors)
+    spot_h1 = fetch_spot_klines_with_taker("1h", 120, errors)
+    spot_h4 = fetch_spot_klines_with_taker("4h", 90, errors)
     eth_d1, _ = fetch_klines("ETH-USDT-SWAP", "ETHUSDT", "1Dutc", "1d", 40, errors)
 
     if ticker.get("price") is None and h1:
@@ -609,8 +650,11 @@ def fetch_all_market_data() -> dict[str, Any]:
             "1d": d1,
             "4h": h4,
             "1h": h1,
+            "15m": m15,
+            "spot_1h": spot_h1,
+            "spot_4h": spot_h4,
             "eth_1d": eth_d1,
-            "sources": {"1d": d1_src, "4h": h4_src, "1h": h1_src},
+            "sources": {"1d": d1_src, "4h": h4_src, "1h": h1_src, "15m": m15_src},
         },
         "derivatives": funding,
         "macro": macro,

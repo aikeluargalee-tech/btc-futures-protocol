@@ -164,6 +164,110 @@ function renderSignalTab() {
 }
 
 function renderRegimeTab() {
+  const sr = STATE.state_of_regime || STATE.regime?.state_of_regime || null;
+  const kp = STATE.kline_patterns || null;
+  const c11 = STATE.cortex_11p || null;
+
+  if ($("stateOfRegimeBox")) {
+    if (!sr) {
+      $("stateOfRegimeBox").innerHTML = `<h2>BTC State of Regime (5-State Radar)</h2><p class="mut">Unavailable</p>`;
+    } else {
+      const regCls = sr.bias === "BULLISH" ? "up" : (sr.bias === "BEARISH" || sr.bias === "CAPITULATION") ? "dn" : "warn";
+      const pois = c11?.price_and_pois || {};
+      const sup = pois.htf_supply_cluster || {};
+      const dem = pois.htf_demand_cluster || {};
+      const poor = pois.poor_highs_cluster || {};
+      const allRegs = (sr.all_regimes || []).map((r) => `
+        <div class="row">
+          <div>
+            <div class="title">[${esc(r.code)}] ${esc(r.name)}</div>
+            <div class="mut">${esc(r.criteria)}</div>
+          </div>
+          <span class="badge ${r.active ? regCls : ""}">${r.active ? "ACTIVE" : "STANDBY"}</span>
+        </div>`).join("");
+      $("stateOfRegimeBox").innerHTML = `
+        <h2>BTC State of Regime &amp; Gate 1 HTF Points of Interest</h2>
+        <div class="signal-head" style="margin-bottom:8px;">
+          <div class="big-num ${regCls}">[${esc(sr.code)}] ${esc(sr.name)}</div>
+          <div>
+            <span class="badge ${regCls}">VOL: ${esc(sr.volatility_modifier)}</span>
+            <span class="badge ${sr.flow_modifier === "SPOT_LED" ? "up" : sr.flow_modifier === "LEVERAGE_LED" ? "warn" : ""}">FLOW: ${esc(sr.flow_modifier)}</span>
+            ${sr.spot_taker_buy_ratio_24h != null ? `<span class="badge">SPOT BUY 24H: ${(sr.spot_taker_buy_ratio_24h * 100).toFixed(1)}%</span>` : ""}
+          </div>
+        </div>
+        <div class="grid-2" style="margin-bottom:8px;">
+          <div>${allRegs}</div>
+          <dl class="kv">${kv([
+            ["Last 1H Close", pois.last_close != null ? usd(pois.last_close, 1) : "UNAVAILABLE"],
+            ["Local 1H Range", pois.range_low != null && pois.range_high != null ? `${usd(pois.range_low, 1)} – ${usd(pois.range_high, 1)}` : "UNAVAILABLE"],
+            ["HTF Supply Cluster", sup.low != null ? `${usd(sup.low, 1)}–${usd(sup.high, 1)} (${sup.status})` : "UNAVAILABLE"],
+            ["HTF Demand Cluster", dem.low != null ? `${usd(dem.low, 1)}–${usd(dem.high, 1)} (${dem.status})` : "UNAVAILABLE"],
+            ["1st Test High", pois.first_test_high != null ? usd(pois.first_test_high, 1) : "UNAVAILABLE"],
+            ["Poor Highs Cluster", poor.level != null ? `${usd(poor.level, 1)} (${poor.touches ?? 0} touches · swept=${poor.swept})` : "None / Unavailable"],
+          ])}</dl>
+        </div>
+      `;
+    }
+  }
+
+  if ($("kline10Box")) {
+    const cat = kp?.catalog_10 || [];
+    $("kline10Box").innerHTML = `
+      <h2>Layer 1 · 10 Crypto Kline Primitives (1H · 4H · 1D)</h2>
+      <p class="mut" style="margin:0 0 8px;">Active multi-timeframe hits: <b>${kp?.active_count ?? 0}</b></p>
+      ${cat.length ? cat.map((p) => {
+        const active = (p.active_tfs || []).length > 0;
+        const bCls = p.direction === "BULLISH" ? "up" : p.direction === "BEARISH" ? "dn" : active ? "warn" : "";
+        return `
+          <div class="row">
+            <div>
+              <div class="title">${esc(p.name)} <span class="mut">(${esc(p.category)})</span></div>
+              <div class="mut">${active ? `${esc(p.detail || "")}${p.confluence_level ? ` · ★ ${esc(p.confluence_level)}` : ""}` : "No recent closed-bar trigger"}</div>
+            </div>
+            <span class="badge ${bCls}">${active ? `${esc(p.active_tfs.join("/"))} · ${esc(p.direction)}` : "INACTIVE"}</span>
+          </div>`;
+      }).join("") : `<p class="mut">Unavailable</p>`}
+    `;
+  }
+
+  if ($("playbook11Box")) {
+    const plist = c11?.patterns_11_list || [];
+    $("playbook11Box").innerHTML = `
+      <h2>Layer 2 · Symmetrical 11-Pattern Playbook (P01–P11)</h2>
+      <p class="mut" style="margin:0 0 8px;">Long (USDT→BTC) vs Short (BTC→USDT) spot rotation telemetry</p>
+      ${plist.length ? plist.map((p) => {
+        const bCls = p.status === "ACTIVE" ? (p.direction === "LONG" ? "up" : "dn") : p.status === "FORMING" ? "warn" : "";
+        return `
+          <div class="row">
+            <div>
+              <div class="title">P${String(p.num).padStart(2, "0")} · ${esc(p.name)} <span class="mut">(${esc(p.rotation)})</span></div>
+              <div class="mut">${esc(p.tier)} · ${esc(p.detail)}</div>
+            </div>
+            <span class="badge ${bCls}">${esc(p.status)}</span>
+          </div>`;
+      }).join("") : `<p class="mut">Unavailable</p>`}
+    `;
+  }
+
+  if ($("rulebook3Box")) {
+    const r3 = c11?.microstructure_rulebook_3 || {};
+    const fs = c11?.feed_status || {};
+    const c = r3.r3_1_cvd || {};
+    const oi = r3.r3_2_oi_funding || {};
+    const fr = r3.r3_3_p_shape_frvp || {};
+    const av = r3.r3_4_avwap || {};
+    $("rulebook3Box").innerHTML = `
+      <h2>Gate 3 · Microstructure Confirmation Rulebook (R3.1–R3.4)</h2>
+      <p class="mut" style="margin:0 0 8px;">Feeds: candles=${esc(fs.candles || "—")} · cvd=${esc(fs.cvd || "—")} · oi_funding=${esc(fs.oi_funding || "—")} · frvp=${esc(fs.frvp || "—")} · avwap=${esc(fs.avwap || "—")}</p>
+      <dl class="kv">${kv([
+        ["R3.1 Spot vs Perp CVD", c.spot_cvd_last_two_highs ? `Spot [${c.spot_cvd_last_two_highs.join(" → ")}] vs Perp [${(c.perp_cvd_last_two_highs || []).join(" → ")}] · Lag=${c.spot_lag_or_divergence_flag}` : "UNAVAILABLE"],
+        ["R3.2 OI + Funding Timing", oi.btc_oi_change_pct_1h != null || oi.funding_rate_current != null ? `OI 1H ${pct(oi.btc_oi_change_pct_1h, 2)} · 4H ${pct(oi.btc_oi_change_pct_4h, 2)} · Fund ${pct(oi.funding_rate_current, 4)} · TrapSweep=${oi.sweep_oi_spike_flag}` : "UNAVAILABLE"],
+        ["R3.3 P-Shape FRVP", fr.frvp_poc != null ? `POC ${usd(fr.frvp_poc, 1)} · VAH ${usd(fr.frvp_vah, 1)} · VAL ${usd(fr.frvp_val, 1)} · BelowVAL=${fr.closed_below_upper_val}` : "UNAVAILABLE"],
+        ["R3.4 Anchored VWAP", av.avwap_value != null ? `${av.anchor_type} (${usd(av.anchor_price, 1)}) · AVWAP ${usd(av.avwap_value, 1)} · Price ${av.price_vs_avwap} · FailedRetest=${av.failed_retest_flag}` : "UNAVAILABLE"],
+      ])}</dl>
+    `;
+  }
+
   const groups = STATE.regime?.groups || {};
   const meta = [
     ["trend_structure", "1. Trend Structure (30%)"],
@@ -470,9 +574,9 @@ Every trade idea you evaluate MUST strictly obey these guardrails:
 - **Primary Rationale:** 2 concise sentences explaining *why* with concrete prices, RSI/ATR figures, and R:R math.
 
 #### 2. 5-PILLAR TELEMETRY AUDIT
-- **A. Price Structure & Volume Profile:** Analyze \`charts_ohlcv_last30\` (\`[ts, O, H, L, C, Vol]\`), EMA alignment (\`ema20_4h\`, \`ema50_4h\`, \`ema50_d\`, \`ema200_d\`), tactical **\`7D Tactical VPOC / VAH / VAL\`**, macro **\`30D VPOC / VAH / VAL\`**, and nearest swing highs/lows.
-- **B. Momentum & Volatility Regime:** Evaluate \`rsi_4h\`, \`rsi_d\`, \`roc6/12/20_4h_pct\`, \`atr_4h_usd\` (\`atr_4h_percentile\`), and \`dvol\`. Classify as **Compression**, **Early Expansion**, or **Late Climax / Exhaustion**.
-- **C. Multi-Venue Derivatives, CMC Liquidation Map & Microstructure:** Evaluate \`funding_rate_pct\` across OKX, Kraken Futures, Deribit, and Hyperliquid, \`oi_btc\` / \`venue_oi_btc\`, **\`derivatives.cmc_liquidations\`** (tactical ±8% dollar-weighted Long & Short liquidation magnet clusters, ±2%/±5% cumulative squeeze fuel, and realized 4H/24H long vs. short liquidation wipeouts in $M), **\`derivatives.liquidation_magnets\`**, and **\`derivatives.orderbook_1pct\`** (±1% bid/ask depth ratio & spread bps). Flag stop-hunt zones and whether a 4H long/short liquidation flush has already exhausted momentum.
+- **A. Price Structure, Kline Primitives & Volume Profile:** Analyze \`charts_ohlcv_last30\` (\`[ts, O, H, L, C, Vol]\`), EMA alignment (\`ema20_4h\`, \`ema50_4h\`, \`ema50_d\`, \`ema200_d\`), tactical **\`7D Tactical VPOC / VAH / VAL\`**, macro **\`30D VPOC / VAH / VAL\`**, Layer-1 **\`kline_patterns\`** (\`1H/4H/1D\` triggers & structural confluence), Layer-2 **\`cortex_11p.pattern_state_flags\`** (\`P01\`–\`P11\` symmetrical setups & Gate 1 POIs), and nearest swing highs/lows.
+- **B. Momentum, State of Regime & Volatility:** Evaluate \`state_of_regime\` (5-state \`R1\`–\`R5\` classification, \`volatility_modifier\`, \`flow_modifier\`, \`spot_taker_buy_ratio_24h\`), \`rsi_4h\`, \`rsi_d\`, \`roc6/12/20_4h_pct\`, \`atr_4h_usd\` (\`atr_4h_percentile\`), and \`dvol\`. Classify as **Compression**, **Early Expansion**, or **Late Climax / Exhaustion**.
+- **C. Multi-Venue Derivatives, CMC Liquidation Map & Microstructure:** Evaluate \`funding_rate_pct\` across OKX, Kraken Futures, Deribit, and Hyperliquid, \`oi_btc\` / \`venue_oi_btc\`, **\`derivatives.cmc_liquidations\`** (tactical ±8% dollar-weighted Long & Short liquidation magnet clusters, ±2%/±5% cumulative squeeze fuel, and realized 4H/24H long vs. short liquidation wipeouts in $M), **\`cortex_11p.microstructure_rulebook_3\`** (\`R3.1\` Spot vs Perp CVD divergence, \`R3.2\` 1H/4H BTC OI + funding timing, \`R3.3\` P-Shape FRVP, \`R3.4\` Anchored VWAP), **\`derivatives.liquidation_magnets\`**, and **\`derivatives.orderbook_1pct\`** (±1% bid/ask depth ratio & spread bps). Flag stop-hunt zones and whether a 4H long/short liquidation flush has already exhausted momentum.
 - **D. Institutional Flows & Macro Context:** Evaluate 5-day ETF flows (\`etf.sum5_usd_m\`), 7d stablecoin liquidity (\`stables.chg7d_pct\`), \`dxy\`, \`vix\`, Fear & Greed (\`fng_value\`), and session liquidity (\`session_name\`).
 - **E. Telemetry Integrity Check:** Verify \`meta.completeness_score\`, inspect \`fetch_errors\`, and check live spot drift (\`meta.price_drift_from_4h_close_atr\`).
 
@@ -632,6 +736,18 @@ function buildRawTelemetryPacket(fullState) {
       h4: h4All.slice(-30),
       d1: d1All.slice(-30),
     },
+    state_of_regime: fullState.state_of_regime ?? null,
+    kline_patterns: fullState.kline_patterns ? {
+      active_count: fullState.kline_patterns.active_count,
+      by_timeframe: fullState.kline_patterns.by_timeframe,
+    } : null,
+    cortex_11p: fullState.cortex_11p ? {
+      schema: fullState.cortex_11p.schema,
+      feed_status: fullState.cortex_11p.feed_status,
+      price_and_pois: fullState.cortex_11p.price_and_pois,
+      pattern_state_flags: fullState.cortex_11p.pattern_state_flags,
+      microstructure_rulebook_3: fullState.cortex_11p.microstructure_rulebook_3,
+    } : null,
     risk_constraints_reference: {
       account_equity_usd: accountEquityUsd,
       max_leverage: lr.max_leverage ?? 2.0,
