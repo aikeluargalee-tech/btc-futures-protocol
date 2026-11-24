@@ -9,13 +9,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=16">
+  <link rel="stylesheet" href="style.css?v=17">
 </head>
 <body>
   <div class="wrap">
     <div class="ws-titlebar">
       <span>&#9632; QUANT-WORKSTATION // BTC-PROTOCOL REV 4.0</span>
-      <span class="ws-sysmeta" data-i18n="sys_meta">SYS: 4H-SWING · MAX LEV 1:2 · KEYS [1-8]</span>
+      <div class="ws-title-right">
+        <span class="ws-sysmeta" data-i18n="sys_meta">SYS: 4H-SWING · MAX LEV 1:2 · KEYS [1-8]</span>
+        <button type="button" class="ws-hub-btn hidden" id="btnBackHub">&#9668; HUB</button>
+      </div>
     </div>
 
     <div class="lang-bar" id="langBar" role="group" aria-label="Language Selector">
@@ -43,24 +46,29 @@
       </div>
     </header>
 
-    <div class="actions" style="margin-bottom:12px;">
-      <button class="btn btn-primary" id="btnCopyAi" data-i18n="copy_ai">[Copy AI Analysis Prompt + JSON]</button>
-      <span class="mut" id="actionMsg" data-i18n="ai_helper" style="align-self:center;">Paste into ChatGPT, Gemini, Claude, Grok, DeepSeek, Kimi, or any AI for direct verdict &amp; Q&amp;A.</span>
+    <section id="entryHubView" class="hub-view active"></section>
+
+    <div id="moduleChrome" class="hidden">
+      <div class="actions" style="margin-bottom:12px;">
+        <button class="btn btn-primary" id="btnCopyAi" data-i18n="copy_ai">[Copy AI Analysis Prompt + JSON]</button>
+        <span class="mut" id="actionMsg" data-i18n="ai_helper" style="align-self:center;">Paste into ChatGPT, Gemini, Claude, Grok, DeepSeek, Kimi, or any AI for direct verdict &amp; Q&amp;A.</span>
+      </div>
+
+      <nav class="tabs" id="tabNav">
+        <button type="button" class="tab-btn" id="btnNavHub">&#9668; HUB</button>
+        <button class="tab-btn active" data-tab="signal"><kbd>F1</kbd> <span data-i18n="tab_f1">Signal Tab</span></button>
+        <button class="tab-btn" data-tab="regime"><kbd>F2</kbd> <span data-i18n="tab_f2">Regime &amp; Kline Patterns</span></button>
+        <button class="tab-btn" data-tab="spot"><kbd>F3</kbd> <span data-i18n="tab_spot">Spot Magnet (DIBSE)</span></button>
+        <button class="tab-btn" data-tab="rhyme"><kbd>F4</kbd> <span data-i18n="tab_rhyme">S2 Cortex-Rhyme</span></button>
+        <button class="tab-btn" data-tab="news"><kbd>F5</kbd> <span data-i18n="tab_news">News &amp; Macro</span></button>
+        <button class="tab-btn" data-tab="shield"><kbd>F6</kbd> <span data-i18n="tab_shield">Spot Shield (80/20)</span></button>
+        <button class="tab-btn" data-tab="ledger"><kbd>F7</kbd> <span data-i18n="tab_f3">Paper Ledger &amp; Risk Calc</span></button>
+        <button class="tab-btn" data-tab="audit"><kbd>F8</kbd> <span data-i18n="tab_f4">Audit Log &amp; Config</span></button>
+      </nav>
     </div>
 
-    <nav class="tabs" id="tabNav">
-      <button class="tab-btn active" data-tab="signal"><kbd>F1</kbd> <span data-i18n="tab_f1">Signal Tab</span></button>
-      <button class="tab-btn" data-tab="regime"><kbd>F2</kbd> <span data-i18n="tab_f2">Regime &amp; Kline Patterns</span></button>
-      <button class="tab-btn" data-tab="spot"><kbd>F3</kbd> <span data-i18n="tab_spot">Spot Magnet (DIBSE)</span></button>
-      <button class="tab-btn" data-tab="rhyme"><kbd>F4</kbd> <span data-i18n="tab_rhyme">S2 Cortex-Rhyme</span></button>
-      <button class="tab-btn" data-tab="news"><kbd>F5</kbd> <span data-i18n="tab_news">News &amp; Macro</span></button>
-      <button class="tab-btn" data-tab="shield"><kbd>F6</kbd> <span data-i18n="tab_shield">Spot Shield (80/20)</span></button>
-      <button class="tab-btn" data-tab="ledger"><kbd>F7</kbd> <span data-i18n="tab_f3">Paper Ledger &amp; Risk Calc</span></button>
-      <button class="tab-btn" data-tab="audit"><kbd>F8</kbd> <span data-i18n="tab_f4">Audit Log &amp; Config</span></button>
-    </nav>
-
     <!-- TAB 1: SIGNAL TAB -->
-    <section class="tab-panel active" id="tab-signal">
+    <section class="tab-panel" id="tab-signal">
       <details class="card video-card" id="briefingVideoCard">
         <summary class="video-summary">
           <span data-i18n="vid_title">Protocol Briefing Video (vGUZF.mp4)</span>
@@ -269,6 +277,6 @@
     </section>
   </div>
   <script src="lang.js?v=6"></script>
-  <script src="app.js?v=20"></script>
+  <script src="app.js?v=21"></script>
 </body>
 </html>

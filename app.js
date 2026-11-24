@@ -13,6 +13,7 @@ const kv = (rows) => rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`
 
 let STATE = null;
 let LIVE = { price: null, src: null, at: 0 };
+let ACTIVE_VIEW = "hub";
 let CHART_TF = "h4";
 let RHYME_LENS = "AUTO";
 let RHYME_COND = "ALL";
@@ -75,7 +76,7 @@ function renderSignalTab() {
   const gRow = pmG?.status === "LIVE" ? pmG.active_cell : null;
   const gCls = gRow?.reading === "directional colour only" ? "warn" : "";
   const mtL = STATE.context_overlays?.market_time_l;
-  const mtCls = mtL?.vol_cluster_active ? "dn" : (mtL?.awake_state === "QUIET_THIN" ? "warn" : "");
+  const mtCls = (mtL?.vol_cluster_active || mtL?.awake_state === "MON_GAP_RISK") ? "dn" : (mtL?.awake_state === "QUIET_THIN" ? "warn" : (mtL?.awake_state === "QUIET_EXEC" ? "up" : ""));
 
   $("signalSummary").innerHTML = `
     <div class="signal-head">
@@ -663,8 +664,11 @@ function renderProjectGMatrixCard() {
   }).join("");
 
   const pmH = STATE.context_overlays?.patient_money_h;
+  const cApr = pmH?.carry_apr_pct;
+  const cCls = typeof cApr === "number" ? (cApr >= 10 ? "up" : cApr < 2 ? "warn" : "") : "";
+  const cBadge = pmH?.carry_summary ? ` · <span class="badge ${cCls}">${esc(pmH.carry_summary)}</span>` : "";
   const hLine = pmH?.status === "LIVE"
-    ? `<div style="margin-bottom:6px;font-size:11px;color:var(--muted);"><b>Patient Money (H):</b> Dollar Funding <b>${pmH.funding_8h_usd != null ? (pmH.funding_8h_usd >= 0 ? "+" : "-") + "$" + Math.round(Math.abs(pmH.funding_8h_usd)).toLocaleString("en-US") : "—"}/8h</b> (${esc(pmH.crowd_payer || "—")}) · Aggression × OI: <span class="badge">${esc(pmH.aggression_oi_state || "—")}</span></div>`
+    ? `<div style="margin-bottom:6px;font-size:11px;color:var(--muted);"><b>Patient Money (H):</b> Dollar Funding <b>${pmH.funding_8h_usd != null ? (pmH.funding_8h_usd >= 0 ? "+" : "-") + "$" + Math.round(Math.abs(pmH.funding_8h_usd)).toLocaleString("en-US") : "—"}/8h</b> (${esc(pmH.crowd_payer || "—")}) · Aggression × OI: <span class="badge">${esc(pmH.aggression_oi_state || "—")}</span>${cBadge}</div>`
     : "";
 
   box.innerHTML = `
@@ -872,6 +876,10 @@ function renderShieldTab() {
       <span class="badge ${ok ? "up" : "dn"}">${ok ? "PASS" : "FAIL"}</span>
     </div>`;
 
+  const pmH = STATE.context_overlays?.patient_money_h;
+  const cApr = pmH?.carry_apr_pct;
+  const cCls = typeof cApr === "number" ? (cApr >= 10 ? "up" : cApr < 2 ? "warn" : "") : "";
+
   $("shieldHeroBox").innerHTML = `
     <h2>Spot Shield (80/20) · Pure Closed-Bar BTCUSDT Portfolio Posture</h2>
     <div class="signal-head" style="margin-bottom:6px;">
@@ -879,9 +887,10 @@ function renderShieldTab() {
         <div class="big-num ${btcPct > 0 ? "up" : "warn"}">${esc(pf.posture_label || "100% USDT")}</div>
         <div class="mut">${esc(pf.split_label || "80% 4H VWAP Shield / 20% 1D TTM Squeeze")} · Updated ${esc(sh.updated_at_utc || "—")}</div>
       </div>
-      <div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
         <span class="badge ${actCls(s1.action)}">S1 (80%): ${esc(s1.action)}</span>
         <span class="badge ${actCls(s2.action)}">S2 (20%): ${esc(s2.action)}</span>
+        ${pmH?.carry_summary ? `<span class="badge ${cCls}">${esc(pmH.carry_summary)}</span>` : ""}
       </div>
     </div>
     <div class="shield-split-bar">
@@ -1172,9 +1181,163 @@ function seedCalcFromState() {
   updateCalc();
 }
 
+function renderEntryHub() {
+  const host = $("entryHubView");
+  if (!host || !STATE) return;
+  const tr = (k, fb) => (window.DeskI18n ? window.DeskI18n.t(k) : fb) || fb;
+  const sig = STATE.signal || {};
+  const reg = STATE.regime || {};
+  const sor = STATE.state_of_regime || {};
+  const kp = STATE.kline_patterns || {};
+  const sm = STATE.spot_magnet || {};
+  const smReg = sm.regime_diagnosis || {};
+  const dibse = sm.dibse || {};
+  const cr = STATE.cortex_rhyme || {};
+  const crDiag = cr.diagnostics || {};
+  const cr24Med = cr.after_similar_setups?.["24h"]?.median_pct;
+  const nm = STATE.news_macro || {};
+  const mb = nm.macro_bias || {};
+  const sh = STATE.spot_shield || {};
+  const pf = sh.portfolio || {};
+  const port = STATE.portfolio || {};
+  const ov = STATE.context_overlays || {};
+  const mtL = ov.market_time_l;
+  const etfReg = ov.etf_flow_regime;
+  const pmH = ov.patient_money_h;
+  const pmG = STATE.positioning_matrix_g;
+
+  const sigSt = sig.status || "FLAT";
+  const sigCls = sigSt === "LONG" ? "up" : sigSt === "SHORT" ? "dn" : "warn";
+  const crTier = String(crDiag.sample_quality || "—").toUpperCase();
+  const crN = crDiag.analogues_found ?? 0;
+  const crCls = crDiag.sample_quality === "solid" ? "up" : crDiag.sample_quality === "moderate" ? "warn" : "dn";
+  const nmStatus = mb.status || "MIXED";
+  const nmCls = nmStatus === "RISK_ON" ? "up" : nmStatus === "RISK_OFF" ? "dn" : "warn";
+  const btcPct = pf.target_btc_pct ?? 0;
+  const usdtPct = pf.target_usdt_pct ?? (100 - btcPct);
+  const carryShort = pmH?.carry_apr_pct != null ? ` · Carry ${pct(pmH.carry_apr_pct, 2)} APR` : "";
+  const nextEvt = mb.next_high_impact?.title || "No High-Impact 7d";
+
+  const cards = [
+    {
+      tab: "signal",
+      num: "01",
+      title: tr("tab_f1", "Signal Tab"),
+      badge: sigSt,
+      badgeCls: sigCls,
+      status: `Regime ${num(reg.score, 1)}/100 (${reg.bias || "—"}) · ${mtL?.summary_line || "4H Cycle"}`,
+      desc: "4H futures qualification, order sizing, Market Time (L) & AI prompt",
+    },
+    {
+      tab: "regime",
+      num: "02",
+      title: tr("tab_f2", "Regime & Kline Patterns"),
+      badge: sor.code || "REGIME",
+      badgeCls: sor.bias === "BULL" ? "up" : sor.bias === "BEAR" ? "dn" : "warn",
+      status: `${sor.name || "—"} · ${kp.active_count ?? 0} Active Kline Pattern(s)`,
+      desc: "5-State Regime Radar, 10 Kline Patterns, 11-Playbook & 4H/1D chart",
+    },
+    {
+      tab: "spot",
+      num: "03",
+      title: tr("tab_spot", "Spot Magnet (DIBSE)"),
+      badge: dibse.rotation || "SPOT",
+      badgeCls: String(dibse.rotation || "").startsWith("USDT") ? "up" : "warn",
+      status: `${smReg.name || "—"} · ${etfReg?.regime ? "ETF " + etfReg.regime : "VWAP Radar"}`,
+      desc: "5-Regime Spot Radar, LSCE sweep gate, liquidation ladder & DIBSE",
+    },
+    {
+      tab: "rhyme",
+      num: "04",
+      title: tr("tab_rhyme", "S2 Cortex-Rhyme"),
+      badge: `${crTier} N=${crN}`,
+      badgeCls: crCls,
+      status: `+24h Med ${pct(cr24Med, 2)} · Project G: ${pmG?.active_cell?.reading || pmG?.status || "—"}`,
+      desc: "6D microstructure analogues, 8-Cell Project G matrix & Patient Money (H)",
+    },
+    {
+      tab: "news",
+      num: "05",
+      title: tr("tab_news", "News & Macro"),
+      badge: nmStatus,
+      badgeCls: nmCls,
+      status: `${(nm.headlines || []).length} Headlines · Next USD: ${nextEvt}`,
+      desc: "Curated BTC/macro feed, cross-asset pulse, ETF flow regime & USD calendar",
+    },
+    {
+      tab: "shield",
+      num: "06",
+      title: tr("tab_shield", "Spot Shield (80/20)"),
+      badge: `BTC ${btcPct}% / USDT ${usdtPct}%`,
+      badgeCls: btcPct > 0 ? "up" : "warn",
+      status: `S1 ${sh.sleeve1?.action || "—"} · S2 ${sh.sleeve2?.action || "—"}${carryShort}`,
+      desc: "Pure closed-bar 80/20 BTC↔USDT dual-sleeve bear shield & Carry APR check",
+    },
+    {
+      tab: "ledger",
+      num: "07",
+      title: tr("tab_f3", "Paper Ledger & Risk Calc"),
+      badge: "MAX 2.0x",
+      badgeCls: "",
+      status: `Open ${(port.open_positions || []).length}/1 · Eq ${usd(port.equity_usd, 0)} · ${mtL ? mtL.day_of_week + " ~" + num(mtL.expected_day_range_pct, 2) + "% day" : "0.40% Risk"}`,
+      desc: "Interactive v4.0 position sizing calculator, paper ledger & session check",
+    },
+    {
+      tab: "audit",
+      num: "08",
+      title: tr("tab_f4", "Audit Log & Config"),
+      badge: `v${STATE.protocol_version || "4.0"}`,
+      badgeCls: "",
+      status: `Updated ${STATE.updated_at_utc || "—"} · Raw JSON Export`,
+      desc: "Historical cycle audit log, frozen risk rules & raw telemetry download",
+    },
+  ];
+
+  host.innerHTML = `
+    <div class="hub-header">
+      <span>// SELECT WORKSTATION MODULE</span>
+      <span>CLICK CARD OR PRESS KEYS [1–8] &#9658;</span>
+    </div>
+    <div class="hub-grid">
+      ${cards.map((c) => `
+        <button type="button" class="hub-card" data-open-tab="${esc(c.tab)}">
+          <div class="hub-card-top">
+            <div class="hub-card-left">
+              <span class="hub-num">[${esc(c.num)}]</span>
+              <span class="hub-title">${esc(c.title)}</span>
+            </div>
+            <span class="badge ${esc(c.badgeCls)}">${esc(c.badge)}</span>
+          </div>
+          <div class="hub-status">&#9658; ${esc(c.status)}</div>
+          <div class="hub-desc">${esc(c.desc)}</div>
+        </button>
+      `).join("")}
+    </div>
+    <div class="hub-footer">
+      <span>COMMAND HUB · 8 MODULES</span>
+      <span>KEYS [1–8] OPEN · [0/ESC] HUB · NO LOGIN</span>
+    </div>
+  `;
+}
+
+function showHub() {
+  ACTIVE_VIEW = "hub";
+  $("entryHubView")?.classList.add("active");
+  $("moduleChrome")?.classList.add("hidden");
+  $("btnBackHub")?.classList.add("hidden");
+  document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+  window.scrollTo(0, 0);
+}
+
 function activateTab(tabId) {
-  document.querySelectorAll("#tabNav .tab-btn").forEach((x) => x.classList.toggle("active", x.dataset.tab === tabId));
+  ACTIVE_VIEW = tabId;
+  $("entryHubView")?.classList.remove("active");
+  $("moduleChrome")?.classList.remove("hidden");
+  $("btnBackHub")?.classList.remove("hidden");
+  document.querySelectorAll("#tabNav .tab-btn[data-tab]").forEach((x) => x.classList.toggle("active", x.dataset.tab === tabId));
   document.querySelectorAll(".tab-panel").forEach((p) => p.classList.toggle("active", p.id === `tab-${tabId}`));
+  if (tabId === "regime") renderChart();
+  window.scrollTo(0, 0);
 }
 
 const SPOT_SHIELD_AI_PROMPT_TEMPLATE = `### ROLE & OBJECTIVE
@@ -1546,6 +1709,12 @@ async function copyTextWithFeedback(text, label, msgId = "actionMsg") {
 }
 
 function bindEvents() {
+  $("entryHubView")?.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-open-tab]");
+    if (b) activateTab(b.dataset.openTab);
+  });
+  $("btnBackHub")?.addEventListener("click", showHub);
+  $("btnNavHub")?.addEventListener("click", showHub);
   $("tabNav").addEventListener("click", (e) => {
     const b = e.target.closest("button[data-tab]");
     if (b) activateTab(b.dataset.tab);
@@ -1553,6 +1722,10 @@ function bindEvents() {
   document.addEventListener("keydown", (e) => {
     if (e.altKey || e.ctrlKey || e.metaKey) return;
     if (/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName || "")) return;
+    if (e.key === "0" || e.key === "Escape") {
+      showHub();
+      return;
+    }
     const map = { "1": "signal", "2": "regime", "3": "spot", "4": "rhyme", "5": "news", "6": "shield", "7": "ledger", "8": "audit" };
     if (map[e.key]) activateTab(map[e.key]);
   });
@@ -1708,6 +1881,7 @@ function bindEvents() {
   }
   window.onDeskLangChanged = () => {
     renderHeaderLive();
+    renderEntryHub();
   };
   $("btnDlJson").onclick = () => {
     const u = URL.createObjectURL(new Blob([JSON.stringify(STATE, null, 2)], { type: "application/json" }));
@@ -1733,6 +1907,8 @@ async function init() {
   renderShieldTab();
   renderLedgerTab();
   renderAuditTab();
+  renderEntryHub();
+  showHub();
   seedCalcFromState();
   pollLivePrice();
   setInterval(pollLivePrice, 5000);

@@ -47,6 +47,18 @@ class TestContextOverlays(unittest.TestCase):
         self.assertEqual(res_sat["awake_state"], "QUIET_THIN")
         self.assertFalse(res_sat["vol_cluster_active"])
 
+        mon_00 = dt.datetime(2026, 11, 23, 0, 30, tzinfo=dt.timezone.utc)
+        res_mon = compute_market_time_profile({"klines": {"1h": []}}, now_utc=mon_00)
+        self.assertEqual(res_mon["awake_state"], "MON_GAP_RISK")
+        self.assertTrue(res_mon["is_monday_gap_risk"])
+        self.assertFalse(res_mon["is_quiet_exec_window"])
+
+        tue_05 = dt.datetime(2026, 11, 24, 5, 0, tzinfo=dt.timezone.utc)
+        res_tue = compute_market_time_profile({"klines": {"1h": []}}, now_utc=tue_05)
+        self.assertEqual(res_tue["awake_state"], "QUIET_EXEC")
+        self.assertTrue(res_tue["is_quiet_exec_window"])
+        self.assertFalse(res_tue["is_monday_gap_risk"])
+
     def test_patient_money_h_dollar_funding_and_aggression(self) -> None:
         market = {
             "ticker": {"price": 60000.0},
@@ -61,6 +73,8 @@ class TestContextOverlays(unittest.TestCase):
         self.assertEqual(res["funding_8h_usd"], 600000.0)
         self.assertEqual(res["funding_24h_usd"], 1800000.0)
         self.assertEqual(res["crowd_payer"], "Longs paying Shorts")
+        self.assertEqual(res["carry_apr_pct"], 10.95)
+        self.assertEqual(res["carry_status"], "ATTRACTIVE (>=10%)")
         self.assertEqual(res["aggression_oi_state"], "SHORT COVERING")
 
         res_new_longs = compute_patient_money_h(
@@ -68,6 +82,17 @@ class TestContextOverlays(unittest.TestCase):
             cortex_rhyme={"current_state": {"raw_metrics": {"taker_buy_ratio": 0.55}}},
         )
         self.assertEqual(res_new_longs["aggression_oi_state"], "NEW LONGS ENTERING")
+
+        for rate, exp_apr, exp_status in [
+            (-0.002, -2.19, "DEAD (<2%)"),
+            (0.004, 4.38, "BELOW T-BILL (2-6%)"),
+            (0.007, 7.67, "MODERATE (6-10%)"),
+            (0.012, 13.14, "ATTRACTIVE (>=10%)"),
+        ]:
+            out = compute_patient_money_h({"derivatives": {"current_rate_pct": rate}})
+            self.assertEqual(out["status"], "LIVE")
+            self.assertEqual(out["carry_apr_pct"], exp_apr)
+            self.assertEqual(out["carry_status"], exp_status)
 
 
 if __name__ == "__main__":

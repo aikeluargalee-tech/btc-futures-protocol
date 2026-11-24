@@ -115,9 +115,15 @@ def compute_market_time_profile(
     is_weekend = now.weekday() >= 5
     hr = now.hour
 
-    if not is_weekend and 13 <= hr <= 16:
+    if now.weekday() == 0 and hr in (0, 1):
+        awake_state = "MON_GAP_RISK"
+        exp_hour_pct = 1.05
+    elif not is_weekend and 13 <= hr <= 16:
         awake_state = "PEAK_AWAKE"
         exp_hour_pct = 1.01
+    elif not is_weekend and 4 <= hr <= 7:
+        awake_state = "QUIET_EXEC"
+        exp_hour_pct = 0.52
     elif hr in (10, 11) or is_weekend:
         awake_state = "QUIET_THIN"
         exp_hour_pct = 0.38 if is_weekend else 0.46
@@ -151,6 +157,8 @@ def compute_market_time_profile(
         "day_of_week": day_name,
         "hour_utc": hr,
         "is_weekend_utc": is_weekend,
+        "is_monday_gap_risk": now.weekday() == 0 and hr in (0, 1),
+        "is_quiet_exec_window": (not is_weekend) and 4 <= hr <= 7,
         "awake_state": awake_state,
         "expected_day_range_pct": exp_day_pct,
         "expected_hour_range_pct": exp_hour_pct,
@@ -196,6 +204,21 @@ def compute_patient_money_h(
         funding_24h_usd = funding_8h_usd * 3.0
         crowd_payer = "Longs paying Shorts" if funding_8h_usd >= 0 else "Shorts paying Longs"
 
+    carry_apr_pct: float | None = None
+    carry_status = "UNAVAILABLE"
+    carry_summary: str | None = None
+    if isinstance(funding_8h, (int, float)):
+        carry_apr_pct = round(float(funding_8h) * 3.0 * 365.0, 2)
+        if carry_apr_pct < 2.0:
+            carry_status = "DEAD (<2%)"
+        elif carry_apr_pct < 6.0:
+            carry_status = "BELOW T-BILL (2-6%)"
+        elif carry_apr_pct < 10.0:
+            carry_status = "MODERATE (6-10%)"
+        else:
+            carry_status = "ATTRACTIVE (>=10%)"
+        carry_summary = f"Carry APR {carry_apr_pct:+.2f}% ({carry_status})"
+
     tbr = cr_m.get("taker_buy_ratio")
     if tbr is None and isinstance(sm_m.get("spot_cvd_ratio"), (int, float)) and sm_m["spot_cvd_ratio"] > 0:
         r = float(sm_m["spot_cvd_ratio"])
@@ -223,12 +246,15 @@ def compute_patient_money_h(
             aggression_state = "LONG UNWIND"
 
     return {
-        "status": "LIVE" if (funding_8h_usd is not None or aggression_state != "UNAVAILABLE") else "unavailable",
+        "status": "LIVE" if (funding_8h_usd is not None or carry_apr_pct is not None or aggression_state != "UNAVAILABLE") else "unavailable",
         "oi_usd_b": round(oi_usd / 1e9, 2) if oi_usd else None,
         "oi_source": oi_source,
         "funding_8h_usd": funding_8h_usd,
         "funding_24h_usd": funding_24h_usd,
         "crowd_payer": crowd_payer,
+        "carry_apr_pct": carry_apr_pct,
+        "carry_status": carry_status,
+        "carry_summary": carry_summary,
         "taker_buy_ratio": round(float(tbr), 4) if isinstance(tbr, (int, float)) else None,
         "oi_delta_24h_pct": round(float(oi_delta), 2) if isinstance(oi_delta, (int, float)) else None,
         "aggression_oi_state": aggression_state,
