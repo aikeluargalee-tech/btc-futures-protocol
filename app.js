@@ -16,6 +16,7 @@ let LIVE = { price: null, src: null, at: 0 };
 let CHART_TF = "h4";
 let RHYME_LENS = "AUTO";
 let RHYME_COND = "ALL";
+let NEWS_CAT = "ALL";
 
 async function fetchJson(url) {
   const r = await fetch(url, { cache: "no-store" });
@@ -614,6 +615,160 @@ function renderRhymeTab() {
   `;
 }
 
+function fmtUsdCompact(v) {
+  if (typeof v !== "number" || !isFinite(v)) return "—";
+  const abs = Math.abs(v);
+  if (abs >= 1e12) return "$" + (v / 1e12).toFixed(2) + "T";
+  if (abs >= 1e9) return "$" + (v / 1e9).toFixed(2) + "B";
+  if (abs >= 1e6) return "$" + (v / 1e6).toFixed(1) + "M";
+  return usd(v, 0);
+}
+
+function fmtAgeMin(m) {
+  if (typeof m !== "number" || !isFinite(m)) return "—";
+  if (m < 0) {
+    const a = Math.abs(Math.round(m));
+    if (a < 60) return `T-${a}m`;
+    const h = Math.floor(a / 60);
+    const rem = a % 60;
+    return h < 48 ? `T-${h}h ${rem}m` : `T-${Math.round(h / 24)}d`;
+  }
+  const r = Math.round(m);
+  if (r < 60) return `${r}m ago`;
+  const h = Math.floor(r / 60);
+  if (h < 48) return `${h}h ${r % 60}m ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+function renderNewsTab() {
+  const nm = STATE.news_macro;
+  if (!nm) {
+    $("newsMacroHeroBox").innerHTML = `<h2>News &amp; Macro Desk</h2><p class="mut">News &amp; Macro telemetry not yet generated in this snapshot.</p>`;
+    $("newsCryptoPulseBox").innerHTML = "";
+    $("newsCalendarBox").innerHTML = "";
+    $("newsWireBox").innerHTML = "";
+    return;
+  }
+
+  const mb = nm.macro_bias || {};
+  const status = mb.status || "MIXED";
+  const stCls = status === "RISK_ON" ? "up" : status === "RISK_OFF" ? "dn" : "warn";
+  const nextHigh = mb.next_high_impact;
+  const xa = nm.cross_asset || {};
+
+  const tileMeta = [
+    ["DXY", xa.dxy, 2, false],
+    ["US10Y", xa.us10y, 2, true],
+    ["VIX", xa.vix, 2, false],
+    ["SPX", xa.spx, 1, false],
+    ["NDX", xa.ndx, 1, false],
+  ];
+  const tilesHtml = tileMeta.map(([label, obj, dec, isPct]) => {
+    const valStr = obj?.value != null ? `${num(obj.value, dec)}${isPct ? "%" : ""}` : "—";
+    const c1 = obj?.chg1d_pct;
+    const r10 = obj?.roc10_pct;
+    const chgCls = typeof c1 === "number" ? (label === "DXY" || label === "US10Y" || label === "VIX" ? (c1 <= -0.25 ? "up" : c1 >= 0.25 ? "dn" : "mut") : (c1 >= 0.25 ? "up" : c1 <= -0.25 ? "dn" : "mut")) : "mut";
+    return `
+      <div class="macro-tile">
+        <div class="lbl">${esc(label)}</div>
+        <div class="val">${esc(valStr)}</div>
+        <div class="mut"><span class="${chgCls}">${pct(c1, 2)} 1D</span> · ROC10 ${pct(r10, 1)}</div>
+      </div>`;
+  }).join("");
+
+  const drvPills = (mb.drivers || []).map((d) => {
+    const cls = d.tone === "bull" ? "up" : d.tone === "bear" ? "dn" : "";
+    return `<span class="badge ${cls}">${esc(d.label)}: ${esc(d.value)}</span>`;
+  }).join(" ");
+
+  const evText = nextHigh
+    ? `${esc(nextHigh.title)} · ${esc(nextHigh.time_utc)} (${nextHigh.minutes_away > 0 ? "in " + Math.round(nextHigh.minutes_away) + "m" : Math.round(nextHigh.minutes_away) + "m"})`
+    : "No USD High-Impact release scheduled in next 7d";
+
+  $("newsMacroHeroBox").innerHTML = `
+    <h2>Macro Risk Backdrop &amp; Cross-Asset Tape</h2>
+    <div class="signal-head" style="margin-bottom:6px;">
+      <div>
+        <div class="big-num ${stCls}">${esc(status.replace("_", "-"))} (${mb.score >= 0 ? "+" : ""}${mb.score ?? 0} / ±${mb.max_abs_score ?? 6})</div>
+        <div class="mut">Next USD High-Impact: <b>${evText}</b></div>
+      </div>
+      <div>
+        <span class="badge ${mb.blackout_active ? "dn" : "up"}">${mb.blackout_active ? "≤60M MACRO BLACKOUT" : "NO 60M BLACKOUT"}</span>
+        <span class="badge">UTC ${esc(nm.updated_at_utc || STATE.updated_at_utc || "—")}</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;">${drvPills || '<span class="mut">No macro drivers available</span>'}</div>
+    <div class="macro-tile-grid">${tilesHtml}</div>
+  `;
+
+  const cp = nm.crypto_pulse || {};
+  const cg = cp.cmc_global || {};
+  const fg = cp.cmc_fear_greed || {};
+  const alt = cp.cmc_altseason || {};
+  const ce = cp.cmc_etf || {};
+  const fe = cp.farside_etf || {};
+  const st = cp.stables || {};
+  $("newsCryptoPulseBox").innerHTML = `
+    <h2>CoinMarketCap Market Pulse &amp; Institutional Flows</h2>
+    <dl class="kv">${kv([
+      ["Total Crypto MCap", cg.total_market_cap_usd != null ? `${fmtUsdCompact(cg.total_market_cap_usd)} (${pct(cg.total_market_cap_24h_pct, 2)} 24h)` : "—"],
+      ["BTC / ETH Dominance", cg.btc_dominance_pct != null ? `${num(cg.btc_dominance_pct, 2)}% BTC · ${num(cg.eth_dominance_pct, 2)}% ETH` : "—"],
+      ["24H Global Spot Vol", cg.total_volume_24h_usd != null ? fmtUsdCompact(cg.total_volume_24h_usd) : "—"],
+      ["CMC Fear & Greed", fg.score != null ? `${fg.score}/100 (${fg.label}) · 7D ago ${fg.last_week_score ?? "—"}` : (cp.alt_fng_value != null ? `${cp.alt_fng_value} (${cp.alt_fng_label})` : "—")],
+      ["CMC Altcoin Season", alt.index != null ? `${alt.index}/100 (${alt.label})` : "—"],
+      ["CMC BTC ETF (1D / 5D)", ce.btc_latest_usd_m != null ? `$${num(ce.btc_latest_usd_m, 1)}M (${ce.latest_date}) · 5D $${num(ce.btc_5d_sum_usd_m, 1)}M` : "—"],
+      ["CMC ETH ETF (1D / 5D)", ce.eth_latest_usd_m != null ? `$${num(ce.eth_latest_usd_m, 1)}M · 5D $${num(ce.eth_5d_sum_usd_m, 1)}M` : "—"],
+      ["Farside BTC ETF (1D / 5D)", fe.latest_usd_m != null ? `$${num(fe.latest_usd_m, 1)}M (${fe.latest_date}) · 5D $${num(fe.sum5_usd_m, 1)}M` : "—"],
+      ["USDT+USDC Liquidity 7D", st.total_usd_b != null ? `$${num(st.total_usd_b, 2)}B (${pct(st.chg7d_pct, 2)})` : "—"],
+      ["Deribit DVOL (30D IV)", cp.dvol != null ? `${num(cp.dvol, 2)}` : "—"],
+    ])}</dl>
+  `;
+
+  const cal = nm.calendar_usd || [];
+  $("newsCalendarBox").innerHTML = `
+    <h2>USD High &amp; Medium Economic Calendar (ForexFactory)</h2>
+    ${cal.length ? `
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr><th>Impact</th><th>Event</th><th>UTC / Countdown</th><th>Forecast / Prev</th></tr></thead>
+          <tbody>${cal.map((ev) => {
+            const impCls = ev.impact === "HIGH" ? (ev.blackout_60m ? "dn" : "warn") : "";
+            const cd = ev.minutes_away >= 0 ? `in ${Math.round(ev.minutes_away)}m` : `${Math.round(ev.minutes_away)}m`;
+            return `
+              <tr>
+                <td><span class="badge ${impCls}">${esc(ev.impact)}</span></td>
+                <td><b>${esc(ev.title)}</b></td>
+                <td>${esc(ev.time_utc)}<div class="mut">${esc(cd)}${ev.blackout_60m ? ' · <b class="dn">BLACKOUT</b>' : ""}</div></td>
+                <td>${esc(ev.forecast || "—")} / ${esc(ev.previous || "—")}</td>
+              </tr>`;
+          }).join("")}</tbody>
+        </table>
+      </div>` : `<p class="mut">No USD High or Medium macro releases within the next 7 days.</p>`}
+  `;
+
+  const allHeadlines = nm.headlines || [];
+  const filtered = NEWS_CAT === "ALL" ? allHeadlines : allHeadlines.filter((h) => h.category === NEWS_CAT);
+  const catCls = (c) => (c === "FED_MACRO" ? "warn" : c === "BTC_ETF" ? "up" : c === "DERIVS_LIQ" || c === "REGULATION" ? "dn" : "");
+  const catLbl = (c) => ({ BTC_ETF: "BTC / ETF", FED_MACRO: "FED / MACRO", DERIVS_LIQ: "DERIVS / LIQ", REGULATION: "REGULATION", MARKET_WIRE: "BTC WIRE" }[c] || c);
+
+  $("newsWireBox").innerHTML = `
+    <h2>Live Crypto &amp; Macro Wire (${filtered.length} Shown / ${allHeadlines.length} Total)</h2>
+    ${filtered.length ? filtered.map((h) => `
+      <div class="news-row">
+        <div>
+          <div class="news-title"><a href="${esc(h.url)}" target="_blank" rel="noopener noreferrer">${esc(h.title)}</a></div>
+          ${h.summary ? `<div class="mut" style="margin-top:2px;">${esc(h.summary)}</div>` : ""}
+          <div class="news-meta"><b>${esc(h.source)}</b> · ${esc(fmtAgeMin(h.age_minutes))} · ${esc(h.published_utc)}</div>
+        </div>
+        <span class="badge ${catCls(h.category)}">${esc(catLbl(h.category))}</span>
+      </div>`).join("") : `<p class="mut">No headlines match category ${esc(NEWS_CAT)}.</p>`}
+    <p class="mut" style="margin:8px 0 0;font-size:10px;">
+      Active keyless feeds (${(nm.sources_ok || []).length}): ${esc((nm.sources_ok || []).join(", ") || "—")}
+      ${(nm.sources_failed || []).length ? ` · Soft failures: ${esc(nm.sources_failed.join(" | "))}` : ""}
+    </p>
+  `;
+}
+
 function renderChart() {
   const bars = (STATE?.charts?.[CHART_TF] || []).slice(-60);
   if (bars.length < 2) {
@@ -816,6 +971,22 @@ function activateTab(tabId) {
   document.querySelectorAll("#tabNav .tab-btn").forEach((x) => x.classList.toggle("active", x.dataset.tab === tabId));
   document.querySelectorAll(".tab-panel").forEach((p) => p.classList.toggle("active", p.id === `tab-${tabId}`));
 }
+
+const NEWS_MACRO_AI_PROMPT_TEMPLATE = `### ROLE & OBJECTIVE
+Act as an Institutional Cross-Asset Macro & Bitcoin Catalyst Strategist auditing the live **News & Macro Packet**.
+STRICT GUARDRAIL: Separate hard macro/flow catalysts from media noise using ONLY the telemetry provided below. Never invent prices, economic prints, or headlines.
+
+Deliver a concise 5-part briefing:
+1. **Macro Risk Backdrop (\`macro_bias\` & \`cross_asset\`):** Assess \`DXY\`, \`US10Y\`, \`VIX\`, \`SPX\`, and \`NDX\` alongside \`macro_bias.status\` (\`RISK_ON\` / \`MIXED\` / \`RISK_OFF\`). Is macro acting as a tailwind or headwind for Bitcoin?
+2. **Event Risk & Blackout Audit (\`calendar_usd\`):** Highlight the next HIGH-impact USD release (forecast vs. previous, countdown), whether \`blackout_active\` is triggered, and expected volatility timing.
+3. **Crypto Capital Flows (\`crypto_pulse\`):** Audit CMC Global Metrics (\`btc_dominance_pct\`, \`total_market_cap_24h_pct\`), CMC Fear & Greed, Altcoin Season Index, CMC/Farside BTC & ETH Spot ETF flows, 7D stablecoin liquidity, and Deribit DVOL.
+4. **Headline Catalyst Synthesis (\`headlines\`):** Group the top price-moving catalysts (ETF flows, Fed/rates, derivatives liquidations, regulation) and flag any conflicting narratives.
+5. **Tactical Desk Takeaway (<= 80 words):** Summarize whether macro catalysts argue for trend continuation, fade/mean-reversion, or waiting through an upcoming USD data release.
+
+### LIVE NEWS & MACRO TELEMETRY (JSON)
+\`\`\`json
+{{NEWS_JSON_PAYLOAD}}
+\`\`\``;
 
 const CORTEX_RHYME_AI_PROMPT_TEMPLATE = `### ROLE & OBJECTIVE
 Act as an Empirical Quantitative Microstructure Statistician auditing telemetry from **S2 CORTEX-RHYME v1.2.0 (MOD 63)**.
@@ -1130,9 +1301,48 @@ function bindEvents() {
   document.addEventListener("keydown", (e) => {
     if (e.altKey || e.ctrlKey || e.metaKey) return;
     if (/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName || "")) return;
-    const map = { "1": "signal", "2": "regime", "3": "spot", "4": "rhyme", "5": "ledger", "6": "audit" };
+    const map = { "1": "signal", "2": "regime", "3": "spot", "4": "rhyme", "5": "news", "6": "ledger", "7": "audit" };
     if (map[e.key]) activateTab(map[e.key]);
   });
+  if ($("newsCatSeg")) {
+    $("newsCatSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-cat]");
+      if (!b) return;
+      NEWS_CAT = b.dataset.cat;
+      document.querySelectorAll("#newsCatSeg .tab-btn").forEach((x) => x.classList.toggle("active", x === b));
+      renderNewsTab();
+    });
+  }
+  if ($("btnCopyNewsAi")) {
+    $("btnCopyNewsAi").onclick = () => {
+      if (!STATE?.news_macro) return;
+      const nm = STATE.news_macro;
+      const packet = {
+        updated_at_utc: nm.updated_at_utc,
+        btc_price: activePrice(),
+        macro_bias: nm.macro_bias,
+        cross_asset: nm.cross_asset,
+        crypto_pulse: nm.crypto_pulse,
+        calendar_usd: (nm.calendar_usd || []).slice(0, 8),
+        headlines: (nm.headlines || []).slice(0, 15).map((h) => ({
+          category: h.category,
+          source: h.source,
+          published_utc: h.published_utc,
+          title: h.title,
+          summary: h.summary,
+        })),
+      };
+      let promptText = NEWS_MACRO_AI_PROMPT_TEMPLATE.replace("{{NEWS_JSON_PAYLOAD}}", JSON.stringify(packet, null, 2));
+      const meta = window.DeskI18n?.getMeta();
+      if (meta && meta.code !== "en") {
+        promptText = promptText.replace(
+          "### LIVE NEWS & MACRO TELEMETRY (JSON)",
+          `**Response Language:** Respond strictly in ${meta.aiName} while keeping all macro numbers, dates, and headline facts exact.\n\n### LIVE NEWS & MACRO TELEMETRY (JSON)`
+        );
+      }
+      copyTextWithFeedback(promptText, "Copied News & Macro AI Prompt + JSON!", "newsActionMsg");
+    };
+  }
   if ($("rhymeLensSeg")) {
     $("rhymeLensSeg").addEventListener("click", (e) => {
       const b = e.target.closest("button[data-lens]");
@@ -1236,6 +1446,7 @@ async function init() {
   renderRegimeTab();
   renderSpotTab();
   renderRhymeTab();
+  renderNewsTab();
   renderLedgerTab();
   renderAuditTab();
   seedCalcFromState();

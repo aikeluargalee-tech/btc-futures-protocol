@@ -9,13 +9,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=14">
+  <link rel="stylesheet" href="style.css?v=15">
 </head>
 <body>
   <div class="wrap">
     <div class="ws-titlebar">
       <span>&#9632; QUANT-WORKSTATION // BTC-PROTOCOL REV 4.0</span>
-      <span class="ws-sysmeta" data-i18n="sys_meta">SYS: 4H-SWING · MAX LEV 1:2 · KEYS [1-6]</span>
+      <span class="ws-sysmeta" data-i18n="sys_meta">SYS: 4H-SWING · MAX LEV 1:2 · KEYS [1-7]</span>
     </div>
 
     <div class="lang-bar" id="langBar" role="group" aria-label="Language Selector">
@@ -53,8 +53,9 @@
       <button class="tab-btn" data-tab="regime"><kbd>F2</kbd> <span data-i18n="tab_f2">Regime &amp; Kline Patterns</span></button>
       <button class="tab-btn" data-tab="spot"><kbd>F3</kbd> <span data-i18n="tab_spot">Spot Magnet (DIBSE)</span></button>
       <button class="tab-btn" data-tab="rhyme"><kbd>F4</kbd> <span data-i18n="tab_rhyme">S2 Cortex-Rhyme</span></button>
-      <button class="tab-btn" data-tab="ledger"><kbd>F5</kbd> <span data-i18n="tab_f3">Paper Ledger &amp; Risk Calc</span></button>
-      <button class="tab-btn" data-tab="audit"><kbd>F6</kbd> <span data-i18n="tab_f4">Audit Log &amp; Config</span></button>
+      <button class="tab-btn" data-tab="news"><kbd>F5</kbd> <span data-i18n="tab_news">News &amp; Macro</span></button>
+      <button class="tab-btn" data-tab="ledger"><kbd>F6</kbd> <span data-i18n="tab_f3">Paper Ledger &amp; Risk Calc</span></button>
+      <button class="tab-btn" data-tab="audit"><kbd>F7</kbd> <span data-i18n="tab_f4">Audit Log &amp; Config</span></button>
     </nav>
 
     <!-- TAB 1: SIGNAL TAB -->
@@ -168,7 +169,30 @@
       <div class="card" id="rhymeAnaloguesBox"></div>
     </section>
 
-    <!-- TAB 5: PAPER LEDGER & RISK CALCULATOR -->
+    <!-- TAB 5: NEWS & MACRO -->
+    <section class="tab-panel" id="tab-news">
+      <div class="actions" style="margin-bottom:10px;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <button class="btn btn-primary" id="btnCopyNewsAi">[Copy News &amp; Macro AI Prompt + JSON]</button>
+          <span class="mut" id="newsActionMsg">Keyless CMC News/Global Pulse + Macro Calendar + CNBC/Fed Wire.</span>
+        </div>
+        <div class="tabs" id="newsCatSeg" style="margin:0;">
+          <button class="tab-btn active" data-cat="ALL">All</button>
+          <button class="tab-btn" data-cat="BTC_ETF">BTC / ETF</button>
+          <button class="tab-btn" data-cat="FED_MACRO">Fed / Macro</button>
+          <button class="tab-btn" data-cat="DERIVS_LIQ">Derivs / Liq</button>
+          <button class="tab-btn" data-cat="REGULATION">Regulation</button>
+        </div>
+      </div>
+      <div class="card" id="newsMacroHeroBox"></div>
+      <div class="grid-2">
+        <div class="card" id="newsCryptoPulseBox"></div>
+        <div class="card" id="newsCalendarBox"></div>
+      </div>
+      <div class="card" id="newsWireBox"></div>
+    </section>
+
+    <!-- TAB 6: PAPER LEDGER & RISK CALCULATOR -->
     <section class="tab-panel" id="tab-ledger">
       <div class="card">
         <h2 data-i18n="h_calc">Interactive v4.0 Position Sizing Calculator</h2>
@@ -227,7 +251,7 @@
       </div>
     </section>
   </div>
-  <script src="lang.js?v=4"></script>
-  <script src="app.js?v=14"></script>
+  <script src="lang.js?v=5"></script>
+  <script src="app.js?v=15"></script>
 </body>
 </html>

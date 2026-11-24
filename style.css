@@ -608,3 +608,71 @@ svg.chart {
   background: #14181d;
   display: block;
 }
+
+.macro-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+@media (max-width: 840px) {
+  .macro-tile-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.macro-tile {
+  background: var(--panel-stripe);
+  border: 1px solid var(--line);
+  padding: 7px 9px;
+}
+
+.macro-tile .lbl {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.macro-tile .val {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 2px 0;
+}
+
+.news-row {
+  padding: 9px 4px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.news-row:last-child {
+  border-bottom: none;
+}
+
+.news-title {
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.news-title a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.news-title a:hover {
+  color: var(--acc);
+  text-decoration: underline;
+}
+
+.news-meta {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 3px;
+}

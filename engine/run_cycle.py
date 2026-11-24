@@ -11,6 +11,7 @@ from .config import load_config
 from .cortex_rhyme_engine import compute_cortex_rhyme
 from .data_fetcher import fetch_all_market_data
 from .kline_playbook_engine import compute_regime_and_kline_playbook
+from .news_macro_engine import compute_news_macro
 from .paper_ledger import (
     compute_review_metrics,
     execute_signal_entry,
@@ -73,6 +74,7 @@ def main() -> int:
     regime["state_of_regime"] = playbook_bundle["state_of_regime"]
     spot_magnet = compute_spot_magnet(market, regime, signal)
     cortex_rhyme = compute_cortex_rhyme()
+    news_macro = compute_news_macro(market, now_utc=now)
 
     _save_json(LEDGER_PATH, ledger)
     _save_json(AUDIT_PATH, ledger["audit_log"][-100:])
@@ -196,6 +198,7 @@ def main() -> int:
         "cortex_11p": playbook_bundle["cortex_11p"],
         "spot_magnet": spot_magnet,
         "cortex_rhyme": cortex_rhyme,
+        "news_macro": news_macro,
         "signal": signal,
         "portfolio": portfolio,
         "audit_log_recent": list(reversed(ledger["audit_log"][-40:])),
@@ -204,7 +207,7 @@ def main() -> int:
     }
     _save_json(STATE_PATH, state)
     print(
-        f"[OK] BTC={market['ticker']['price']} | v4.0 Regime={regime['score']} ({regime['bias']}, 1D={regime.get('daily_bias')}, {playbook_bundle['state_of_regime']['code']}) | Spot={(spot_magnet.get('regime_diagnosis') or {}).get('name')} | KlineHits={playbook_bundle['kline_patterns']['active_count']} | Signal={signal['status']} | Eq=${eq:,.2f}"
+        f"[OK] BTC={market['ticker']['price']} | v4.0 Regime={regime['score']} ({regime['bias']}, 1D={regime.get('daily_bias')}, {playbook_bundle['state_of_regime']['code']}) | Spot={(spot_magnet.get('regime_diagnosis') or {}).get('name')} | News={len(news_macro.get('headlines') or [])} | KlineHits={playbook_bundle['kline_patterns']['active_count']} | Signal={signal['status']} | Eq=${eq:,.2f}"
     )
     return 0
 
