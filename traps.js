@@ -75,7 +75,7 @@
     work = escHtml(work);
     work = work.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label) => label);
     work = work.replace(/\*\*\*([^*\n]+?)\*\*\*/g, "<strong><em>$1</em></strong>");
-    work = work.replace(/\*\*((?:(?!\*\*).)+?)\*\*(?!\*)/g, "<strong>$1</strong>");
+    work = work.replace(/\*\*((?:(?!\*\*(?!\*)).)+?)\*\*(?!\*)/g, "<strong>$1</strong>");
     work = work.replace(/(^|[^*])\*([^*\n]+?)\*(?!\*)/g, "$1<em>$2</em>");
     work = work.replace(/\u0000CODE(\d+)\u0000/g, (_, i) => tokens[Number(i)] || "");
     return work;
