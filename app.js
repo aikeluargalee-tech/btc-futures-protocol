@@ -1302,10 +1302,15 @@ function renderEntryHub() {
     ? `Phase 1: ${trapSum.trafficLight.color}${trapSum.topTitles.length ? " · Active: " + trapSum.topTitles.join(", ") : " · 16 Spot Traps + Bonus B1 Ready"}`
     : "16 Spot Traps + Bonus B1 ('If-Then' Chart Hygiene) + Pre-Trade Decision Scanner";
 
+  const srSum = window.SrMapModule?.getHubSummary ? window.SrMapModule.getHubSummary(STATE) : "1W/1D/4H/1H S/R Bands & Liquidity Clusters";
+  const srOv = (STATE.sr_bands?.magnet_overlaps || []).length;
+  const srBadge = srOv ? `${srOv} OVERLAP${srOv === 1 ? "" : "S"}` : (STATE.sr_bands?.status || "MAP");
+  const srBadgeCls = srOv ? "warn" : "up";
+
   host.innerHTML = `
     <div class="hub-header">
       <span>// SELECT WORKSTATION MODULE</span>
-      <span>CLICK CARD OR PRESS KEYS [1–9] &#9658;</span>
+      <span>CLICK CARD OR PRESS KEYS [1–9, M] &#9658;</span>
     </div>
     <button type="button" class="hub-featured-card" data-open-tab="traps">
       <div class="hub-card-top">
@@ -1332,10 +1337,21 @@ function renderEntryHub() {
           <div class="hub-desc">${esc(c.desc)}</div>
         </button>
       `).join("")}
+      <button type="button" class="hub-card wide" data-open-tab="srmap">
+        <div class="hub-card-top">
+          <div class="hub-card-left">
+            <span class="hub-num">[10]</span>
+            <span class="hub-title">${esc(tr("tab_srmap", "S/R & Magnets"))}</span>
+          </div>
+          <span class="badge ${esc(srBadgeCls)}">${esc(srBadge)}</span>
+        </div>
+        <div class="hub-status">&#9658; ${esc(srSum)}</div>
+        <div class="hub-desc">Multi-timeframe S/R staircase (1W / 1D / 4H / 1H + live 15m/30m/12H toggle) paired with CMC Exact &amp; Modeled BTC Liquidation Clusters.</div>
+      </button>
     </div>
     <div class="hub-footer">
-      <span>COMMAND HUB · 9 MODULES</span>
-      <span>KEYS [1–9] OPEN · [0/ESC] HUB · NO LOGIN</span>
+      <span>COMMAND HUB · 10 MODULES</span>
+      <span>KEYS [1–9, M] OPEN · [0/ESC] HUB · NO LOGIN</span>
     </div>
   `;
 }
@@ -1358,6 +1374,7 @@ function activateTab(tabId) {
   document.querySelectorAll(".tab-panel").forEach((p) => p.classList.toggle("active", p.id === `tab-${tabId}`));
   if (tabId === "regime") renderChart();
   if (tabId === "traps") window.SpotTrapsModule?.render(STATE);
+  if (tabId === "srmap") window.SrMapModule?.render(STATE);
   window.scrollTo(0, 0);
 }
 
@@ -1799,7 +1816,7 @@ function bindEvents() {
       showHub();
       return;
     }
-    const map = { "1": "signal", "2": "regime", "3": "spot", "4": "rhyme", "5": "news", "6": "shield", "7": "ledger", "8": "audit", "9": "traps" };
+    const map = { "1": "signal", "2": "regime", "3": "spot", "4": "rhyme", "5": "news", "6": "shield", "7": "ledger", "8": "audit", "9": "traps", "m": "srmap", "M": "srmap" };
     if (map[e.key]) activateTab(map[e.key]);
   });
   if ($("btnCopyShieldAi")) {
@@ -1942,6 +1959,7 @@ function bindEvents() {
     renderHeaderLive();
     renderEntryHub();
     if (ACTIVE_VIEW === "traps") window.SpotTrapsModule?.render(STATE);
+    if (ACTIVE_VIEW === "srmap") window.SrMapModule?.render(STATE);
   };
   $("btnDlJson").onclick = () => {
     const u = URL.createObjectURL(new Blob([JSON.stringify(STATE, null, 2)], { type: "application/json" }));
@@ -1966,6 +1984,14 @@ async function init() {
     copyWithFeedback: copyTextWithFeedback,
     buildTelemetryPacket: (s) => buildRawTelemetryPacket(s),
   });
+  window.SrMapModule?.init({
+    getLivePrice: activePrice,
+    copyWithFeedback: copyTextWithFeedback,
+    openTrapGuide: (trapId) => {
+      activateTab("traps");
+      window.SpotTrapsModule?.openReader(trapId);
+    },
+  });
   $("snapMeta").textContent = `v${STATE.protocol_version || "4.0"} · Updated ${STATE.updated_at_utc} · 4H Close ${STATE.last_4h_close_utc || "—"} · Source ${STATE.ticker?.source || "—"}`;
   renderHeaderLive();
   renderSignalTab();
@@ -1977,6 +2003,7 @@ async function init() {
   renderLedgerTab();
   renderAuditTab();
   window.SpotTrapsModule?.render(STATE);
+  window.SrMapModule?.render(STATE);
   renderEntryHub();
   showHub();
   seedCalcFromState();

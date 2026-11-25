@@ -26,6 +26,7 @@ from .regime_engine import compute_regime
 from .signal_engine import evaluate_signal
 from .spot_magnet_engine import compute_spot_magnet
 from .spot_shield_engine import compute_spot_shield
+from .sr_bands_engine import compute_sr_bands
 
 ROOT = Path(__file__).resolve().parent.parent
 LEDGER_PATH = ROOT / "data" / "ledger.json"
@@ -96,6 +97,7 @@ def main() -> int:
         news_macro=news_macro,
         now_utc=now,
     )
+    sr_bands = compute_sr_bands(market, spot_magnet=spot_magnet, now_utc=now)
 
     _save_json(LEDGER_PATH, ledger)
     _save_json(AUDIT_PATH, ledger["audit_log"][-100:])
@@ -222,6 +224,7 @@ def main() -> int:
         "cortex_rhyme": cortex_rhyme,
         "positioning_matrix_g": positioning_matrix_g,
         "context_overlays": context_overlays,
+        "sr_bands": sr_bands,
         "news_macro": news_macro,
         "signal": signal,
         "portfolio": portfolio,

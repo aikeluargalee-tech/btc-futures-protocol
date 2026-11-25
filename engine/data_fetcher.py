@@ -736,6 +736,7 @@ def fetch_all_market_data() -> dict[str, Any]:
     errors: list[str] = []
     now_utc = dt.datetime.now(dt.timezone.utc)
     ticker = fetch_live_ticker(errors)
+    w1, w1_src = fetch_klines("BTC-USDT-SWAP", "BTCUSDT", "1Wutc", "1w", 104, errors)
     d1, d1_src = fetch_klines("BTC-USDT-SWAP", "BTCUSDT", "1Dutc", "1d", 265, errors)
     h4, h4_src = fetch_klines("BTC-USDT-SWAP", "BTCUSDT", "4H", "4h", 200, errors)
     h1, h1_src = fetch_klines("BTC-USDT-SWAP", "BTCUSDT", "1H", "1h", 168, errors)
@@ -764,6 +765,7 @@ def fetch_all_market_data() -> dict[str, Any]:
         "fetched_at_ms": int(now_utc.timestamp() * 1000),
         "ticker": ticker,
         "klines": {
+            "1w": w1,
             "1d": d1,
             "4h": h4,
             "1h": h1,
@@ -772,7 +774,7 @@ def fetch_all_market_data() -> dict[str, Any]:
             "spot_1h": spot_h1,
             "spot_4h": spot_h4,
             "eth_1d": eth_d1,
-            "sources": {"1d": d1_src, "4h": h4_src, "1h": h1_src, "15m": m15_src},
+            "sources": {"1w": w1_src, "1d": d1_src, "4h": h4_src, "1h": h1_src, "15m": m15_src},
         },
         "spot_cross_venue": spot_xv,
         "derivatives": funding,
