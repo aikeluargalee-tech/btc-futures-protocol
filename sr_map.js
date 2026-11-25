@@ -31,6 +31,125 @@
     return typeof v === "number" && isFinite(v) ? v.toFixed(d) : "—";
   }
 
+  function _toUtcSgtParts(ms) {
+    const u = new Date(ms);
+    const s = new Date(ms + 8 * 3600 * 1000);
+    const pad2 = (n) => String(n).padStart(2, "0");
+    const fmtD = (d) => `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}`;
+    const fmtT = (d) => `${pad2(d.getUTCHours())}:${pad2(d.getUTCMinutes())}:${pad2(d.getUTCSeconds())}`;
+    return {
+      utc: `${fmtD(u)} ${fmtT(u)} UTC`,
+      sgt: `${fmtD(s)} ${fmtT(s)} SGT`,
+      shortPair: `${fmtT(u).slice(0, 5)} UTC / ${fmtT(s).slice(0, 5)} SGT`,
+      fullPair: `${fmtD(u)} ${fmtT(u)} UTC / ${fmtT(s)} SGT`,
+    };
+  }
+
+  function fmtUtcSgt(isoUtc, addMinutes = 0) {
+    if (!isoUtc) return { utc: "MISSING", sgt: "MISSING", shortPair: "MISSING", fullPair: "MISSING" };
+    const ms = Date.parse(isoUtc);
+    if (!isFinite(ms)) return { utc: String(isoUtc), sgt: "MISSING", shortPair: String(isoUtc), fullPair: String(isoUtc) };
+    return _toUtcSgtParts(ms + addMinutes * 60 * 1000);
+  }
+
+  function get24hWickRange(state) {
+    const h4 = (state?.charts?.h4 || []).slice(-6);
+    const highs = h4.map((c) => c?.[2]).filter((v) => typeof v === "number" && isFinite(v));
+    const lows = h4.map((c) => c?.[3]).filter((v) => typeof v === "number" && isFinite(v));
+    const m = state?.spot_magnet?.metrics || {};
+    const tk = state?.ticker || {};
+    for (const v of [m.recent_3h_wick_high, tk.high24]) {
+      if (typeof v === "number" && isFinite(v)) highs.push(v);
+    }
+    for (const v of [m.recent_3h_wick_low, tk.low24]) {
+      if (typeof v === "number" && isFinite(v)) lows.push(v);
+    }
+    return {
+      high24: highs.length ? Math.max(...highs) : null,
+      low24: lows.length ? Math.min(...lows) : null,
+    };
+  }
+
+  function classifyClusterFreshness(price, side, wick24) {
+    if (!wick24 || !(typeof price === "number" && isFinite(price))) return "UNKNOWN";
+    if (side === "upper" && wick24.high24 != null) {
+      return wick24.high24 >= price * 0.999 ? "TESTED_24H" : "FRESH";
+    }
+    if (side === "lower" && wick24.low24 != null) {
+      return wick24.low24 <= price * 1.001 ? "TESTED_24H" : "FRESH";
+    }
+    return "UNKNOWN";
+  }
+
+  function extractTrendAndFlow(state) {
+    const valOrMissing = (v) => (v === null || v === undefined || v === "" ? "MISSING" : v);
+    const ts = state?.regime?.groups?.trend_structure || {};
+    const sor = state?.state_of_regime || {};
+    const smM = state?.spot_magnet?.metrics || {};
+    const ov = state?.context_overlays || {};
+    const etfReg = ov.etf_flow_regime || {};
+    const etf = state?.etf || {};
+
+    const dBias = ts.daily_bias || state?.regime?.daily_bias || null;
+    const h4Struct = ts.h4_structure || null;
+    const d1Struct = ts.daily_structure || null;
+    const score = state?.regime?.score ?? null;
+
+    let trendCue = "Range / balanced chop — respect outer 4H/1D bands.";
+    if (dBias === "BEAR" && h4Struct === "BULLISH_HH_HL") {
+      trendCue = "1D downtrend vs 4H bounce — wait for 4H close before trusting upside.";
+    } else if (dBias === "BEAR") {
+      trendCue = "Downtrend bias — don't catch falling floors before sweep + reclaim close.";
+    } else if (dBias === "BULL" && h4Struct === "BULLISH_HH_HL") {
+      trendCue = "Aligned uptrend — don't fade trend just because a near ceiling appears.";
+    } else if (dBias === "BULL") {
+      trendCue = "Constructive 1D bias — look for clean higher-low sweeps on 4H.";
+    }
+
+    const oi24 = smM.oi_change_24h_pct;
+    const etf5d = etf.sum5_usd_m;
+    const spotCvd = smM.spot_cvd_ratio;
+    let driverCue = "Mixed spot & derivatives flow — check closed candle confirmation.";
+    if (etfReg.regime === "NEW SHORTS" || (typeof etf5d === "number" && etf5d <= -500 && typeof oi24 === "number" && oi24 > 1)) {
+      driverCue = "ETF outflows + rising Perp OI — short leverage building; caution on bounces.";
+    } else if (typeof spotCvd === "number" && spotCvd >= 1.05 && typeof etf5d === "number" && etf5d > 0) {
+      driverCue = "Spot demand + ETF inflows supporting floors.";
+    } else if (typeof oi24 === "number" && oi24 > 2.0 && typeof spotCvd === "number" && spotCvd < 1.0) {
+      driverCue = "Leverage leading spot — higher wick/sweep risk around magnets.";
+    }
+
+    return {
+      trendCue,
+      driverCue,
+      trend: {
+        regime_code: valOrMissing(sor.code),
+        regime_name: valOrMissing(sor.name),
+        regime_bias: valOrMissing(sor.bias),
+        regime_4h_score: valOrMissing(score),
+        daily_bias: valOrMissing(dBias),
+        daily_structure: valOrMissing(d1Struct),
+        h4_structure: valOrMissing(h4Struct),
+        summary: valOrMissing(ts.summary),
+      },
+      flow: {
+        etf_latest_settled_date: valOrMissing(etf.latest_date),
+        etf_1d_usd_m: valOrMissing(etf.latest_usd_m),
+        etf_5d_usd_m: valOrMissing(etf5d),
+        etf_flow_regime: valOrMissing(etfReg.regime),
+        spot_cvd_ratio: valOrMissing(spotCvd),
+        spot_cvd_slope_7d: valOrMissing(smM.spot_cvd_slope_7d),
+        perp_cvd_slope_24h: valOrMissing(smM.perp_cvd_slope_24h),
+        perp_cvd_trend: valOrMissing(smM.perp_cvd_trend),
+        spot_vol_ratio_vs_ma20: valOrMissing(smM.spot_vol_ratio),
+        oi_change_4h_pct: valOrMissing(smM.oi_change_4h_pct),
+        oi_change_24h_pct: valOrMissing(oi24),
+        oi_change_3d_pct: valOrMissing(smM.oi_change_3d_pct),
+        funding_rate_8h_pct: valOrMissing(smM.funding_rate_8h_pct ?? state?.derivatives?.current_rate_pct),
+        funding_rate_annualized_pct: valOrMissing(smM.funding_rate_annualized_pct),
+      },
+    };
+  }
+
   function getRefPrice(state) {
     const live = INIT_OPTS.getLivePrice ? INIT_OPTS.getLivePrice() : null;
     if (typeof live === "number" && isFinite(live) && live > 0) return live;
@@ -182,9 +301,9 @@
       );
       const tfMap = {};
       for (const [k, val] of results) tfMap[k] = val;
-      const nowStr = new Date().toISOString().slice(11, 19) + "Z";
+      const tsNow = _toUtcSgtParts(Date.now());
       INTRADAY_DATA = {
-        source: `Live Closed Bars @ ${nowStr} (BinanceVision)`,
+        source: `Live Closed Bars @ ${tsNow.shortPair} (BinanceVision)`,
         error: null,
         timeframes: tfMap,
       };
@@ -353,7 +472,7 @@
     `;
   }
 
-  function renderClusterBarList(rows, maxUsdM, refPrice, side, isModeled) {
+  function renderClusterBarList(rows, maxUsdM, refPrice, side, isModeled, wick24) {
     if (!rows.length) return `<p class="mut" style="margin:6px 0 0;">No clusters reported on this side.</p>`;
     return rows
       .map((c) => {
@@ -362,6 +481,7 @@
         const dist = liveDistPct(c.price, refPrice);
         const pull = computePullScore(usdM, dist);
         const farTag = typeof dist === "number" && Math.abs(dist) >= 6.0;
+        const fresh = classifyClusterFreshness(c.price, side, wick24);
         const barCls = side === "upper" ? "upper" : "lower";
         return `
           <div class="srmap-liq-item">
@@ -372,6 +492,7 @@
               </div>
               <div class="srmap-liq-badges">
                 ${isModeled ? `<span class="badge">MODELED</span>` : `<span class="badge">EXACT</span>`}
+                ${fresh === "FRESH" ? `<span class="badge fresh">FRESH</span>` : fresh === "TESTED_24H" ? `<span class="badge tested">TESTED 24H</span>` : ""}
                 ${farTag ? `<span class="badge warn">FAR &ge;6%</span>` : ""}
                 <span class="badge ${side === "upper" ? "dn" : "up"}">${fmtPct(dist, 2)}</span>
               </div>
@@ -390,7 +511,7 @@
       .join("");
   }
 
-  function renderLiquidationSection(state, refPrice) {
+  function renderLiquidationSection(state, refPrice, wick24) {
     const cmc = state?.derivatives?.cmc_liquidations || null;
     const cf = cmc?.cumulative_fuel || {};
     const rl = cmc?.realized || {};
@@ -436,9 +557,9 @@
             <div><span class="mut">24h Realized Flush:</span> <b>$${fmtNum(rl.h24_total_usd_m, 1)}M (${fmtNum(rl.h24_long_flush_pct, 0)}% Longs)</b></div>
           </div>
           <div class="srmap-tf-sub" style="margin-top:8px;">&#9650; Upper Short Clusters (Short Liquidations Above)</div>
-          ${renderClusterBarList(cmcShorts, cmcMax, refPrice, "upper", false)}
+          ${renderClusterBarList(cmcShorts, cmcMax, refPrice, "upper", false, wick24)}
           <div class="srmap-tf-sub" style="margin-top:10px;">&#9660; Lower Long Clusters (Long Liquidations Below)</div>
-          ${renderClusterBarList(cmcLongs, cmcMax, refPrice, "lower", false)}
+          ${renderClusterBarList(cmcLongs, cmcMax, refPrice, "lower", false, wick24)}
           ${
             cmc?.largest_macro_long_cluster || cmc?.largest_macro_short_cluster
               ? `<div class="mut" style="margin-top:8px;padding-top:6px;border-top:1px dashed var(--line);">
@@ -453,7 +574,7 @@
           <div class="srmap-sec-head">
             <div>
               <h2>Modeled 10x–100x Liquidation Ladder (F3 Estimates)</h2>
-              <div class="mut">Estimated leverage buckets anchored to recent swing pivots · Labelled MODELED (not realized)</div>
+              <div class="mut">Estimated leverage buckets anchored to recent swing pivots · Labelled MODELED (never added to CMC Exact)</div>
             </div>
             <span class="badge">${typeof imb === "number" ? imb.toFixed(1) + "x Immed Skew" : "MODELED"}</span>
           </div>
@@ -463,11 +584,11 @@
             <div><span class="mut">Ladder Skew:</span> <b>${typeof ladImb === "number" ? ladImb.toFixed(2) + "x" : "—"} (${escHtml(mag.dominant_magnet || "Balanced")})</b></div>
           </div>
           <div class="srmap-tf-sub" style="margin-top:8px;">&#9650; Modeled Short Tiers Above Spot</div>
-          ${renderClusterBarList(modUpper, modMax, refPrice, "upper", true)}
+          ${renderClusterBarList(modUpper, modMax, refPrice, "upper", true, wick24)}
           <div class="srmap-tf-sub" style="margin-top:10px;">&#9660; Modeled Long Tiers Below Spot</div>
-          ${renderClusterBarList(modLower, modMax, refPrice, "lower", true)}
+          ${renderClusterBarList(modLower, modMax, refPrice, "lower", true, wick24)}
           <div class="mut" style="margin-top:8px;padding-top:6px;border-top:1px dashed var(--line);">
-            Pull Score = <code>Size ($M) / max(|Dist %|, 0.15)</code>. Nearby bright pools (&lt;4%) pull harder than far pools (&ge;6%).
+            Pull Score = <code>Size ($M) / max(|Dist %|, 0.15)</code>. Magnets show fuel, not a must-visit — <b>FRESH</b> pools pull harder than <b>TESTED 24H</b> pools.
           </div>
         </div>
       </div>
@@ -483,37 +604,121 @@
 
     const sr = state?.sr_bands || null;
     const cmc = state?.derivatives?.cmc_liquidations || null;
-    const ladder = state?.spot_magnet?.magnets?.liquidation_ladder || null;
+    const ladder = state?.spot_magnet?.magnets?.liquidation_ladder || [];
+    const wick24 = get24hWickRange(state);
+    const tfCtx = extractTrendAndFlow(state);
+    const tsPair = fmtUtcSgt(state?.updated_at_utc);
+    const stalePair = fmtUtcSgt(state?.updated_at_utc, 65);
+
+    const annotateCluster = (price, usdM, side, extra = {}) => {
+      const dist = liveDistPct(price, refPrice);
+      const pull = computePullScore(usdM, dist);
+      return {
+        ...extra,
+        price,
+        usd_m: usdM,
+        live_distance_pct: dist != null ? +dist.toFixed(2) : null,
+        pull_score: pull != null ? +pull.toFixed(1) : null,
+        freshness: classifyClusterFreshness(price, side, wick24),
+      };
+    };
+
     const payload = {
-      updated_at_utc: state?.updated_at_utc ?? null,
+      scope: "1.0x Spot Only (zero leverage, zero futures, zero shorting) · 1H-4H short-term timing layer only",
+      updated_at_utc: tsPair.utc,
+      updated_at_sgt: tsPair.sgt,
+      stale_after_utc: stalePair.utc,
+      stale_after_sgt: stalePair.sgt,
       live_spot_price: refPrice,
+      wick_range_24h: wick24,
+      trend_filter: tfCtx.trend,
+      flow_filter: tfCtx.flow,
       sr_bands: sr,
-      cmc_liquidations: cmc,
-      f3_modeled_liquidation_ladder: ladder,
-      etf_flow_regime: state?.context_overlays?.etf_flow_regime ?? null,
-      market_time_l: state?.context_overlays?.market_time_l ?? null,
+      liquidation_clusters: {
+        strict_rule: "NEVER mix or sum CMC Exact Hyperliquid with Modeled F3 Ladder.",
+        cmc_exact_hyperliquid: cmc
+          ? {
+              source: cmc.source,
+              mark_price: cmc.mark_price,
+              cumulative_fuel: cmc.cumulative_fuel,
+              realized: cmc.realized,
+              short_clusters_above: (cmc.tactical_short_clusters_within_8pct || []).map((c) =>
+                annotateCluster(c.price, c.usd_m, "upper", { leverage: c.leverage, range: c.range })
+              ),
+              long_clusters_below: (cmc.tactical_long_clusters_within_8pct || []).map((c) =>
+                annotateCluster(c.price, c.usd_m, "lower", { leverage: c.leverage, range: c.range })
+              ),
+              largest_macro_short_cluster: cmc.largest_macro_short_cluster ?? "MISSING",
+              largest_macro_long_cluster: cmc.largest_macro_long_cluster ?? "MISSING",
+            }
+          : "MISSING",
+        modeled_f3_ladder: ladder.length
+          ? ladder.map((r) => annotateCluster(r.price, r.estimated_vol_m, r.side, { tier: r.tier, side: r.side }))
+          : "MISSING",
+      },
+      market_time_l: state?.context_overlays?.market_time_l ?? "MISSING",
     };
 
     return (
       prefix +
       `### ROLE & OBJECTIVE
-Act as an Institutional Bitcoin Market-Structure & Liquidity Analyst explaining S/R Bands & Liquidation Magnets in plain, beginner-friendly 1.0x Spot terms.
+Act as a 1.0x Spot Bitcoin Market-Structure & Timing Analyst. Strictly 1.0x Spot Only (zero leverage, zero futures, zero shorting). Use S/R Bands + Liquidation Magnets as a **1H–4H timing and trap-avoidance layer**, NOT as a standalone direction predictor or long-term valuation tool.
 
-STRICT AUDIT GUARDRAILS:
-1. **Freshness & Null Inventory:** Check \`updated_at_utc\` age (flag stale if \`> 65m\`) and list any missing/\`null\` feeds rather than guessing.
-2. **Closed-Bar S/R vs Liquidity Distinction:** Strictly separate verified closed-candle S/R bands (\`1W / 1D / 4H / 1H\`), CMC \`Exact Hyperliquid\` liquidation clusters, and \`Modeled\` F3 ladder estimates — never treat modeled clusters as realized order flow.
-3. **Overlap & Trap #05 Check:** Explicitly inspect whether a major lower liquidation cluster sits 0.2%–3.5% below the nearest \`1H\` or \`4H\` support band (wait-for-sweep risk vs clean shelf) and whether overhead short pools sit \`>= 6%\` away (Far Magnet).
-4. **Actionable 4-Part Map:**
-   - **Data Freshness & Overall Structure:** Are we boxed near support or pressing a resistance ceiling?
-   - **Key Ceilings & Key Floors (\`1W / 1D / 4H / 1H\`):** Highlight any multi-timeframe **Confluence Zones**.
-   - **Liquidation Magnet Traps Nearby:** Compare Pull Scores (` + "`$M / |Dist %|`" + `) above vs below spot and state whether Trap #05 / Trap #01 patience is needed.
-   - **Falsification & "If-Then" Conditions:** Exact completed 4H/1D close that flips resistance into support or breaks current floor structure.
+STRICT AUDIT & OUTPUT RULES:
+1. **Timestamps (`UTC` + `SGT` ONLY):** Report packet time and stale cutoff (`+65m`) strictly in **UTC and SGT (UTC+8)** using \`updated_at_utc\` / \`updated_at_sgt\` and \`stale_after_utc\` / \`stale_after_sgt\`. Mark stale if >65m old.
+2. **Never Invent Missing Feeds:** Inspect \`trend_filter\` and \`flow_filter\`; report any field marked \`"MISSING"\` explicitly without guessing.
+3. **Never Mix Liquidations:** Keep **CMC Exact Hyperliquid** and **Modeled F3 Ladder** strictly separate. State clearly that magnets represent leverage fuel (not a guaranteed must-visit) and modeled pools are mathematical estimates, not confirmed resting positions.
+4. **Deliver a Structured 5-Part Review:**
+   - **1. Freshness (`UTC + SGT`), Scope & Missing Inventory:** Note short-term 1H–4H timing scope explicitly.
+   - **2. Trend & Flow Filter ("Who Is Driving?"):** Assess \`trend_filter\` (HH/HL vs LH/LL, Range vs Trend) and \`flow_filter\` (Spot CVD vs Perp CVD trend, Vol Ratio, OI Δ%, Funding, ETF flows). State whether Spot is supporting floors or Futures leverage is driving.
+   - **3. Key S/R Ceilings, Floors & Confluence (`1W / 1D / 4H / 1H`)**
+   - **4. Dual Magnets (`FRESH` vs `TESTED_24H`), OI/Vol Context & Traps (`#05` / `#01`):** Note which pools are \`FRESH\` vs \`TESTED_24H\`.
+   - **5. 1.0x Spot Risk Filter ("If-Then"):** State (a) the exact completed **4H/1D close** that invalidates the floor/thesis, (b) the next floor below & next ceiling above if a sweep extends, and (c) the exact **reclaim close** required before acting. Zero automatic entry or leverage instructions.
 
-### LIVE S/R BANDS & LIQUIDATION TELEMETRY (JSON)
+### LIVE 1.0X SPOT TIMING PACKET (JSON)
 \`\`\`json
 ${JSON.stringify(payload, null, 2)}
 \`\`\``
     );
+  }
+
+  function renderContextStrip(tfCtx, state) {
+    const t = tfCtx.trend;
+    const f = tfCtx.flow;
+    const dCls = t.daily_bias === "BEAR" ? "dn" : t.daily_bias === "BULL" ? "up" : "warn";
+    const etfStr = typeof f.etf_5d_usd_m === "number" ? `5D ETF ${f.etf_5d_usd_m >= 0 ? "+" : ""}$${f.etf_5d_usd_m.toFixed(1)}M` : "5D ETF MISSING";
+    const oiStr = typeof f.oi_change_24h_pct === "number" ? `OI 24h ${fmtPct(f.oi_change_24h_pct)}` : "OI MISSING";
+    const cvdStr = typeof f.spot_cvd_ratio === "number" ? `Spot CVD ${f.spot_cvd_ratio.toFixed(3)}` : "Spot CVD MISSING";
+    const volStr = typeof f.spot_vol_ratio_vs_ma20 === "number" ? `Vol ${f.spot_vol_ratio_vs_ma20.toFixed(2)}x` : "Vol MISSING";
+    const fundStr = typeof f.funding_rate_8h_pct === "number" ? `Fund ${fmtPct(f.funding_rate_8h_pct, 4)}` : "Fund MISSING";
+
+    return `
+      <div class="srmap-ctx-strip">
+        <div class="srmap-ctx-box">
+          <div class="srmap-ctx-kicker">1. TREND FILTER (RANGE VS TREND)</div>
+          <div class="srmap-ctx-val">
+            <span class="badge ${dCls}">1D ${escHtml(t.daily_structure)}</span>
+            <span class="badge">4H ${escHtml(t.h4_structure)}</span>
+            ${t.regime_code !== "MISSING" ? `<span class="badge">${escHtml(t.regime_code)}</span>` : ""}
+          </div>
+          <div class="srmap-ctx-sub">${escHtml(tfCtx.trendCue)}</div>
+        </div>
+
+        <div class="srmap-ctx-box">
+          <div class="srmap-ctx-kicker">2. FLOW FILTER (WHO IS DRIVING?)</div>
+          <div class="srmap-ctx-val">
+            <b>${escHtml(f.etf_flow_regime)}</b> · ${escHtml(etfStr)} · ${escHtml(oiStr)}
+          </div>
+          <div class="srmap-ctx-sub">${escHtml(cvdStr)} · ${escHtml(volStr)} · ${escHtml(fundStr)}<br>${escHtml(tfCtx.driverCue)}</div>
+        </div>
+
+        <div class="srmap-ctx-box scope">
+          <div class="srmap-ctx-kicker">3. SCOPE · 1.0X SPOT TIMING ONLY</div>
+          <div class="srmap-ctx-val"><b>1H–4H Trap &amp; Timing Layer Only</b></div>
+          <div class="srmap-ctx-sub">Not long-term valuation. Magnets show leverage fuel, never must-visit targets. Check 4H/1D closes first.</div>
+        </div>
+      </div>
+    `;
   }
 
   function render(state) {
@@ -535,15 +740,20 @@ ${JSON.stringify(payload, null, 2)}
     const confS = sr.confluence_zones?.support || [];
     const intradayMap = INTRADAY_DATA?.timeframes || sr.intraday_snapshot || {};
     const intradaySource = INTRADAY_DATA?.source || "Hourly Snapshot Fallback (click Refresh Intraday for live 15m/30m/12H bars)";
+    const wick24 = get24hWickRange(LAST_STATE);
+    const tfCtx = extractTrendAndFlow(LAST_STATE);
+    const tsPair = fmtUtcSgt(LAST_STATE.updated_at_utc);
 
     host.innerHTML = `
       <div class="actions" style="margin-bottom:10px;justify-content:space-between;flex-wrap:wrap;gap:8px;">
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
           <button type="button" class="btn btn-primary" id="btnCopySrAi">[Copy Price Map AI Prompt + JSON]</button>
-          <span class="mut" id="srAiMsg">Closed-bar 1W / 1D / 4H / 1H S/R Bands + Dual-Source Liquidation Magnets.</span>
+          <span class="mut" id="srAiMsg">Closed-bar 1W–1H S/R · Trend &amp; Flow Filters · Fresh/Tested Liquidations (1.0x Spot Timing).</span>
         </div>
-        <span class="badge ${sr.status === "LIVE" ? "up" : "warn"}">${escHtml(sr.status || "—")} · Spot ${fmtUsd(refPrice, 1)}</span>
+        <span class="badge ${sr.status === "LIVE" ? "up" : "warn"}">${escHtml(tsPair.shortPair)} · Spot ${fmtUsd(refPrice, 1)}</span>
       </div>
+
+      ${renderContextStrip(tfCtx, LAST_STATE)}
 
       <details class="card srmap-guide-card">
         <summary class="srmap-guide-summary">
@@ -631,7 +841,7 @@ ${JSON.stringify(payload, null, 2)}
         }
       </div>
 
-      ${renderLiquidationSection(LAST_STATE, refPrice)}
+      ${renderLiquidationSection(LAST_STATE, refPrice, wick24)}
     `;
   }
 
