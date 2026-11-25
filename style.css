@@ -84,6 +84,13 @@ html, body {
   text-decoration: underline;
 }
 
+@media (max-width: 520px) {
+  .ws-brand-btn {
+    font-size: 9.5px;
+    letter-spacing: 0.02em;
+  }
+}
+
 .ws-title-right {
   display: flex;
   align-items: center;
@@ -941,13 +948,15 @@ svg.chart {
 
 @media (max-width: 760px) {
   .hub-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
 .hub-card {
   display: block;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   background: var(--panel);
   border: 1.5px solid var(--line-dark);
   box-shadow: 3px 3px 0 var(--shadow);
@@ -975,7 +984,8 @@ svg.chart {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 6px 8px;
   margin-bottom: 6px;
 }
 
@@ -984,6 +994,7 @@ svg.chart {
   align-items: center;
   gap: 7px;
   min-width: 0;
+  flex: 1 1 160px;
 }
 
 .hub-num {
@@ -1011,12 +1022,14 @@ svg.chart {
   font-weight: 700;
   color: var(--text);
   margin-bottom: 3px;
+  overflow-wrap: anywhere;
 }
 
 .hub-desc {
   font-size: 10px;
   color: var(--muted);
   line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .hub-footer {
@@ -1051,7 +1064,7 @@ svg.chart {
 
 @media (max-width: 760px) {
   .hub-featured-pair {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -1098,6 +1111,8 @@ svg.chart {
 .hub-featured-card {
   display: block;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   margin-bottom: 0;
   background: linear-gradient(135deg, #fffdf6 0%, var(--panel) 55%, var(--acc-soft) 100%);
   border: 2px solid var(--acc);
