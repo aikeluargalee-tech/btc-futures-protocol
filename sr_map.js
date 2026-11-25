@@ -587,11 +587,13 @@ ${JSON.stringify(payload, null, 2)}
           </div>
         </div>
         <div class="srmap-staircase">
+          <div class="srmap-stair-hdr ceil">&#9650; RESISTANCE (CEILINGS ABOVE LIVE PRICE)</div>
           ${staircase.ceilings.length ? staircase.ceilings.map((r) => renderStaircaseRow(r, "resistance")).join("") : `<div class="mut" style="padding:6px;">No overhead resistance zones mapped above live price.</div>`}
           <div class="srmap-live-divider">
             <span>&#9658; LIVE BTC REFERENCE PRICE</span>
             <strong>${fmtUsd(refPrice, 1)}</strong>
           </div>
+          <div class="srmap-stair-hdr floor">&#9660; SUPPORT (FLOORS BELOW LIVE PRICE)</div>
           ${staircase.floors.length ? staircase.floors.map((r) => renderStaircaseRow(r, "support")).join("") : `<div class="mut" style="padding:6px;">No underlying support zones mapped below live price.</div>`}
         </div>
       </div>

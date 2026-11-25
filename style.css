@@ -1792,3 +1792,25 @@ svg.chart {
   font-size: 10px;
   white-space: nowrap;
 }
+
+.srmap-stair-hdr {
+  padding: 5px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid var(--line-dark);
+}
+
+.srmap-stair-hdr.ceil {
+  background: var(--dn-bg);
+  border-color: var(--dn);
+  color: var(--dn);
+}
+
+.srmap-stair-hdr.floor {
+  background: var(--up-bg);
+  border-color: var(--up);
+  color: var(--up);
+  margin-top: 2px;
+}
