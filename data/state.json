@@ -1,37 +1,37 @@
 {
   "protocol_version": "4.0",
   "protocol_name": "BTC Short-Term Futures Protocol",
-  "updated_at_utc": "2026-11-25T05:53:02Z",
-  "updated_at_ms": 1795585982351,
+  "updated_at_utc": "2026-11-25T05:54:01Z",
+  "updated_at_ms": 1795586041894,
   "last_4h_close_utc": "2026-11-25T00:00:00Z",
   "ticker": {
-    "price": 59108.1,
+    "price": 59148.3,
     "high24": 60666.0,
     "low24": 58913.9,
-    "chg24_pct": -2.48,
+    "chg24_pct": -2.38,
     "source": "OKX BTC-USDT-SWAP"
   },
   "derivatives": {
-    "current_rate_pct": 0.0064,
-    "oi_btc": 31034.4,
-    "total_oi_btc": 82490.5,
+    "current_rate_pct": 0.00644,
+    "oi_btc": 31030.1,
+    "total_oi_btc": 82483.0,
     "venues": {
-      "okx": 0.0064,
+      "okx": 0.00644,
       "kraken_futures": 0.00448,
       "deribit": 0.0,
-      "hyperliquid": -0.00692
+      "hyperliquid": -0.00676
     },
     "venue_oi_btc": {
-      "okx": 31034.4,
-      "kraken_futures": 2106.6,
-      "deribit": 13968.3,
-      "hyperliquid": 35381.2
+      "okx": 31030.1,
+      "kraken_futures": 2106.7,
+      "deribit": 13960.6,
+      "hyperliquid": 35385.6
     },
     "orderbook_1pct": {
-      "bid_depth_1pct_usd": 11015050.0,
-      "ask_depth_1pct_usd": 9009989.0,
-      "imbalance_ratio": 1.22,
-      "imbalance_pct": 10.0,
+      "bid_depth_1pct_usd": 12436149.0,
+      "ask_depth_1pct_usd": 10115834.0,
+      "imbalance_ratio": 1.23,
+      "imbalance_pct": 10.3,
       "spread_bps": 0.0169,
       "source": "OKX BTC-USDT-SWAP"
     },
@@ -140,7 +140,7 @@
         "h24_short_usd_m": 22.05,
         "h24_total_usd_m": 81.23,
         "h24_long_flush_pct": 72.9,
-        "global_btc_oi_usd_b": 64.14
+        "global_btc_oi_usd_b": 63.98
       }
     }
   },
@@ -185,7 +185,7 @@
       "title": "Core PCE Price Index m/m",
       "time_utc": "2026-11-25T13:30:00Z",
       "ts_ms": 1795613400000,
-      "minutes_away": 456.8,
+      "minutes_away": 455.8,
       "forecast": "0.3%",
       "previous": "0.3%"
     },
@@ -193,7 +193,7 @@
       "title": "Prelim GDP q/q",
       "time_utc": "2026-11-25T13:30:00Z",
       "ts_ms": 1795613400000,
-      "minutes_away": 456.8,
+      "minutes_away": 455.8,
       "forecast": "3.5%",
       "previous": "3.4%"
     }
@@ -1697,14 +1697,14 @@
         "atr_4h_pct": 2.17,
         "atr_4h_percentile": 75.0,
         "rel_volume_4h": 0.86,
-        "funding_rate_pct": 0.0064,
-        "funding_30d_percentile": 55.56,
+        "funding_rate_pct": 0.00644,
+        "funding_30d_percentile": 56.67,
         "components": {
           "atr_4h_percentile_score": 63.0,
           "rel_volume_4h_score": 58.2,
           "funding_score": 72.0
         },
-        "summary": "ATR4Hp=75.0, RelVol4H=0.86x, Fund=0.0064%",
+        "summary": "ATR4Hp=75.0, RelVol4H=0.86x, Fund=0.00644%",
         "score": 36.88
       },
       "session_context": {
@@ -1714,7 +1714,7 @@
         "session_name": "ASIA_OR_OFFHOURS",
         "is_weekend_utc": false,
         "next_macro_event": "Core PCE Price Index m/m",
-        "next_macro_minutes": 456.8,
+        "next_macro_minutes": 455.8,
         "vix": 26.36,
         "dxy": 104.01,
         "etf_5d_usd_m": -2359.1,
@@ -1723,7 +1723,7 @@
           "event_proximity": 72.0,
           "external_context": 17.0
         },
-        "summary": "ASIA_OR_OFFHOURS, NextEv=457m",
+        "summary": "ASIA_OR_OFFHOURS, NextEv=456m",
         "score": 45.2
       }
     },
@@ -1764,7 +1764,7 @@
     "last_4h_close_ts": 1795564800000,
     "last_4h_close_utc": "2026-11-25T00:00:00Z",
     "recalc_utc_day": "2026-11-25",
-    "recalc_at_utc": "2026-11-25T05:53:02Z",
+    "recalc_at_utc": "2026-11-25T05:54:01Z",
     "is_weekend_utc": false,
     "htf_structural_break": false,
     "state_of_regime": {
@@ -2245,7 +2245,7 @@
       "r3_2_oi_funding": {
         "btc_oi_change_pct_1h": 0.48,
         "btc_oi_change_pct_4h": 0.61,
-        "funding_rate_current": 0.0064,
+        "funding_rate_current": 0.00644,
         "sweep_oi_spike_flag": false
       },
       "r3_3_p_shape_frvp": {
@@ -2266,36 +2266,36 @@
   "spot_magnet": {
     "data_quality": "LIVE",
     "metrics": {
-      "price": 59148.0,
-      "price_change_1h_pct": -0.13,
-      "price_change_24h_pct": -2.49,
+      "price": 59174.01,
+      "price_change_1h_pct": -0.08,
+      "price_change_24h_pct": -2.41,
       "daily_vwap": 59352.81,
       "weekly_vwap": 61119.48,
       "vwap_30d": 69225.69,
       "vpoc_30d_primary": 77500.0,
       "vpoc_30d_secondary": 58750.0,
-      "spot_vol_24h": 18805.78,
+      "spot_vol_24h": 18808.67,
       "spot_vol_ma20": 22793.55,
       "spot_vol_ratio": 0.83,
       "spot_cvd_ratio": 1.088,
       "spot_cvd_slope_7d": -7165.5,
       "spot_cvd_slope_14d": -9655.3,
-      "perp_cvd_slope_24h": -18.2,
+      "perp_cvd_slope_24h": -24.71,
       "perp_cvd_trend": "surging",
-      "open_interest_btc": 31034.4,
+      "open_interest_btc": 31030.1,
       "oi_change_1h_pct": 0.48,
       "oi_change_4h_pct": 0.61,
       "oi_change_24h_pct": 2.93,
       "oi_change_3d_pct": -2.12,
-      "funding_rate_8h_pct": 0.0064,
-      "funding_rate_decimal": 6.4e-05,
-      "funding_rate_annualized_pct": 7.01,
-      "futures_basis_annualized_pct": -0.37,
+      "funding_rate_8h_pct": 0.00644,
+      "funding_rate_decimal": 6.44e-05,
+      "funding_rate_annualized_pct": 7.05,
+      "futures_basis_annualized_pct": -0.51,
       "long_short_account_ratio": 2.64,
       "ls_ratio_percentile_72h": 84.7,
       "ls_ratio_available": true,
       "oi_history_available": true,
-      "bids_asks_depth_ratio": 1.22,
+      "bids_asks_depth_ratio": 1.23,
       "swing_low_4h": 58952.48,
       "swing_high_4h": 60768.56,
       "base_floor": 58768.51,
@@ -2304,10 +2304,10 @@
       "euphoria_wick_high": 60768.56,
       "recent_3h_wick_low": 58937.5,
       "recent_3h_wick_high": 59671.2,
-      "coinbase_spot_price": 59063.63,
-      "okx_spot_price": 59148.4,
-      "coinbase_premium_usd": -84.37,
-      "coinbase_premium_bps": -14.26,
+      "coinbase_spot_price": 59092.71,
+      "okx_spot_price": 59174.9,
+      "coinbase_premium_usd": -81.3,
+      "coinbase_premium_bps": -13.74,
       "realized_vol_30d_pct": 47.13,
       "implied_vol_dvol_pct": 53.18,
       "variance_premium_pts": 6.05,
@@ -2315,43 +2315,43 @@
       "etf_sum5_usd_m": -2359.1
     },
     "lsce": {
-      "status": "UNTESTED",
-      "side": "NONE",
-      "cluster_tested": "Modelled Lower $58,800 | Upper $59,500",
-      "sweep_depth_pct": 0.59,
-      "reclaim_level": 58800.0,
-      "spot_absorption": "Balanced / Mid-Range",
-      "observation": "Spot sits +0.59% above modelled lower pool ($58,800) and -0.60% below modelled upper pool ($59,500); neutral standby.",
-      "action_verdict": "Spot sits +0.59% above modelled lower pool ($58,800) and -0.60% below modelled upper pool ($59,500); neutral standby."
+      "status": "SWEEP_AND_RECLAIM_OBSERVED",
+      "side": "LOWER",
+      "cluster_tested": "Modelled Lower Longs ($58,900)",
+      "sweep_depth_pct": 0.46,
+      "reclaim_level": 58900.0,
+      "spot_absorption": "Strong Bid Absorption (CVD 1.09, Depth 1.23)",
+      "observation": "Modelled lower shelf ($58,900) swept (3H wick $58,938) & reclaimed with spot buying; Loop A (USDT -> BTC) condition observed.",
+      "action_verdict": "Modelled lower shelf ($58,900) swept (3H wick $58,938) & reclaimed with spot buying; Loop A (USDT -> BTC) condition observed."
     },
     "magnets": {
       "dominant_magnet": "Lower Long Sweep Magnet",
-      "dominant_magnet_reason": "LOWER ($58,800, Immediate 4.3x / Ladder 3.74x; 72.5% long crowded)",
+      "dominant_magnet_reason": "LOWER ($58,900, Immediate 2.3x / Ladder 2.76x; 72.5% long crowded)",
       "nearest_upper_cluster": {
         "price_level": 59500.0,
-        "distance_pct": 0.6,
-        "estimated_vol_usd": 55068681.0,
+        "distance_pct": 0.55,
+        "estimated_vol_usd": 55085263.0,
         "side": "upper",
         "cluster_type": "Modeled Short Liquidity Pool"
       },
       "nearest_lower_cluster": {
-        "price_level": 58800.0,
-        "distance_pct": 0.59,
-        "estimated_vol_usd": 236795327.0,
+        "price_level": 58900.0,
+        "distance_pct": 0.46,
+        "estimated_vol_usd": 126696106.0,
         "side": "lower",
         "cluster_type": "Modeled Long Liquidity Pool"
       },
-      "immediate_imbalance_ratio": 4.3,
+      "immediate_imbalance_ratio": 2.3,
       "total_ladder_upper_vol_m": 111.6,
-      "total_ladder_lower_vol_m": 417.9,
-      "total_ladder_imbalance_ratio": 3.74,
+      "total_ladder_lower_vol_m": 307.8,
+      "total_ladder_imbalance_ratio": 2.76,
       "magnet_factors": {
-        "factor_1_size": "Immediate L vs S: $236.8M vs $55.1M (4.3x) | 10x\u2013100x Ladder: $417.9M vs $111.6M (3.74x)",
+        "factor_1_size": "Immediate L vs S: $126.7M vs $55.1M (2.3x) | 10x\u2013100x Ladder: $307.8M vs $111.6M (2.76x)",
         "factor_2_spot_leadership": "Spot CVD Ratio 1.09 vs Perp Trend surging",
         "factor_3_crowding_fuel": "Funding +0.0064% | Retail L/S 2.64 (72.5% long)",
         "factor_4_regime_structure": "Sub-Daily-VWAP structure (overhead supply active)",
-        "factor_5_asymmetry": "LOWER -0.59% away vs UPPER +0.60% away",
-        "factor_6_range_compression": "Closed 4H Range 3.07% | 24H Wick Span 3.10% | Depth 1.22"
+        "factor_5_asymmetry": "LOWER -0.46% away vs UPPER +0.55% away",
+        "factor_6_range_compression": "Closed 4H Range 3.07% | 24H Wick Span 3.09% | Depth 1.23"
       },
       "liquidation_ladder": [
         {
@@ -2359,7 +2359,7 @@
           "leverage": "10x",
           "side": "upper",
           "price": 62287.77,
-          "distance_pct": 5.31,
+          "distance_pct": 5.26,
           "estimated_vol_m": 24.2,
           "is_nearest": false
         },
@@ -2368,7 +2368,7 @@
           "leverage": "25x",
           "side": "upper",
           "price": 61497.78,
-          "distance_pct": 3.97,
+          "distance_pct": 3.93,
           "estimated_vol_m": 32.3,
           "is_nearest": false
         },
@@ -2377,7 +2377,7 @@
           "leverage": "50-100x",
           "side": "upper",
           "price": 59500.0,
-          "distance_pct": 0.6,
+          "distance_pct": 0.55,
           "estimated_vol_m": 55.1,
           "is_nearest": true
         },
@@ -2385,9 +2385,9 @@
           "tier": "100x Longs",
           "leverage": "100x",
           "side": "lower",
-          "price": 58800.0,
-          "distance_pct": -0.59,
-          "estimated_vol_m": 236.8,
+          "price": 58900.0,
+          "distance_pct": -0.46,
+          "estimated_vol_m": 126.7,
           "is_nearest": true
         },
         {
@@ -2395,7 +2395,7 @@
           "leverage": "25x",
           "side": "lower",
           "price": 58245.05,
-          "distance_pct": -1.53,
+          "distance_pct": -1.57,
           "estimated_vol_m": 106.5,
           "is_nearest": false
         },
@@ -2404,7 +2404,7 @@
           "leverage": "10x",
           "side": "lower",
           "price": 57478.67,
-          "distance_pct": -2.82,
+          "distance_pct": -2.87,
           "estimated_vol_m": 74.6,
           "is_nearest": false
         }
@@ -2421,7 +2421,7 @@
         "Price trapped below Daily VWAP, Weekly VWAP & closed 4H ceiling",
         "Spot CVD persistently negative (7D -7166 / Ratio 1.09)",
         "Spot volume depressed (0.83x 20D baseline)",
-        "Funding +0.0064% / compressed basis (-0.37%)"
+        "Funding +0.0064% / compressed basis (-0.51%)"
       ],
       "all_5_candidates": [
         {
@@ -2464,7 +2464,7 @@
           "matches_count": 1,
           "required": 3,
           "matched": [
-            "Basis compressed / backwardation (-0.37%)"
+            "Basis compressed / backwardation (-0.51%)"
           ],
           "active": false
         },
@@ -2477,12 +2477,12 @@
             "Price trapped below Daily VWAP, Weekly VWAP & closed 4H ceiling",
             "Spot CVD persistently negative (7D -7166 / Ratio 1.09)",
             "Spot volume depressed (0.83x 20D baseline)",
-            "Funding +0.0064% / compressed basis (-0.37%)"
+            "Funding +0.0064% / compressed basis (-0.51%)"
           ],
           "active": true
         }
       ],
-      "notes": "Weak spot demand / active overhead distribution. Rule Score: 4/4 observations matched. LSCE: UNTESTED. Dominant Magnet: LOWER ($58,800, Immediate 4.3x / Ladder 3.74x; 72.5% long crowded).",
+      "notes": "Weak spot demand / active overhead distribution. Rule Score: 4/4 observations matched. LSCE: SWEEP_AND_RECLAIM_OBSERVED. Dominant Magnet: LOWER ($58,900, Immediate 2.3x / Ladder 2.76x; 72.5% long crowded).",
       "plain_english_verdict": "[Distribution / Bear Continuation] Weak spot demand / active overhead distribution. Observational context only: NEUTRAL STANDBY (0.00x): 10% USDT + 10% BTC sandbox balanced; neither Loop A nor Loop B modelled state active."
     },
     "dibse": {
@@ -2497,7 +2497,7 @@
       "untouched_core_pct": 80.0,
       "target_btc_allocation_pct": 10.0,
       "target_usdt_reserve_pct": 10.0,
-      "loop_a_zone": "Modelled Washout $58,800\u2013$58,952 -> Ref Exit > $60,769",
+      "loop_a_zone": "Modelled Washout $58,900\u2013$58,952 -> Ref Exit > $60,769",
       "loop_b_zone": "Modelled Squeeze $59,500\u2013$60,769 -> Ref Rebuy < $58,952",
       "sleeve_allocation": "10% USDT Sleeve + 10% BTC Sleeve (20% Active Sandbox | 80% Untouched Core)",
       "actionable_trade_instruction": "NEUTRAL STANDBY (0.00x): 10% USDT + 10% BTC sandbox balanced; neither Loop A nor Loop B modelled state active.",
@@ -2509,7 +2509,7 @@
   "spot_shield": {
     "status": "LIVE",
     "version": "1.0",
-    "updated_at_utc": "2026-11-25T05:53:02Z",
+    "updated_at_utc": "2026-11-25T05:54:01Z",
     "source": "Binance Spot BTCUSDT (data-api.binance.vision, closed bars only)",
     "portfolio": {
       "split_label": "80% 4H VWAP Shield / 20% 1D TTM Squeeze",
@@ -2610,7 +2610,7 @@
       "instrument": "BTC-USDT-SWAP",
       "status": "live",
       "as_of_utc": "2026-11-25T04:00:00Z",
-      "generated_at_utc": "2026-11-25T05:53:19Z",
+      "generated_at_utc": "2026-11-25T05:54:20Z",
       "history_sources": [
         "OKX Public v5 Keyless Archive"
       ],
@@ -3390,9 +3390,9 @@
     "status": "LIVE",
     "regime_200d": "below_200d",
     "sma_200d": 72165.32,
-    "funding_8h_pct": 0.0064,
-    "funding_daily_pct": 0.0192,
-    "funding_annualized_pct": 7.01,
+    "funding_8h_pct": 0.00644,
+    "funding_daily_pct": 0.01932,
+    "funding_annualized_pct": 7.05,
     "oi_delta_pct": -2.12,
     "oi_window": "3d",
     "leverage_state": "quiet_deleveraging",
@@ -3556,7 +3556,7 @@
         "etf_1d_usd_m": -231.4,
         "etf_5d_usd_m": -2359.1,
         "oi_delta_pct": 2.93,
-        "funding_8h_pct": 0.0064,
+        "funding_8h_pct": 0.00644,
         "spot_cvd_ratio": 1.088,
         "spot_cvd_slope_7d": -7165.5
       },
@@ -3583,14 +3583,14 @@
     },
     "patient_money_h": {
       "status": "LIVE",
-      "oi_usd_b": 64.14,
+      "oi_usd_b": 63.98,
       "oi_source": "CMC Global BTC OI",
-      "funding_8h_usd": 4104960.0,
-      "funding_24h_usd": 12314880.0,
+      "funding_8h_usd": 4120312.0,
+      "funding_24h_usd": 12360936.0,
       "crowd_payer": "Longs paying Shorts",
-      "carry_apr_pct": 7.01,
+      "carry_apr_pct": 7.05,
       "carry_status": "MODERATE (6-10%)",
-      "carry_summary": "Carry APR +7.01% (MODERATE (6-10%))",
+      "carry_summary": "Carry APR +7.05% (MODERATE (6-10%))",
       "taker_buy_ratio": 0.5464,
       "oi_delta_24h_pct": 2.93,
       "aggression_oi_state": "NEW LONGS ENTERING",
@@ -3599,8 +3599,8 @@
   },
   "sr_bands": {
     "status": "LIVE",
-    "updated_at_utc": "2026-11-25T05:53:02Z",
-    "ref_price": 59108.1,
+    "updated_at_utc": "2026-11-25T05:54:01Z",
+    "ref_price": 59148.3,
     "core_order": [
       "1W",
       "1D",
@@ -3614,17 +3614,17 @@
         "role": "Macro Structural Map",
         "bars": 103,
         "atr14_usd": 7521.6,
-        "atr14_pct": 12.73,
+        "atr14_pct": 12.72,
         "resistance": [
           {
             "tf": "1W",
             "side": "resistance",
-            "low": 58843.5,
+            "low": 58843.1,
             "mid": 59493.7,
-            "high": 60143.9,
+            "high": 60144.3,
             "touches": 2,
             "last_ts": 1780272000000,
-            "distance_pct": 0.65,
+            "distance_pct": 0.58,
             "in_zone": true,
             "pivot_kind": "LOW",
             "strength": "TESTED"
@@ -3632,12 +3632,12 @@
           {
             "tf": "1W",
             "side": "resistance",
-            "low": 62073.4,
+            "low": 62073.2,
             "mid": 62400.0,
-            "high": 62726.6,
+            "high": 62726.8,
             "touches": 1,
             "last_ts": 1771804800000,
-            "distance_pct": 5.57,
+            "distance_pct": 5.5,
             "in_zone": false,
             "pivot_kind": "LOW",
             "strength": "SINGLE"
@@ -3645,12 +3645,12 @@
           {
             "tf": "1W",
             "side": "resistance",
-            "low": 64679.6,
+            "low": 64679.4,
             "mid": 65293.0,
-            "high": 65906.3,
+            "high": 65906.5,
             "touches": 2,
             "last_ts": 1794787200000,
-            "distance_pct": 10.46,
+            "distance_pct": 10.39,
             "in_zone": false,
             "pivot_kind": "S/R FLIP",
             "strength": "TESTED"
@@ -3660,12 +3660,12 @@
           {
             "tf": "1W",
             "side": "support",
-            "low": 57423.4,
+            "low": 57423.2,
             "mid": 57750.0,
-            "high": 58076.6,
+            "high": 58076.8,
             "touches": 1,
             "last_ts": 1782691200000,
-            "distance_pct": -2.3,
+            "distance_pct": -2.36,
             "in_zone": false,
             "pivot_kind": "LOW",
             "strength": "SINGLE"
@@ -3673,12 +3673,12 @@
           {
             "tf": "1W",
             "side": "support",
-            "low": 54773.4,
+            "low": 54773.2,
             "mid": 55100.0,
-            "high": 55426.6,
+            "high": 55426.8,
             "touches": 1,
             "last_ts": 1794787200000,
-            "distance_pct": -6.78,
+            "distance_pct": -6.84,
             "in_zone": false,
             "pivot_kind": "LOW",
             "strength": "SINGLE"
@@ -3696,12 +3696,12 @@
           {
             "tf": "1D",
             "side": "resistance",
-            "low": 58827.2,
+            "low": 58827.0,
             "mid": 59155.1,
-            "high": 59483.0,
+            "high": 59483.2,
             "touches": 2,
             "last_ts": 1795478400000,
-            "distance_pct": 0.08,
+            "distance_pct": 0.01,
             "in_zone": true,
             "pivot_kind": "LOW",
             "strength": "TESTED"
@@ -3709,12 +3709,12 @@
           {
             "tf": "1D",
             "side": "resistance",
-            "low": 60544.8,
+            "low": 60544.4,
             "mid": 61195.0,
-            "high": 61845.2,
+            "high": 61845.6,
             "touches": 3,
             "last_ts": 1795478400000,
-            "distance_pct": 3.53,
+            "distance_pct": 3.46,
             "in_zone": false,
             "pivot_kind": "S/R FLIP",
             "strength": "STRONG"
@@ -3722,12 +3722,12 @@
           {
             "tf": "1D",
             "side": "resistance",
-            "low": 61621.1,
+            "low": 61620.7,
             "mid": 62271.3,
-            "high": 62921.5,
+            "high": 62921.9,
             "touches": 7,
             "last_ts": 1794700800000,
-            "distance_pct": 5.35,
+            "distance_pct": 5.28,
             "in_zone": false,
             "pivot_kind": "LOW",
             "strength": "STRONG"
@@ -3737,12 +3737,12 @@
           {
             "tf": "1D",
             "side": "support",
-            "low": 57498.8,
+            "low": 57498.6,
             "mid": 57890.8,
-            "high": 58282.7,
+            "high": 58282.9,
             "touches": 2,
             "last_ts": 1782864000000,
-            "distance_pct": -2.06,
+            "distance_pct": -2.13,
             "in_zone": false,
             "pivot_kind": "LOW",
             "strength": "TESTED"
@@ -3750,12 +3750,12 @@
           {
             "tf": "1D",
             "side": "support",
-            "low": 54773.4,
+            "low": 54773.2,
             "mid": 55100.0,
-            "high": 55426.6,
+            "high": 55426.8,
             "touches": 1,
             "last_ts": 1795219200000,
-            "distance_pct": -6.78,
+            "distance_pct": -6.84,
             "in_zone": false,
             "pivot_kind": "LOW",
             "strength": "SINGLE"
@@ -3778,7 +3778,7 @@
             "high": 60454.7,
             "touches": 2,
             "last_ts": 1795564800000,
-            "distance_pct": 1.63,
+            "distance_pct": 1.56,
             "in_zone": false,
             "pivot_kind": "S/R FLIP",
             "strength": "TESTED"
@@ -3791,7 +3791,7 @@
             "high": 61743.0,
             "touches": 3,
             "last_ts": 1795348800000,
-            "distance_pct": 3.69,
+            "distance_pct": 3.62,
             "in_zone": false,
             "pivot_kind": "S/R FLIP",
             "strength": "STRONG"
@@ -3804,7 +3804,7 @@
             "high": 62115.3,
             "touches": 3,
             "last_ts": 1795392000000,
-            "distance_pct": 4.83,
+            "distance_pct": 4.76,
             "in_zone": false,
             "pivot_kind": "S/R FLIP",
             "strength": "STRONG"
@@ -3819,7 +3819,7 @@
             "high": 59029.0,
             "touches": 2,
             "last_ts": 1795564800000,
-            "distance_pct": -0.48,
+            "distance_pct": -0.55,
             "in_zone": false,
             "pivot_kind": "LOW",
             "strength": "TESTED"
@@ -3832,7 +3832,7 @@
             "high": 55249.6,
             "touches": 1,
             "last_ts": 1795233600000,
-            "distance_pct": -6.78,
+            "distance_pct": -6.84,
             "in_zone": false,
             "pivot_kind": "LOW",
             "strength": "SINGLE"
@@ -3855,7 +3855,7 @@
             "high": 59524.0,
             "touches": 6,
             "last_ts": 1795579200000,
-            "distance_pct": 0.45,
+            "distance_pct": 0.38,
             "in_zone": false,
             "pivot_kind": "S/R FLIP",
             "strength": "STRONG"
@@ -3868,7 +3868,7 @@
             "high": 60118.2,
             "touches": 2,
             "last_ts": 1795557600000,
-            "distance_pct": 1.53,
+            "distance_pct": 1.46,
             "in_zone": false,
             "pivot_kind": "S/R FLIP",
             "strength": "TESTED"
@@ -3881,7 +3881,7 @@
             "high": 60597.4,
             "touches": 5,
             "last_ts": 1795543200000,
-            "distance_pct": 2.21,
+            "distance_pct": 2.14,
             "in_zone": false,
             "pivot_kind": "S/R FLIP",
             "strength": "STRONG"
@@ -3896,7 +3896,7 @@
             "high": 58985.9,
             "touches": 4,
             "last_ts": 1795579200000,
-            "distance_pct": -0.52,
+            "distance_pct": -0.59,
             "in_zone": false,
             "pivot_kind": "S/R FLIP",
             "strength": "STRONG"
@@ -3909,7 +3909,7 @@
             "high": 57754.6,
             "touches": 1,
             "last_ts": 1795201200000,
-            "distance_pct": -2.39,
+            "distance_pct": -2.46,
             "in_zone": false,
             "pivot_kind": "LOW",
             "strength": "SINGLE"
@@ -3922,7 +3922,7 @@
             "high": 55159.3,
             "touches": 1,
             "last_ts": 1795240800000,
-            "distance_pct": -6.78,
+            "distance_pct": -6.84,
             "in_zone": false,
             "pivot_kind": "LOW",
             "strength": "SINGLE"
@@ -3947,7 +3947,7 @@
             "high": 60558.5,
             "touches": 1,
             "last_ts": 1795536000000,
-            "distance_pct": 1.96,
+            "distance_pct": 1.89,
             "in_zone": false,
             "pivot_kind": "HIGH",
             "strength": "SINGLE"
@@ -3960,7 +3960,7 @@
             "high": 62222.9,
             "touches": 1,
             "last_ts": 1794672000000,
-            "distance_pct": 4.78,
+            "distance_pct": 4.7,
             "in_zone": false,
             "pivot_kind": "LOW",
             "strength": "SINGLE"
@@ -3973,7 +3973,7 @@
             "high": 64861.8,
             "touches": 1,
             "last_ts": 1795406400000,
-            "distance_pct": 9.24,
+            "distance_pct": 9.17,
             "in_zone": false,
             "pivot_kind": "HIGH",
             "strength": "SINGLE"
@@ -3988,7 +3988,7 @@
             "high": 59205.7,
             "touches": 1,
             "last_ts": 1795536000000,
-            "distance_pct": -0.33,
+            "distance_pct": -0.4,
             "in_zone": true,
             "pivot_kind": "LOW",
             "strength": "SINGLE"
@@ -4001,7 +4001,7 @@
             "high": 55391.8,
             "touches": 1,
             "last_ts": 1795233600000,
-            "distance_pct": -6.78,
+            "distance_pct": -6.84,
             "in_zone": false,
             "pivot_kind": "LOW",
             "strength": "SINGLE"
@@ -4024,7 +4024,7 @@
             "high": 59485.1,
             "touches": 5,
             "last_ts": 1795583700000,
-            "distance_pct": 0.4,
+            "distance_pct": 0.33,
             "in_zone": false,
             "pivot_kind": "S/R FLIP",
             "strength": "STRONG"
@@ -4037,7 +4037,7 @@
             "high": 59782.3,
             "touches": 4,
             "last_ts": 1795576500000,
-            "distance_pct": 1.0,
+            "distance_pct": 0.93,
             "in_zone": false,
             "pivot_kind": "S/R FLIP",
             "strength": "STRONG"
@@ -4050,7 +4050,7 @@
             "high": 60302.2,
             "touches": 2,
             "last_ts": 1795560300000,
-            "distance_pct": 1.8,
+            "distance_pct": 1.73,
             "in_zone": false,
             "pivot_kind": "HIGH",
             "strength": "TESTED"
@@ -4065,7 +4065,7 @@
             "high": 58992.8,
             "touches": 2,
             "last_ts": 1795583700000,
-            "distance_pct": -0.29,
+            "distance_pct": -0.36,
             "in_zone": false,
             "pivot_kind": "LOW",
             "strength": "TESTED"
@@ -4088,7 +4088,7 @@
             "high": 59492.1,
             "touches": 5,
             "last_ts": 1795582800000,
-            "distance_pct": 0.41,
+            "distance_pct": 0.34,
             "in_zone": false,
             "pivot_kind": "S/R FLIP",
             "strength": "STRONG"
@@ -4101,7 +4101,7 @@
             "high": 59788.5,
             "touches": 5,
             "last_ts": 1795576500000,
-            "distance_pct": 0.96,
+            "distance_pct": 0.89,
             "in_zone": false,
             "pivot_kind": "S/R FLIP",
             "strength": "STRONG"
@@ -4114,7 +4114,7 @@
             "high": 60108.1,
             "touches": 2,
             "last_ts": 1795560300000,
-            "distance_pct": 1.53,
+            "distance_pct": 1.46,
             "in_zone": false,
             "pivot_kind": "HIGH",
             "strength": "TESTED"
@@ -4129,8 +4129,8 @@
             "high": 59141.3,
             "touches": 5,
             "last_ts": 1795584600000,
-            "distance_pct": -0.2,
-            "in_zone": true,
+            "distance_pct": -0.27,
+            "in_zone": false,
             "pivot_kind": "S/R FLIP",
             "strength": "STRONG"
           }
@@ -4141,10 +4141,10 @@
       "resistance": [
         {
           "side": "resistance",
-          "low": 58689.8,
+          "low": 58689.4,
           "mid": 59340.0,
-          "high": 59990.2,
-          "distance_pct": 0.39,
+          "high": 59990.6,
+          "distance_pct": 0.32,
           "timeframes": [
             "1W",
             "1D",
@@ -4159,7 +4159,7 @@
           "low": 59709.9,
           "mid": 60165.6,
           "high": 60621.3,
-          "distance_pct": 1.79,
+          "distance_pct": 1.72,
           "timeframes": [
             "4H",
             "1H"
@@ -4170,10 +4170,10 @@
         },
         {
           "side": "resistance",
-          "low": 60592.6,
+          "low": 60592.2,
           "mid": 61242.8,
-          "high": 61893.0,
-          "distance_pct": 3.61,
+          "high": 61893.4,
+          "distance_pct": 3.54,
           "timeframes": [
             "1D",
             "4H"
@@ -4184,10 +4184,10 @@
         },
         {
           "side": "resistance",
-          "low": 61560.6,
+          "low": 61560.2,
           "mid": 62210.8,
-          "high": 62861.0,
-          "distance_pct": 5.25,
+          "high": 62861.4,
+          "distance_pct": 5.18,
           "timeframes": [
             "1W",
             "1D",
@@ -4204,7 +4204,7 @@
           "low": 58603.3,
           "mid": 58811.1,
           "high": 59018.9,
-          "distance_pct": -0.5,
+          "distance_pct": -0.57,
           "timeframes": [
             "4H",
             "1H"
@@ -4215,10 +4215,10 @@
         },
         {
           "side": "support",
-          "low": 57349.1,
+          "low": 57348.8,
           "mid": 57778.7,
-          "high": 58208.3,
-          "distance_pct": -2.25,
+          "high": 58208.6,
+          "distance_pct": -2.32,
           "timeframes": [
             "1W",
             "1D",
@@ -4230,10 +4230,10 @@
         },
         {
           "side": "support",
-          "low": 54773.4,
+          "low": 54773.2,
           "mid": 55100.0,
-          "high": 55426.6,
-          "distance_pct": -6.78,
+          "high": 55426.8,
+          "distance_pct": -6.84,
           "timeframes": [
             "1W",
             "1D",
@@ -4254,10 +4254,10 @@
         "support_mid": 58799.7,
         "cluster_source": "F3 Modeled Ladder",
         "cluster_label": "Modeled 100x Longs",
-        "cluster_price": 58800.0,
-        "cluster_usd_m": 236.8,
-        "gap_below_support_pct": -0.0,
-        "message": "1H Support ($58,800) sits just above Modeled 100x Longs ($58,800, $236.8M, inside (0.00%) \u2014 Trap #05 magnet risk)."
+        "cluster_price": 58900.0,
+        "cluster_usd_m": 126.7,
+        "gap_below_support_pct": -0.17,
+        "message": "1H Support ($58,800) sits just above Modeled 100x Longs ($58,900, $126.7M, inside (0.17%) \u2014 Trap #05 magnet risk)."
       },
       {
         "side": "LOWER_BELOW_SUPPORT",
@@ -4266,10 +4266,10 @@
         "support_mid": 58822.4,
         "cluster_source": "F3 Modeled Ladder",
         "cluster_label": "Modeled 100x Longs",
-        "cluster_price": 58800.0,
-        "cluster_usd_m": 236.8,
-        "gap_below_support_pct": 0.04,
-        "message": "4H Support ($58,822) sits just above Modeled 100x Longs ($58,800, $236.8M, 0.04% below \u2014 Trap #05 magnet risk)."
+        "cluster_price": 58900.0,
+        "cluster_usd_m": 126.7,
+        "gap_below_support_pct": -0.13,
+        "message": "4H Support ($58,822) sits just above Modeled 100x Longs ($58,900, $126.7M, inside (0.13%) \u2014 Trap #05 magnet risk)."
       },
       {
         "side": "LOWER_BELOW_SUPPORT",
@@ -4344,11 +4344,11 @@
         "message": "4H Support ($58,822) sits just above CMC Long Pool (22x) ($57,125, $33.6M, 2.89% below \u2014 Trap #05 magnet risk)."
       }
     ],
-    "summary_line": "7 Confluence Zone(s) \u00b7 Floor $58,822 (-0.48%) \u00b7 Ceiling $59,155 (+0.08%)",
+    "summary_line": "7 Confluence Zone(s) \u00b7 Floor $58,822 (-0.55%) \u00b7 Ceiling $59,155 (+0.01%)",
     "guardrail": "Closed-candle structural zones & liquidation context only \u2014 never issues an automatic entry or leverage instruction."
   },
   "news_macro": {
-    "updated_at_utc": "2026-11-25T05:53:02Z",
+    "updated_at_utc": "2026-11-25T05:54:01Z",
     "sources_ok": [
       "CMC Global",
       "CMC F&G",
@@ -4374,7 +4374,7 @@
         "impact": "HIGH",
         "time_utc": "2026-11-25T13:30:00Z",
         "ts_ms": 1795613400000,
-        "minutes_away": 457.0,
+        "minutes_away": 456.0,
         "forecast": "0.3%",
         "previous": "0.3%",
         "blackout_60m": false
@@ -4552,7 +4552,7 @@
         "impact": "HIGH",
         "time_utc": "2026-11-25T13:30:00Z",
         "ts_ms": 1795613400000,
-        "minutes_away": 457.0,
+        "minutes_away": 456.0,
         "forecast": "0.3%",
         "previous": "0.3%",
         "blackout_60m": false
@@ -4562,7 +4562,7 @@
         "impact": "HIGH",
         "time_utc": "2026-11-25T13:30:00Z",
         "ts_ms": 1795613400000,
-        "minutes_away": 457.0,
+        "minutes_away": 456.0,
         "forecast": "3.5%",
         "previous": "3.4%",
         "blackout_60m": false
@@ -4572,7 +4572,7 @@
         "impact": "MEDIUM",
         "time_utc": "2026-11-25T13:30:00Z",
         "ts_ms": 1795613400000,
-        "minutes_away": 457.0,
+        "minutes_away": 456.0,
         "forecast": "2.3%",
         "previous": "2.3%",
         "blackout_60m": false
@@ -4597,7 +4597,7 @@
           "DERIVS"
         ],
         "published_utc": "2026-11-25T04:57:22Z",
-        "age_minutes": 55.7
+        "age_minutes": 56.7
       },
       {
         "title": "A year after buying bitcoin, Czech central bank won't say what it's worth",
@@ -4610,7 +4610,7 @@
           "BTC"
         ],
         "published_utc": "2026-11-25T04:50:08Z",
-        "age_minutes": 62.9
+        "age_minutes": 63.9
       },
       {
         "title": "Binance Hires Mandiant, SlowMist, Verichains After Reported $6.3B Exploit",
@@ -4620,7 +4620,7 @@
         "category": "MARKET_WIRE",
         "tags": [],
         "published_utc": "2026-11-25T03:59:43Z",
-        "age_minutes": 113.3
+        "age_minutes": 114.3
       },
       {
         "title": "U.S. Pursues $1.1 Billion USDC Recovery Tied to Binance Hack",
@@ -4632,7 +4632,7 @@
           "BTC"
         ],
         "published_utc": "2026-11-25T03:51:02Z",
-        "age_minutes": 122.0
+        "age_minutes": 123.0
       },
       {
         "title": "Coinbase Backs Dublin Symposium on North Korean Crypto Crime",
@@ -4642,7 +4642,7 @@
         "category": "MARKET_WIRE",
         "tags": [],
         "published_utc": "2026-11-25T03:45:03Z",
-        "age_minutes": 128.0
+        "age_minutes": 129.0
       },
       {
         "title": "Bitcoin Is Unlikely to Climb Back to $90K by Year End, Galaxy Digital CEO Says",
@@ -4654,7 +4654,7 @@
           "BTC"
         ],
         "published_utc": "2026-11-25T03:29:32Z",
-        "age_minutes": 143.5
+        "age_minutes": 144.5
       },
       {
         "title": "US moves to recover $1.1 billion in crypto stolen from Binance, Strategy boosts BTC holdings",
@@ -4666,7 +4666,7 @@
           "BTC"
         ],
         "published_utc": "2026-11-25T03:22:24Z",
-        "age_minutes": 150.6
+        "age_minutes": 151.6
       },
       {
         "title": "Coinkite: Coldcard seed flaw hid from 15 reviews",
@@ -4676,7 +4676,7 @@
         "category": "MARKET_WIRE",
         "tags": [],
         "published_utc": "2026-11-25T03:10:03Z",
-        "age_minutes": 163.0
+        "age_minutes": 164.0
       },
       {
         "title": "Ukraine Postpones Parliament Review of Crypto Tax Bill",
@@ -4688,7 +4688,7 @@
           "REGULATION"
         ],
         "published_utc": "2026-11-25T02:50:03Z",
-        "age_minutes": 183.0
+        "age_minutes": 184.0
       },
       {
         "title": "Ethereum Foundation: AI a More Urgent Threat Than Quantum",
@@ -4698,7 +4698,7 @@
         "category": "MARKET_WIRE",
         "tags": [],
         "published_utc": "2026-11-25T02:40:04Z",
-        "age_minutes": 193.0
+        "age_minutes": 194.0
       },
       {
         "title": "UniCredit Sells Bitcoin Certificate to Italian Retail at 65% Cap",
@@ -4710,7 +4710,7 @@
           "BTC"
         ],
         "published_utc": "2026-11-25T02:25:03Z",
-        "age_minutes": 208.0
+        "age_minutes": 209.0
       },
       {
         "title": "CleanSpark Plans to Sell More Bitcoin Than It Mines to De-Risk",
@@ -4722,7 +4722,7 @@
           "BTC"
         ],
         "published_utc": "2026-11-25T02:21:35Z",
-        "age_minutes": 211.5
+        "age_minutes": 212.4
       },
       {
         "title": "US Bitcoin ETFs See $4.71 Billion November Outflows While BlackRock\u2019s IBIT Gains 4.85%",
@@ -4735,7 +4735,7 @@
           "BTC"
         ],
         "published_utc": "2026-11-25T02:00:29Z",
-        "age_minutes": 232.6
+        "age_minutes": 233.5
       },
       {
         "title": "Kalshi Exits Utah Affecting 177,000 Users After Charges",
@@ -4745,7 +4745,7 @@
         "category": "MARKET_WIRE",
         "tags": [],
         "published_utc": "2026-11-25T02:00:03Z",
-        "age_minutes": 233.0
+        "age_minutes": 234.0
       },
       {
         "title": "CleanSpark weighs selling more Bitcoin than it mines to de-risk books",
@@ -4758,7 +4758,7 @@
           "BTC"
         ],
         "published_utc": "2026-11-25T01:40:59Z",
-        "age_minutes": 252.1
+        "age_minutes": 253.0
       },
       {
         "title": "BlackRock launch: $100M tokenized fund accepts stablecoins in Hong Kong",
@@ -4770,7 +4770,7 @@
           "ETF"
         ],
         "published_utc": "2026-11-25T01:40:03Z",
-        "age_minutes": 253.0
+        "age_minutes": 254.0
       },
       {
         "title": "Bitcoiners Who Hate Michael Saylor Need Him \u2014 Grant Cardone",
@@ -4782,7 +4782,7 @@
           "BTC"
         ],
         "published_utc": "2026-11-25T01:00:00Z",
-        "age_minutes": 293.0
+        "age_minutes": 294.0
       },
       {
         "title": "Bitcoin tests six-year moving average, echoing FTX collapse period",
@@ -4794,7 +4794,7 @@
           "BTC"
         ],
         "published_utc": "2026-11-25T00:19:21Z",
-        "age_minutes": 333.7
+        "age_minutes": 334.7
       },
       {
         "title": "Crypto Prices on Nov. 25: BTC Drops 4.46%, KITE Rises 1.26%",
@@ -4807,7 +4807,7 @@
           "BTC"
         ],
         "published_utc": "2026-11-25T00:16:13Z",
-        "age_minutes": 336.8
+        "age_minutes": 337.8
       },
       {
         "title": "Wednesday's big stock stories: What\u2019s likely to move the market in the next trading session",
@@ -4819,7 +4819,7 @@
           "MACRO"
         ],
         "published_utc": "2026-11-25T00:12:45Z",
-        "age_minutes": 340.3
+        "age_minutes": 341.3
       },
       {
         "title": "AI debt markets shudder as Nvidia's top 'banker' returns",
@@ -4831,7 +4831,7 @@
           "MACRO"
         ],
         "published_utc": "2026-11-24T21:52:05Z",
-        "age_minutes": 481.0
+        "age_minutes": 481.9
       },
       {
         "title": "Minutes of the Board's discount rate meetings on October 19 and October 28, 2026",
@@ -4843,7 +4843,7 @@
           "MACRO"
         ],
         "published_utc": "2026-11-24T19:00:00Z",
-        "age_minutes": 653.0
+        "age_minutes": 654.0
       },
       {
         "title": "Consumer confidence shoots up after Democrats' midterm victories \u2014 though inflation worries persist",
@@ -4855,7 +4855,7 @@
           "MACRO"
         ],
         "published_utc": "2026-11-24T18:34:43Z",
-        "age_minutes": 678.3
+        "age_minutes": 679.3
       },
       {
         "title": "Wall Street and Crypto Are in 'Extreme Fear'. What's Spooking Investors?",
@@ -4868,7 +4868,7 @@
           "BTC"
         ],
         "published_utc": "2026-11-24T18:16:02Z",
-        "age_minutes": 697.0
+        "age_minutes": 698.0
       },
       {
         "title": "Bitcoin slides amid US tariff nerves as Anthropic falls below IPO price",
@@ -4881,7 +4881,7 @@
           "BTC"
         ],
         "published_utc": "2026-11-24T17:09:11Z",
-        "age_minutes": 763.9
+        "age_minutes": 764.8
       }
     ]
   },
@@ -4892,7 +4892,7 @@
       "FLAT"
     ],
     "direction": null,
-    "price": 59108.1,
+    "price": 59148.3,
     "atr_4h": 1289.4,
     "structural_levels": [
       {
@@ -4982,7 +4982,7 @@
         "id": 2,
         "rule": "4H Level Aligned w/ Daily Bias",
         "passed": true,
-        "detail": "At Prior Daily Low (59,231.8, dist $124) aligned w/ Daily BEAR"
+        "detail": "At Prior Daily Low (59,231.8, dist $84) aligned w/ Daily BEAR"
       },
       {
         "id": 3,
@@ -4994,7 +4994,7 @@
         "id": 4,
         "rule": "Risk-Reward \u2265 1.6 : 1",
         "passed": false,
-        "detail": "R:R 0.20:1 (adj 0.20:1) to 7D VAL (58,850.0) < 1.6:1 min"
+        "detail": "R:R 0.23:1 (adj 0.23:1) to 7D VAL (58,850.0) < 1.6:1 min"
       },
       {
         "id": 5,
@@ -5030,31 +5030,31 @@
     "rejection_reasons": [
       "Score 36.5 in Flat Zone (32\u201368); no exceptions",
       "No 4H bearish BOS (< 59231.8) or qualifying rejection candle (vol 0.86x)",
-      "R:R 0.20:1 (adj 0.20:1) to 7D VAL (58,850.0) < 1.6:1 min"
+      "R:R 0.23:1 (adj 0.23:1) to 7D VAL (58,850.0) < 1.6:1 min"
     ],
     "proposal": {
       "direction": "SHORT",
       "entry_method": "LIMIT_AT_LEVEL",
-      "entry_price": 59108.1,
-      "stop_price": 60397.5,
+      "entry_price": 59148.3,
+      "stop_price": 60437.7,
       "target1_price": 58850.0,
       "target1_label": "7D VAL",
-      "raw_rr": 0.2,
-      "funding_adjusted_rr": 0.2,
+      "raw_rr": 0.23,
+      "funding_adjusted_rr": 0.23,
       "level_label": "Prior Daily Low",
       "level_price": 59231.8,
       "confirmation_type": null,
       "weekend_halved": false,
       "valid": true,
       "size_btc": 0.310222,
-      "notional_usd": 18336.62,
+      "notional_usd": 18349.09,
       "leverage": 0.183,
       "leverage_capped": false,
       "target_risk_pct": 0.4,
       "actual_risk_pct": 0.4,
       "actual_risk_usd": 400.0,
       "stop_distance_usd": 1289.4,
-      "stop_distance_pct": 2.181
+      "stop_distance_pct": 2.18
     },
     "liquidation_magnets": {
       "basis": "CoinMarketCap Exact Liquidation Map ($50 bins) + 4H/24H Realized Liquidations + 25x/50x Pivot Bands",
@@ -5169,7 +5169,7 @@
           "h24_short_usd_m": 22.05,
           "h24_total_usd_m": 81.23,
           "h24_long_flush_pct": 72.9,
-          "global_btc_oi_usd_b": 64.14
+          "global_btc_oi_usd_b": 63.98
         }
       }
     },
