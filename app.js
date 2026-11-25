@@ -18,6 +18,19 @@ let CHART_TF = "h4";
 let RHYME_LENS = "AUTO";
 let RHYME_COND = "ALL";
 let NEWS_CAT = "ALL";
+let HUB_ADV_OPEN = false;
+
+const tr = (k, fb) => (window.DeskI18n ? window.DeskI18n.t(k) : fb) || fb;
+
+function fmtUtcSgtCompact(isoOrMs) {
+  if (!isoOrMs) return "—";
+  const ms = typeof isoOrMs === "number" ? isoOrMs : Date.parse(isoOrMs);
+  if (!isFinite(ms)) return String(isoOrMs);
+  const u = new Date(ms);
+  const s = new Date(ms + 8 * 3600 * 1000);
+  const p2 = (n) => String(n).padStart(2, "0");
+  return `${p2(u.getUTCHours())}:${p2(u.getUTCMinutes())} UTC / ${p2(s.getUTCHours())}:${p2(s.getUTCMinutes())} SGT`;
+}
 
 async function fetchJson(url, retries = 2) {
   let lastErr = null;
@@ -1207,30 +1220,28 @@ function seedCalcFromState() {
   updateCalc();
 }
 
-function renderEntryHub() {
-  const host = $("entryHubView");
-  if (!host || !STATE) return;
-  const tr = (k, fb) => (window.DeskI18n ? window.DeskI18n.t(k) : fb) || fb;
-  const sig = STATE.signal || {};
-  const reg = STATE.regime || {};
-  const sor = STATE.state_of_regime || {};
-  const kp = STATE.kline_patterns || {};
-  const sm = STATE.spot_magnet || {};
+function getDeskModules() {
+  const sig = STATE?.signal || {};
+  const reg = STATE?.regime || {};
+  const sor = STATE?.state_of_regime || {};
+  const kp = STATE?.kline_patterns || {};
+  const sm = STATE?.spot_magnet || {};
   const smReg = sm.regime_diagnosis || {};
   const dibse = sm.dibse || {};
-  const cr = STATE.cortex_rhyme || {};
+  const cr = STATE?.cortex_rhyme || {};
   const crDiag = cr.diagnostics || {};
   const cr24Med = cr.after_similar_setups?.["24h"]?.median_pct;
-  const nm = STATE.news_macro || {};
+  const nm = STATE?.news_macro || {};
   const mb = nm.macro_bias || {};
-  const sh = STATE.spot_shield || {};
+  const sh = STATE?.spot_shield || {};
   const pf = sh.portfolio || {};
-  const port = STATE.portfolio || {};
-  const ov = STATE.context_overlays || {};
+  const port = STATE?.portfolio || {};
+  const ov = STATE?.context_overlays || {};
   const mtL = ov.market_time_l;
   const etfReg = ov.etf_flow_regime;
   const pmH = ov.patient_money_h;
-  const pmG = STATE.positioning_matrix_g;
+  const pmG = STATE?.positioning_matrix_g;
+  const errs = STATE?.fetch_errors || [];
 
   const sigSt = sig.status || "FLAT";
   const sigCls = sigSt === "LONG" ? "up" : sigSt === "SHORT" ? "dn" : "warn";
@@ -1244,85 +1255,10 @@ function renderEntryHub() {
   const carryShort = pmH?.carry_apr_pct != null ? ` · Carry ${pct(pmH.carry_apr_pct, 2)} APR` : "";
   const nextEvt = mb.next_high_impact?.title || "No High-Impact 7d";
 
-  const cards = [
-    {
-      tab: "signal",
-      num: "01",
-      title: tr("tab_f1", "Signal Tab"),
-      badge: sigSt,
-      badgeCls: sigCls,
-      status: `Regime ${num(reg.score, 1)}/100 (${reg.bias || "—"}) · ${mtL?.summary_line || "4H Cycle"}`,
-      desc: "4H futures qualification, order sizing, Market Time (L) & AI prompt",
-    },
-    {
-      tab: "regime",
-      num: "02",
-      title: tr("tab_f2", "Regime & Kline Patterns"),
-      badge: sor.code || "REGIME",
-      badgeCls: sor.bias === "BULL" ? "up" : sor.bias === "BEAR" ? "dn" : "warn",
-      status: `${sor.name || "—"} · ${kp.active_count ?? 0} Active Kline Pattern(s)`,
-      desc: "5-State Regime Radar, 10 Kline Patterns, 11-Playbook & 4H/1D chart",
-    },
-    {
-      tab: "spot",
-      num: "03",
-      title: tr("tab_spot", "Spot Magnet (DIBSE)"),
-      badge: dibse.rotation || "SPOT",
-      badgeCls: String(dibse.rotation || "").startsWith("USDT") ? "up" : "warn",
-      status: `${smReg.name || "—"} · ${etfReg?.regime ? "ETF " + etfReg.regime : "VWAP Radar"}`,
-      desc: "5-Regime Spot Radar, LSCE sweep gate, liquidation ladder & DIBSE",
-    },
-    {
-      tab: "rhyme",
-      num: "04",
-      title: tr("tab_rhyme", "S2 Cortex-Rhyme"),
-      badge: `${crTier} N=${crN}`,
-      badgeCls: crCls,
-      status: `+24h Med ${pct(cr24Med, 2)} · Project G: ${pmG?.active_cell?.reading || pmG?.status || "—"}`,
-      desc: "6D microstructure analogues, 8-Cell Project G matrix & Patient Money (H)",
-    },
-    {
-      tab: "news",
-      num: "05",
-      title: tr("tab_news", "News & Macro"),
-      badge: nmStatus,
-      badgeCls: nmCls,
-      status: `${(nm.headlines || []).length} Headlines · Next USD: ${nextEvt}`,
-      desc: "Curated BTC/macro feed, cross-asset pulse, ETF flow regime & USD calendar",
-    },
-    {
-      tab: "shield",
-      num: "06",
-      title: tr("tab_shield", "Spot Shield (80/20)"),
-      badge: `BTC ${btcPct}% / USDT ${usdtPct}%`,
-      badgeCls: btcPct > 0 ? "up" : "warn",
-      status: `S1 ${sh.sleeve1?.action || "—"} · S2 ${sh.sleeve2?.action || "—"}${carryShort}`,
-      desc: "Pure closed-bar 80/20 BTC↔USDT dual-sleeve bear shield & Carry APR check",
-    },
-    {
-      tab: "ledger",
-      num: "07",
-      title: tr("tab_f3", "Paper Ledger & Risk Calc"),
-      badge: "MAX 2.0x",
-      badgeCls: "",
-      status: `Open ${(port.open_positions || []).length}/1 · Eq ${usd(port.equity_usd, 0)} · ${mtL ? mtL.day_of_week + " ~" + num(mtL.expected_day_range_pct, 2) + "% day" : "0.40% Risk"}`,
-      desc: "Interactive v4.0 position sizing calculator, paper ledger & session check",
-    },
-    {
-      tab: "audit",
-      num: "08",
-      title: tr("tab_f4", "Audit Log & Config"),
-      badge: `v${STATE.protocol_version || "4.0"}`,
-      badgeCls: "",
-      status: `Updated ${STATE.updated_at_utc || "—"} · Raw JSON Export`,
-      desc: "Historical cycle audit log, frozen risk rules & raw telemetry download",
-    },
-  ];
-
   const trapSum = window.SpotTrapsModule?.getHubSummary ? window.SpotTrapsModule.getHubSummary(STATE) : null;
   const trapBadge = trapSum
-    ? `START HERE · ${trapSum.activeCount} ACTIVE${trapSum.watchCount ? " / " + trapSum.watchCount + " WATCH" : ""}`
-    : "START HERE · 16+1";
+    ? `${trapSum.trafficLight.color} · ${trapSum.activeCount} ACTIVE${trapSum.watchCount ? " / " + trapSum.watchCount + " WATCH" : ""}`
+    : "16+1 READY";
   const trapBadgeCls = trapSum?.activeCount > 0 ? "dn" : trapSum?.watchCount > 0 ? "warn" : "up";
   const trapStatus = trapSum
     ? `Phase 1: ${trapSum.trafficLight.color}${trapSum.topTitles.length ? " · Active: " + trapSum.topTitles.join(", ") : " · 16 Spot Traps + Bonus B1 Ready"}`
@@ -1332,71 +1268,349 @@ function renderEntryHub() {
     ? window.SrMapModule.getHubInfo(STATE)
     : { badge: "FINAL DESK", badgeCls: "warn", status: "1.0x Spot Final Decision Desk" };
 
+  return {
+    hub: {
+      tab: "hub",
+      num: "HOME",
+      code: "HUB",
+      title: "BTC 1.0x Spot Workstation",
+      scope: "1.0x SPOT FIRST",
+      scopeCls: "up",
+      badge: srInfo.badge,
+      badgeCls: srInfo.badgeCls,
+      purpose: "Start with Final Decision or Spot Traps — tap \u2630 anytime to switch tools.",
+      status: srInfo.status,
+      desc: "Command Hub overview",
+    },
+    srmap: {
+      tab: "srmap",
+      num: "10",
+      code: "F10",
+      title: tr("tab_srmap", "Final Decision Desk"),
+      scope: "1.0x SPOT ONLY",
+      scopeCls: "up",
+      badge: srInfo.badge,
+      badgeCls: srInfo.badgeCls,
+      purpose: "All-in-one 1.0x spot verdict: act, reduce size, or stay safely in cash.",
+      status: srInfo.status,
+      desc: "Final 1.0x Spot Decision Gate: Veto Priority + Regime & Flow Filters + S/R Staircase + Dual Magnets + Run Log.",
+    },
+    traps: {
+      tab: "traps",
+      num: "09",
+      code: "F9",
+      title: tr("tab_traps", "Spot Traps (16+1)"),
+      scope: "1.0x SPOT ONLY",
+      scopeCls: "up",
+      badge: trapBadge,
+      badgeCls: trapBadgeCls,
+      purpose: "Check if you're walking into a common BTC spot mistake before clicking Buy or Sell.",
+      status: trapStatus,
+      desc: "Check active market traps, scan your trade idea or chart call before clicking, or read the 16+1 Field Guide.",
+    },
+    shield: {
+      tab: "shield",
+      num: "06",
+      code: "F6",
+      title: tr("tab_shield", "Spot Shield (80/20)"),
+      scope: "1.0x SPOT ONLY",
+      scopeCls: "up",
+      badge: `BTC ${btcPct}% / USDT ${usdtPct}%`,
+      badgeCls: btcPct > 0 ? "up" : "warn",
+      purpose: "Long-term 80/20 portfolio shield — protect your spot capital during bear markets.",
+      status: `S1 ${sh.sleeve1?.action || "—"} · S2 ${sh.sleeve2?.action || "—"}${carryShort}`,
+      desc: "Pure closed-bar 80/20 BTC\u2194USDT dual-sleeve bear shield & Carry APR check.",
+    },
+    news: {
+      tab: "news",
+      num: "05",
+      code: "F5",
+      title: tr("tab_news", "News & Macro"),
+      scope: "MACRO & EVENTS",
+      scopeCls: "",
+      badge: nmStatus,
+      badgeCls: nmCls,
+      purpose: "Track major US releases (CPI, PCE, FOMC) and market-moving BTC headlines.",
+      status: `${(nm.headlines || []).length} Headlines · Next USD: ${nextEvt}`,
+      desc: "Curated BTC/macro feed, cross-asset pulse, ETF flow regime & USD event blackout calendar.",
+    },
+    regime: {
+      tab: "regime",
+      num: "02",
+      code: "F2",
+      title: tr("tab_f2", "Regime & Kline Patterns"),
+      scope: "MARKET CONTEXT",
+      scopeCls: "",
+      badge: sor.code ? `${sor.code}: ${sor.name || ""}`.trim() : "REGIME",
+      badgeCls: sor.bias === "BULL" ? "up" : sor.bias === "BEAR" ? "dn" : "warn",
+      purpose: "See whether BTC is trending up, trending down, or chopping sideways on 4H and 1D.",
+      status: `${sor.name || "—"} · ${kp.active_count ?? 0} Active Kline Pattern(s)`,
+      desc: "5-State Regime Radar, 10 Kline Patterns, 11-Playbook & interactive 4H/1D chart.",
+    },
+    spot: {
+      tab: "spot",
+      num: "03",
+      code: "F3",
+      title: tr("tab_spot", "Spot Magnet (DIBSE)"),
+      scope: "1.0x SPOT CONTEXT",
+      scopeCls: "up",
+      badge: dibse.rotation || smReg.name || "SPOT",
+      badgeCls: String(dibse.rotation || "").startsWith("USDT") ? "up" : "warn",
+      purpose: "Spot where leveraged liquidation clusters sit so you don't get caught in a stop-hunt.",
+      status: `${smReg.name || "—"} · ${etfReg?.regime ? "ETF " + etfReg.regime : "VWAP Radar"}`,
+      desc: "5-Regime Spot Radar, LSCE sweep gate, liquidation ladder & DIBSE rotation.",
+    },
+    rhyme: {
+      tab: "rhyme",
+      num: "04",
+      code: "F4",
+      title: tr("tab_rhyme", "S2 Cortex-Rhyme"),
+      scope: "HISTORICAL ODDS",
+      scopeCls: "",
+      badge: crDiag.posture_verdict ? `${crDiag.posture_verdict} (${crTier} N=${crN})` : `${crTier} N=${crN}`,
+      badgeCls: crCls,
+      purpose: "Compare today's market setup against past BTC history to sanity-check your odds.",
+      status: `+24h Med ${pct(cr24Med, 2)} · Project G: ${pmG?.active_cell?.reading || pmG?.status || "—"}`,
+      desc: "6D microstructure analogues, 8-Cell Project G matrix & Patient Money (H).",
+    },
+    signal: {
+      tab: "signal",
+      num: "01",
+      code: "F1",
+      title: tr("tab_f1", "Signal Tab"),
+      scope: "FUTURES · MAX 1:2 LEV",
+      scopeCls: "warn",
+      badge: sigSt,
+      badgeCls: sigCls,
+      purpose: "Automated 4H short-term futures swing model (max 1:2 leverage — advanced only).",
+      status: `Regime ${num(reg.score, 1)}/100 (${reg.bias || "—"}) · ${mtL?.summary_line || "4H Cycle"}`,
+      desc: "4H futures qualification checklist, order sizing & circuit breakers.",
+    },
+    ledger: {
+      tab: "ledger",
+      num: "07",
+      code: "F7",
+      title: tr("tab_f3", "Paper Ledger & Risk Calc"),
+      scope: "FUTURES · MAX 1:2 LEV",
+      scopeCls: "warn",
+      badge: `OPEN ${(port.open_positions || []).length}/1 · ${usd(port.equity_usd, 0)}`,
+      badgeCls: "",
+      purpose: "Simulated futures trade ledger and strict 0.40% stop-loss risk calculator.",
+      status: `Open ${(port.open_positions || []).length}/1 · Eq ${usd(port.equity_usd, 0)} · ${mtL ? mtL.day_of_week + " ~" + num(mtL.expected_day_range_pct, 2) + "% day" : "0.40% Risk"}`,
+      desc: "Interactive v4.0 futures sizing calculator & paper execution history.",
+    },
+    audit: {
+      tab: "audit",
+      num: "08",
+      code: "F8",
+      title: tr("tab_f4", "Audit Log & Config"),
+      scope: "SYSTEM & PRIVACY",
+      scopeCls: "",
+      badge: errs.length ? `${errs.length} FETCH NOTES` : "LIVE · 0 ERRORS",
+      badgeCls: errs.length ? "warn" : "up",
+      purpose: "System health diagnostics, raw JSON export, and Privacy Policy.",
+      status: `Updated ${fmtUtcSgtCompact(STATE?.updated_at_utc)} · Raw JSON Export`,
+      desc: "Historical cycle audit log, frozen parameters & Privacy Policy.",
+    },
+  };
+}
+
+function renderPageHeader(viewId = ACTIVE_VIEW) {
+  const mods = getDeskModules();
+  const meta = mods[viewId] || mods.hub;
+  if ($("pageTitle")) $("pageTitle").textContent = meta.title;
+  const scopeEl = $("pageScopeBadge");
+  if (scopeEl) {
+    scopeEl.textContent = meta.scope;
+    scopeEl.className = "badge" + (meta.scopeCls ? " " + meta.scopeCls : "");
+  }
+  const vEl = $("pageVerdictBadge");
+  if (vEl) {
+    if (meta.badge) {
+      vEl.textContent = meta.badge;
+      vEl.className = "badge" + (meta.badgeCls ? " " + meta.badgeCls : "");
+    } else {
+      vEl.className = "badge hidden";
+    }
+  }
+  if ($("pagePurpose")) $("pagePurpose").textContent = meta.purpose;
+  if (STATE && $("snapMeta")) {
+    const updPair = fmtUtcSgtCompact(STATE.updated_at_utc);
+    const h4Pair = STATE.last_4h_close_utc ? fmtUtcSgtCompact(STATE.last_4h_close_utc) : "—";
+    $("snapMeta").textContent = `v${STATE.protocol_version || "4.0"} · Updated ${updPair} · 4H Close ${h4Pair} · Source ${STATE.ticker?.source || "—"}`;
+  }
+}
+
+function renderNavDrawer() {
+  const host = $("navDrawer");
+  if (!host) return;
+  const mods = getDeskModules();
+  const renderNavItem = (key) => {
+    const m = mods[key];
+    const active = ACTIVE_VIEW === m.tab ? " active" : "";
+    return `
+      <button type="button" class="nav-item${active}" data-open-tab="${esc(m.tab)}">
+        <span class="nav-item-main">
+          <span class="nav-item-code">${esc(m.code)}</span>
+          <span>${esc(m.title)}</span>
+        </span>
+        <span class="badge ${esc(m.badgeCls)}">${esc(m.badge)}</span>
+      </button>
+    `;
+  };
+  host.innerHTML = `
+    <div class="nav-drawer-head">
+      <span>// WORKSTATION MENU</span>
+      <button type="button" class="ws-ctrl-btn" id="btnCloseDrawer" aria-label="Close Navigation Menu">&#10005;</button>
+    </div>
+    <div class="nav-drawer-body">
+      ${renderNavItem("hub")}
+      <div class="nav-group-lbl">Core 1.0x Spot Desk</div>
+      ${["srmap", "traps", "shield", "news"].map(renderNavItem).join("")}
+      <div class="nav-group-lbl">Market Context</div>
+      ${["regime", "spot", "rhyme"].map(renderNavItem).join("")}
+      <div class="nav-group-lbl">Advanced · Futures &amp; System</div>
+      ${["signal", "ledger", "audit"].map(renderNavItem).join("")}
+    </div>
+    <div class="nav-drawer-foot">
+      <a href="privacy.html" data-i18n="privacy_lbl">${esc(tr("privacy_lbl", "Privacy Policy & Data Disclosure"))}</a>
+      <span class="mut">KEYS [0/ESC]</span>
+    </div>
+  `;
+}
+
+function closeLangMenu() {
+  $("langMenu")?.classList.add("hidden");
+  $("btnLangToggle")?.setAttribute("aria-expanded", "false");
+}
+
+function toggleLangMenu() {
+  const menu = $("langMenu");
+  if (!menu) return;
+  const willOpen = menu.classList.contains("hidden");
+  if (willOpen) closeNavDrawer();
+  menu.classList.toggle("hidden", !willOpen);
+  $("btnLangToggle")?.setAttribute("aria-expanded", String(willOpen));
+}
+
+function closeNavDrawer() {
+  $("navDrawer")?.classList.add("hidden");
+  $("navBackdrop")?.classList.add("hidden");
+  $("btnMenuToggle")?.setAttribute("aria-expanded", "false");
+}
+
+function openNavDrawer() {
+  closeLangMenu();
+  renderNavDrawer();
+  $("navDrawer")?.classList.remove("hidden");
+  $("navBackdrop")?.classList.remove("hidden");
+  $("btnMenuToggle")?.setAttribute("aria-expanded", "true");
+}
+
+function renderEntryHub() {
+  const host = $("entryHubView");
+  if (!host || !STATE) return;
+  const mods = getDeskModules();
+
+  const renderCard = (key) => {
+    const c = mods[key];
+    return `
+      <button type="button" class="hub-card" data-open-tab="${esc(c.tab)}">
+        <div class="hub-card-top">
+          <div class="hub-card-left">
+            <span class="hub-num">[${esc(c.num)}]</span>
+            <span class="hub-title">${esc(c.title)}</span>
+          </div>
+          <span class="badge ${esc(c.badgeCls)}">${esc(c.badge)}</span>
+        </div>
+        <div class="hub-status">&#9658; ${esc(c.status)}</div>
+        <div class="hub-desc">${esc(c.desc)}</div>
+      </button>
+    `;
+  };
+
+  const f10 = mods.srmap;
+  const f9 = mods.traps;
   host.innerHTML = `
     <div class="hub-header">
-      <span>// SELECT WORKSTATION MODULE</span>
-      <span>CLICK CARD OR PRESS KEYS [1–9, M] &#9658;</span>
+      <span>// START HERE · 1.0x SPOT DESK</span>
+      <span>TAP CARD OR USE &#9776; MENU &#9658;</span>
     </div>
-    <button type="button" class="hub-featured-card" data-open-tab="traps">
-      <div class="hub-card-top">
-        <div class="hub-card-left">
-          <span class="hub-num">[09]</span>
-          <span class="hub-title">${esc(tr("tab_traps", "Spot Trap Radar & Field Guide"))}</span>
-        </div>
-        <span class="badge ${esc(trapBadgeCls)}">${esc(trapBadge)}</span>
-      </div>
-      <div class="hub-status">&#9658; ${esc(trapStatus)}</div>
-      <div class="hub-desc">New to BTC? Check today's active market traps, scan your trade idea or chart call before clicking, or read the 16+1 Spot Field Guide.</div>
-    </button>
-    <div class="hub-grid">
-      ${cards.map((c) => `
-        <button type="button" class="hub-card" data-open-tab="${esc(c.tab)}">
-          <div class="hub-card-top">
-            <div class="hub-card-left">
-              <span class="hub-num">[${esc(c.num)}]</span>
-              <span class="hub-title">${esc(c.title)}</span>
-            </div>
-            <span class="badge ${esc(c.badgeCls)}">${esc(c.badge)}</span>
-          </div>
-          <div class="hub-status">&#9658; ${esc(c.status)}</div>
-          <div class="hub-desc">${esc(c.desc)}</div>
-        </button>
-      `).join("")}
-      <button type="button" class="hub-card wide" data-open-tab="srmap">
+    <div class="hub-featured-pair">
+      <button type="button" class="hub-featured-card primary" data-open-tab="srmap">
         <div class="hub-card-top">
           <div class="hub-card-left">
             <span class="hub-num">[10]</span>
-            <span class="hub-title">${esc(tr("tab_srmap", "Final Decision Desk"))}</span>
+            <span class="hub-title">${esc(f10.title)}</span>
           </div>
-          <span class="badge ${esc(srInfo.badgeCls)}">${esc(srInfo.badge)}</span>
+          <span class="badge ${esc(f10.badgeCls)}">${esc(f10.badge)}</span>
         </div>
-        <div class="hub-status">&#9658; ${esc(srInfo.status)}</div>
-        <div class="hub-desc">Final 1.0x Spot Decision Gate: Conflict Priority Veto + Regime &amp; Flow Filters + S/R Staircase + Dual Magnets + Run Log.</div>
+        <div class="hub-status">&#9658; ${esc(f10.status)}</div>
+        <div class="hub-desc">${esc(f10.desc)}</div>
+      </button>
+      <button type="button" class="hub-featured-card" data-open-tab="traps">
+        <div class="hub-card-top">
+          <div class="hub-card-left">
+            <span class="hub-num">[09]</span>
+            <span class="hub-title">${esc(f9.title)}</span>
+          </div>
+          <span class="badge ${esc(f9.badgeCls)}">${esc(f9.badge)}</span>
+        </div>
+        <div class="hub-status">&#9658; ${esc(f9.status)}</div>
+        <div class="hub-desc">${esc(f9.desc)}</div>
       </button>
     </div>
+
+    <div class="hub-section-lbl">Core Spot &amp; Market Context</div>
+    <div class="hub-grid">
+      ${["shield", "news", "regime", "spot", "rhyme"].map(renderCard).join("")}
+    </div>
+
+    <details class="hub-advanced-drawer" id="hubAdvancedDrawer" ${HUB_ADV_OPEN ? "open" : ""}>
+      <summary class="hub-adv-summary">
+        <span>Advanced · Futures (Max 1:2 Lev) &amp; System Tools (F1 · F7 · F8)</span>
+        <span class="badge">TAP TO EXPAND</span>
+      </summary>
+      <div class="hub-adv-body">
+        <div class="hub-grid">
+          ${["signal", "ledger", "audit"].map(renderCard).join("")}
+        </div>
+      </div>
+    </details>
+
     <div class="hub-footer">
-      <span>COMMAND HUB · 10 MODULES</span>
-      <span>KEYS [1–9, M] OPEN · [0/ESC] HUB · NO LOGIN</span>
+      <span>1.0x SPOT FIRST · 10 MODULES · KEYS [1–9, M]</span>
+      <span><a href="privacy.html" data-i18n="privacy_lbl">${esc(tr("privacy_lbl", "Privacy Policy & Data Disclosure"))}</a></span>
     </div>
   `;
 }
 
 function showHub() {
   ACTIVE_VIEW = "hub";
+  closeNavDrawer();
+  closeLangMenu();
   $("entryHubView")?.classList.add("active");
   $("moduleChrome")?.classList.add("hidden");
-  $("btnBackHub")?.classList.add("hidden");
   document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+  renderPageHeader("hub");
+  renderNavDrawer();
   window.scrollTo(0, 0);
 }
 
 function activateTab(tabId) {
+  if (tabId === "hub") {
+    showHub();
+    return;
+  }
   ACTIVE_VIEW = tabId;
+  closeNavDrawer();
+  closeLangMenu();
   $("entryHubView")?.classList.remove("active");
-  $("moduleChrome")?.classList.remove("hidden");
-  $("btnBackHub")?.classList.remove("hidden");
-  document.querySelectorAll("#tabNav .tab-btn[data-tab]").forEach((x) => x.classList.toggle("active", x.dataset.tab === tabId));
+  const showFuturesCopy = tabId === "signal" || tabId === "regime";
+  $("moduleChrome")?.classList.toggle("hidden", !showFuturesCopy);
   document.querySelectorAll(".tab-panel").forEach((p) => p.classList.toggle("active", p.id === `tab-${tabId}`));
+  renderPageHeader(tabId);
+  renderNavDrawer();
   if (tabId === "regime") renderChart();
   if (tabId === "traps") window.SpotTrapsModule?.render(STATE);
   if (tabId === "srmap") window.SrMapModule?.render(STATE);
@@ -1828,16 +2042,51 @@ function bindEvents() {
     const b = e.target.closest("button[data-open-tab]");
     if (b) activateTab(b.dataset.openTab);
   });
-  $("btnBackHub")?.addEventListener("click", showHub);
-  $("btnNavHub")?.addEventListener("click", showHub);
-  $("tabNav").addEventListener("click", (e) => {
-    const b = e.target.closest("button[data-tab]");
-    if (b) activateTab(b.dataset.tab);
+  $("entryHubView")?.addEventListener(
+    "toggle",
+    (e) => {
+      if (e.target.id === "hubAdvancedDrawer") HUB_ADV_OPEN = Boolean(e.target.open);
+    },
+    true
+  );
+  $("btnBrandHome")?.addEventListener("click", showHub);
+  $("btnMenuToggle")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = !$("navDrawer")?.classList.contains("hidden");
+    if (open) closeNavDrawer();
+    else openNavDrawer();
+  });
+  $("navBackdrop")?.addEventListener("click", closeNavDrawer);
+  $("navDrawer")?.addEventListener("click", (e) => {
+    if (e.target.closest("#btnCloseDrawer")) {
+      closeNavDrawer();
+      return;
+    }
+    const b = e.target.closest("button[data-open-tab]");
+    if (b) activateTab(b.dataset.openTab);
+  });
+  $("btnLangToggle")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleLangMenu();
+  });
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".lang-picker")) closeLangMenu();
   });
   document.addEventListener("keydown", (e) => {
     if (e.altKey || e.ctrlKey || e.metaKey) return;
     if (/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName || "")) return;
-    if (e.key === "0" || e.key === "Escape") {
+    if (e.key === "Escape") {
+      const langOpen = !$("langMenu")?.classList.contains("hidden");
+      const navOpen = !$("navDrawer")?.classList.contains("hidden");
+      if (langOpen || navOpen) {
+        closeLangMenu();
+        closeNavDrawer();
+        return;
+      }
+      showHub();
+      return;
+    }
+    if (e.key === "0") {
       showHub();
       return;
     }
@@ -1982,6 +2231,8 @@ function bindEvents() {
   }
   window.onDeskLangChanged = () => {
     renderHeaderLive();
+    renderPageHeader(ACTIVE_VIEW);
+    renderNavDrawer();
     renderEntryHub();
     if (ACTIVE_VIEW === "traps") window.SpotTrapsModule?.render(STATE);
     if (ACTIVE_VIEW === "srmap") window.SrMapModule?.render(STATE);
@@ -1998,7 +2249,6 @@ function bindEvents() {
 
 function renderAllTabsFromState() {
   if (!STATE) return;
-  $("snapMeta").textContent = `v${STATE.protocol_version || "4.0"} · Updated ${STATE.updated_at_utc} · 4H Close ${STATE.last_4h_close_utc || "—"} · Source ${STATE.ticker?.source || "—"}`;
   renderHeaderLive();
   renderSignalTab();
   renderRegimeTab();
@@ -2011,6 +2261,8 @@ function renderAllTabsFromState() {
   window.SpotTrapsModule?.render(STATE);
   window.SrMapModule?.render(STATE);
   renderEntryHub();
+  renderPageHeader(ACTIVE_VIEW);
+  renderNavDrawer();
 }
 
 async function refreshStateFromServer(silent = false) {
@@ -2025,7 +2277,7 @@ async function refreshStateFromServer(silent = false) {
     if (!silent || !editingField) {
       renderAllTabsFromState();
     } else {
-      $("snapMeta").textContent = `v${STATE.protocol_version || "4.0"} · Updated ${STATE.updated_at_utc} · 4H Close ${STATE.last_4h_close_utc || "—"} · Source ${STATE.ticker?.source || "—"}`;
+      renderPageHeader(ACTIVE_VIEW);
       renderHeaderLive();
     }
     return {

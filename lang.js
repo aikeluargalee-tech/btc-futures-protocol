@@ -398,7 +398,14 @@
       const key = el.getAttribute("data-i18n");
       if (d[key] !== undefined) el.textContent = d[key];
     });
-    document.querySelectorAll("#langBar .lang-btn").forEach((btn) => {
+    const flagEl = document.getElementById("langCurFlag");
+    const codeEl = document.getElementById("langCurCode");
+    if (flagEl) {
+      flagEl.src = `assets/flags/${current}.png?v=1`;
+      flagEl.alt = current.toUpperCase();
+    }
+    if (codeEl) codeEl.textContent = current.toUpperCase();
+    document.querySelectorAll("#langBar .lang-btn, #langMenu .lang-opt").forEach((btn) => {
       const on = btn.dataset.lang === current;
       btn.classList.toggle("active", on);
       btn.setAttribute("aria-pressed", String(on));
@@ -424,6 +431,17 @@
         bar.addEventListener("click", (e) => {
           const b = e.target.closest("button[data-lang]");
           if (b) window.DeskI18n.setLang(b.dataset.lang);
+        });
+      }
+      const menu = document.getElementById("langMenu");
+      if (menu) {
+        menu.addEventListener("click", (e) => {
+          const b = e.target.closest("button[data-lang]");
+          if (!b) return;
+          window.DeskI18n.setLang(b.dataset.lang);
+          menu.classList.add("hidden");
+          const tog = document.getElementById("btnLangToggle");
+          if (tog) tog.setAttribute("aria-expanded", "false");
         });
       }
       applyDomTranslations();
