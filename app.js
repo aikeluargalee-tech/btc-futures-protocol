@@ -1302,10 +1302,9 @@ function renderEntryHub() {
     ? `Phase 1: ${trapSum.trafficLight.color}${trapSum.topTitles.length ? " · Active: " + trapSum.topTitles.join(", ") : " · 16 Spot Traps + Bonus B1 Ready"}`
     : "16 Spot Traps + Bonus B1 ('If-Then' Chart Hygiene) + Pre-Trade Decision Scanner";
 
-  const srSum = window.SrMapModule?.getHubSummary ? window.SrMapModule.getHubSummary(STATE) : "1W/1D/4H/1H S/R Bands & Liquidity Clusters";
-  const srOv = (STATE.sr_bands?.magnet_overlaps || []).length;
-  const srBadge = srOv ? `${srOv} OVERLAP${srOv === 1 ? "" : "S"}` : (STATE.sr_bands?.status || "MAP");
-  const srBadgeCls = srOv ? "warn" : "up";
+  const srInfo = window.SrMapModule?.getHubInfo
+    ? window.SrMapModule.getHubInfo(STATE)
+    : { badge: "FINAL DESK", badgeCls: "warn", status: "1.0x Spot Final Decision Desk" };
 
   host.innerHTML = `
     <div class="hub-header">
@@ -1341,12 +1340,12 @@ function renderEntryHub() {
         <div class="hub-card-top">
           <div class="hub-card-left">
             <span class="hub-num">[10]</span>
-            <span class="hub-title">${esc(tr("tab_srmap", "S/R & Magnets"))}</span>
+            <span class="hub-title">${esc(tr("tab_srmap", "Final Decision Desk"))}</span>
           </div>
-          <span class="badge ${esc(srBadgeCls)}">${esc(srBadge)}</span>
+          <span class="badge ${esc(srInfo.badgeCls)}">${esc(srInfo.badge)}</span>
         </div>
-        <div class="hub-status">&#9658; ${esc(srSum)}</div>
-        <div class="hub-desc">Multi-timeframe S/R staircase (1W / 1D / 4H / 1H + live 15m/30m/12H toggle) paired with CMC Exact &amp; Modeled BTC Liquidation Clusters.</div>
+        <div class="hub-status">&#9658; ${esc(srInfo.status)}</div>
+        <div class="hub-desc">Final 1.0x Spot Decision Gate: Conflict Priority Veto + Regime &amp; Flow Filters + S/R Staircase + Dual Magnets + Run Log.</div>
       </button>
     </div>
     <div class="hub-footer">
