@@ -13,10 +13,45 @@ from typing import Any
 UA = {"User-Agent": "Mozilla/5.0 btc-futures-protocol/1.0"}
 OKX_BASE = "https://www.okx.com/api/v5"
 BINANCE_VISION = "https://data-api.binance.vision/api/v3"
+KRAKEN_SPOT = "https://api.kraken.com/0/public"
+COINBASE_EXCHANGE = "https://api.exchange.coinbase.com"
 KRAKEN_FUTURES = "https://futures.kraken.com/derivatives/api/v3"
 DERIBIT_PUBLIC = "https://www.deribit.com/api/v2/public"
 HYPERLIQUID_INFO = "https://api.hyperliquid.xyz/info"
 CMC_DATA_API = "https://api.coinmarketcap.com/data-api/v3"
+TRANSIENT_HTTP_CODES = {408, 429, 500, 502, 503, 504}
+
+
+def _fetch_with_retry(
+    make_req: Any,
+    name: str,
+    errors: list[str],
+    timeout: int = 12,
+    retries: int = 2,
+    parse_json: bool = True,
+) -> Any:
+    """Execute HTTP request with bounded exponential backoff on transient failures."""
+    last_err = ""
+    for attempt in range(retries + 1):
+        try:
+            req = make_req()
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                raw = resp.read().decode("utf-8", "replace")
+                return json.loads(raw) if parse_json else raw
+        except urllib.error.HTTPError as exc:
+            code = getattr(exc, "code", None)
+            last_err = f"{name}: HTTPError {code}".strip()
+            if code not in TRANSIENT_HTTP_CODES or attempt >= retries:
+                break
+        except Exception as exc:
+            code = getattr(exc, "code", "")
+            last_err = f"{name}: {type(exc).__name__} {code}".strip()
+            if attempt >= retries:
+                break
+        time.sleep(0.6 * (2**attempt))
+    if last_err:
+        errors.append(last_err)
+    return None
 
 
 def _get_json(
@@ -25,45 +60,57 @@ def _get_json(
     errors: list[str],
     timeout: int = 12,
     headers: dict[str, str] | None = None,
+    retries: int = 2,
 ) -> Any:
-    try:
-        req = urllib.request.Request(url, headers=headers or UA)
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except Exception as exc:
-        code = getattr(exc, "code", "")
-        errors.append(f"{name}: {type(exc).__name__} {code}".strip())
-        return None
+    return _fetch_with_retry(
+        lambda: urllib.request.Request(url, headers=headers or UA),
+        name,
+        errors,
+        timeout=timeout,
+        retries=retries,
+        parse_json=True,
+    )
 
 
-def _post_json(url: str, payload: dict[str, Any], name: str, errors: list[str], timeout: int = 12) -> Any:
-    try:
-        data = json.dumps(payload).encode("utf-8")
-        headers = {**UA, "Content-Type": "application/json"}
-        req = urllib.request.Request(url, data=data, headers=headers, method="POST")
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except Exception as exc:
-        code = getattr(exc, "code", "")
-        errors.append(f"{name}: {type(exc).__name__} {code}".strip())
-        return None
+def _post_json(
+    url: str,
+    payload: dict[str, Any],
+    name: str,
+    errors: list[str],
+    timeout: int = 12,
+    retries: int = 2,
+) -> Any:
+    data = json.dumps(payload).encode("utf-8")
+    headers = {**UA, "Content-Type": "application/json"}
+    return _fetch_with_retry(
+        lambda: urllib.request.Request(url, data=data, headers=headers, method="POST"),
+        name,
+        errors,
+        timeout=timeout,
+        retries=retries,
+        parse_json=True,
+    )
 
 
-def _get_text(url: str, name: str, errors: list[str], timeout: int = 15) -> str | None:
-    try:
-        req = urllib.request.Request(
-            url,
-            headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Safari/537.36",
-                "Accept": "text/html,application/json",
-            },
-        )
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return resp.read().decode("utf-8", "replace")
-    except Exception as exc:
-        code = getattr(exc, "code", "")
-        errors.append(f"{name}: {type(exc).__name__} {code}".strip())
-        return None
+def _get_text(
+    url: str,
+    name: str,
+    errors: list[str],
+    timeout: int = 15,
+    retries: int = 2,
+) -> str | None:
+    text_headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Safari/537.36",
+        "Accept": "text/html,application/json",
+    }
+    return _fetch_with_retry(
+        lambda: urllib.request.Request(url, headers=text_headers),
+        name,
+        errors,
+        timeout=timeout,
+        retries=retries,
+        parse_json=False,
+    )
 
 
 def _parse_okx_candles(rows: list[list[str]], closed_only: bool = True) -> list[dict[str, float]]:
@@ -113,6 +160,38 @@ def _parse_binance_candles(
     ]
 
 
+KRAKEN_PAIR_MAP = {"BTCUSDT": "XBTUSD", "ETHUSDT": "ETHUSD"}
+KRAKEN_INTERVAL_MAP = {"1w": 10080, "1d": 1440, "4h": 240, "1h": 60, "15m": 15}
+
+
+def _parse_kraken_candles(
+    rows: list[list[Any]],
+    interval_min: int,
+    closed_only: bool = True,
+    now_ms: int | None = None,
+) -> list[dict[str, float]]:
+    if not rows:
+        return []
+    ref_ms = now_ms if now_ms is not None else int(time.time() * 1000)
+    bar_ms = interval_min * 60 * 1000
+    out: list[dict[str, float]] = []
+    for x in rows:
+        ts_ms = int(float(x[0])) * 1000
+        if closed_only and ts_ms + bar_ms > ref_ms:
+            continue
+        out.append(
+            {
+                "ts": ts_ms,
+                "open": float(x[1]),
+                "high": float(x[2]),
+                "low": float(x[3]),
+                "close": float(x[4]),
+                "volume": float(x[6]),
+            }
+        )
+    return out
+
+
 def fetch_spot_klines_with_taker(
     interval: str, limit: int, errors: list[str]
 ) -> list[dict[str, Any]]:
@@ -135,7 +214,7 @@ def fetch_klines(
     limit: int,
     errors: list[str],
 ) -> tuple[list[dict[str, float]], str]:
-    """Fetch closed OHLCV bars from OKX SWAP first, falling back to Binance Vision spot."""
+    """Fetch closed OHLCV bars from OKX SWAP, falling back to Binance Vision and Kraken Spot."""
     r = _get_json(
         f"{OKX_BASE}/market/candles?instId={symbol_okx}&bar={bar_okx}&limit={min(limit, 300)}",
         f"OKX {symbol_okx} {bar_okx}",
@@ -154,11 +233,26 @@ def fetch_klines(
     if isinstance(r2, list) and len(r2) > 10:
         return _parse_binance_candles(r2, closed_only=True), f"BinanceVision {symbol_binance}"
 
+    kpair = KRAKEN_PAIR_MAP.get(symbol_binance)
+    kint = KRAKEN_INTERVAL_MAP.get(interval_binance)
+    if kpair and kint:
+        r3 = _get_json(
+            f"{KRAKEN_SPOT}/OHLC?pair={kpair}&interval={kint}",
+            f"KrakenSpot {kpair} {interval_binance}",
+            errors,
+        )
+        res3 = (r3 or {}).get("result") or {}
+        rows3 = next((v for k, v in res3.items() if k != "last" and isinstance(v, list)), None)
+        if isinstance(rows3, list):
+            parsed3 = _parse_kraken_candles(rows3, kint, closed_only=True)[-limit:]
+            if len(parsed3) >= 10:
+                return parsed3, f"KrakenSpot {kpair}"
+
     return [], "unavailable"
 
 
 def fetch_live_ticker(errors: list[str]) -> dict[str, Any]:
-    """Fetch current BTC perp mark/last price with spot fallback."""
+    """Fetch current BTC perp mark/last price with Binance Vision, Kraken, and Coinbase fallbacks."""
     r = _get_json(f"{OKX_BASE}/market/ticker?instId=BTC-USDT-SWAP", "OKX SWAP ticker", errors)
     if r and r.get("data"):
         d = r["data"][0]
@@ -179,6 +273,28 @@ def fetch_live_ticker(errors: list[str]) -> dict[str, Any]:
             "low24": float(r2["lowPrice"]),
             "chg24_pct": float(r2["priceChangePercent"]),
             "source": "BinanceVision BTCUSDT",
+        }
+    r3 = _get_json(f"{KRAKEN_SPOT}/Ticker?pair=XBTUSD", "KrakenSpot ticker", errors)
+    res3 = (r3 or {}).get("result") or {}
+    d3 = next((v for k, v in res3.items() if k != "last" and isinstance(v, dict)), None)
+    if d3 and d3.get("c"):
+        last = float(d3["c"][0])
+        open24 = float(d3.get("o") or 0.0)
+        return {
+            "price": last,
+            "high24": float(d3["h"][1]) if d3.get("h") and len(d3["h"]) > 1 else None,
+            "low24": float(d3["l"][1]) if d3.get("l") and len(d3["l"]) > 1 else None,
+            "chg24_pct": round((last / open24 - 1.0) * 100.0, 2) if open24 else 0.0,
+            "source": "KrakenSpot XBTUSD",
+        }
+    r4 = _get_json(f"{COINBASE_EXCHANGE}/products/BTC-USD/ticker", "Coinbase ticker", errors)
+    if r4 and r4.get("price") is not None:
+        return {
+            "price": float(r4["price"]),
+            "high24": None,
+            "low24": None,
+            "chg24_pct": None,
+            "source": "Coinbase BTC-USD",
         }
     return {"price": None, "source": "unavailable"}
 

@@ -9,6 +9,10 @@
   let INTRADAY_OPEN = false;
   let INTRADAY_LOADING = false;
   let INTRADAY_DATA = null;
+  let REFRESHING_STATE = false;
+  let CORE_LIVE_LOADING = false;
+  let CORE_LIVE_SR = null;
+  let CORE_LIVE_ERROR = null;
   let MATRIX_OPEN = false;
   let PLAN_OPEN = false;
   let GUIDE_OPEN = false;
@@ -391,15 +395,15 @@
     return win.length ? win.reduce((a, b) => a + b, 0) / win.length : null;
   }
 
-  function computeClientTfBands(bars, refPrice, tfLabel, role) {
+  function computeClientTfBands(bars, refPrice, tfLabel, role, lookback = 120) {
     if (!Array.isArray(bars) || !bars.length || !(refPrice > 0)) {
       return { tf: tfLabel, label: tfLabel, role, bars: 0, atr14_usd: null, atr14_pct: null, resistance: [], support: [] };
     }
-    const win = bars.slice(-120);
-    const atr14 = calcAtr14Client(win) || refPrice * 0.006;
+    const win = bars.slice(-lookback);
+    const atr14 = calcAtr14Client(win) || refPrice * 0.015;
     const atr14Pct = (atr14 / refPrice) * 100.0;
-    const pad = Math.max(refPrice * 0.001, Math.min(refPrice * 0.0085, 0.18 * atr14));
-    const clusterTol = Math.max(refPrice * 0.0035, Math.min(refPrice * 0.015, 0.55 * atr14));
+    const pad = Math.max(refPrice * 0.0012, Math.min(refPrice * 0.0085, 0.18 * atr14));
+    const clusterTol = Math.max(refPrice * 0.005, Math.min(refPrice * 0.018, 0.55 * atr14));
     const span = 2;
 
     const points = [];
@@ -469,6 +473,74 @@
     };
   }
 
+  function computeClientConfluence(coreTimeframes, refPrice) {
+    if (!(refPrice > 0) || !coreTimeframes) return { resistance: [], support: [] };
+    const tol = refPrice * 0.0085;
+    const tfWeight = { "1W": 4, "1D": 3, "4H": 2, "1H": 1 };
+    const out = { resistance: [], support: [] };
+
+    for (const side of ["resistance", "support"]) {
+      const flat = [];
+      for (const tfKey of ["1W", "1D", "4H", "1H"]) {
+        for (const z of coreTimeframes?.[tfKey]?.[side] || []) flat.push(z);
+      }
+      if (!flat.length) continue;
+      flat.sort((a, b) => a.mid - b.mid);
+      const groups = [[flat[0]]];
+      for (let i = 1; i < flat.length; i += 1) {
+        const grp = groups[groups.length - 1];
+        const anchor = grp.reduce((s, x) => s + x.mid, 0) / grp.length;
+        if (Math.abs(flat[i].mid - anchor) <= tol) grp.push(flat[i]);
+        else groups.push([flat[i]]);
+      }
+
+      const confs = [];
+      for (const grp of groups) {
+        const tfs = [...new Set(grp.map((x) => x.tf))].sort((a, b) => (tfWeight[b] || 0) - (tfWeight[a] || 0));
+        if (tfs.length < 2) continue;
+        const mid = +(grp.reduce((s, x) => s + x.mid, 0) / grp.length).toFixed(1);
+        const rawLow = Math.min(...grp.map((x) => x.low));
+        const rawHigh = Math.max(...grp.map((x) => x.high));
+        const halfW = Math.min(Math.max((rawHigh - rawLow) * 0.5, refPrice * 0.0035), refPrice * 0.011);
+        const low = +(mid - halfW).toFixed(1);
+        const high = +(mid + halfW).toFixed(1);
+        const distPct = +(((mid - refPrice) / refPrice) * 100.0).toFixed(2);
+        confs.push({
+          side,
+          low,
+          mid,
+          high,
+          distance_pct: distPct,
+          timeframes: tfs,
+          tf_count: tfs.length,
+          total_touches: grp.reduce((s, x) => s + (Number(x.touches) || 1), 0),
+          label: tfs.join(" + ") + (side === "support" ? " Floor" : " Ceiling"),
+        });
+      }
+      confs.sort((a, b) => Math.abs(a.distance_pct) - Math.abs(b.distance_pct));
+      out[side] = confs.slice(0, 4);
+    }
+    return out;
+  }
+
+  async function fetchBinanceClosedBars(interval, limit) {
+    const nowMs = Date.now();
+    const url = `https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=${limit}`;
+    const r = await fetch(url, { cache: "no-store" });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const raw = await r.json();
+    return (Array.isArray(raw) ? raw : [])
+      .filter((row) => row.length >= 7 && Number(row[6]) <= nowMs)
+      .map((row) => ({
+        ts: Number(row[0]),
+        open: Number(row[1]),
+        high: Number(row[2]),
+        low: Number(row[3]),
+        close: Number(row[4]),
+        volume: Number(row[5]),
+      }));
+  }
+
   async function fetchLiveIntradayBands(state) {
     if (INTRADAY_LOADING) return;
     INTRADAY_LOADING = true;
@@ -481,25 +553,8 @@
       { key: "15m", interval: "15m", role: "Micro Execution Noise (Live BinanceVision)" },
     ];
     try {
-      const nowMs = Date.now();
       const results = await Promise.all(
-        specs.map(async (sp) => {
-          const url = `https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=${sp.interval}&limit=120`;
-          const r = await fetch(url, { cache: "no-store" });
-          if (!r.ok) throw new Error(`HTTP ${r.status}`);
-          const raw = await r.json();
-          const closed = (Array.isArray(raw) ? raw : [])
-            .filter((row) => row.length >= 7 && Number(row[6]) <= nowMs)
-            .map((row) => ({
-              ts: Number(row[0]),
-              open: Number(row[1]),
-              high: Number(row[2]),
-              low: Number(row[3]),
-              close: Number(row[4]),
-              volume: Number(row[5]),
-            }));
-          return [sp.key, computeClientTfBands(closed, refPrice, sp.key, sp.role)];
-        })
+        specs.map(async (sp) => [sp.key, computeClientTfBands(await fetchBinanceClosedBars(sp.interval, 120), refPrice, sp.key, sp.role, 120)])
       );
       const tfMap = {};
       for (const [k, val] of results) tfMap[k] = val;
@@ -517,6 +572,45 @@
       };
     } finally {
       INTRADAY_LOADING = false;
+      render(LAST_STATE);
+    }
+  }
+
+  async function fetchLiveCoreBands(state) {
+    if (CORE_LIVE_LOADING) return;
+    CORE_LIVE_LOADING = true;
+    CORE_LIVE_ERROR = null;
+    render(state);
+
+    const refPrice = getRefPrice(state) || state?.ticker?.price || 0;
+    const specs = [
+      { key: "1W", interval: "1w", limit: 104, role: "Macro Structural Boundaries (Browser Live)" },
+      { key: "1D", interval: "1d", limit: 200, role: "Primary Swing Trend Structure (Browser Live)" },
+      { key: "4H", interval: "4h", limit: 200, role: "Execution & F4 Regime Window (Browser Live)" },
+      { key: "1H", interval: "1h", limit: 168, role: "Tactical Entry & Liquidity Timing (Browser Live)" },
+    ];
+    try {
+      const results = await Promise.all(
+        specs.map(async (sp) => [sp.key, computeClientTfBands(await fetchBinanceClosedBars(sp.interval, sp.limit), refPrice, sp.key, sp.role, 180)])
+      );
+      const tfMap = {};
+      for (const [k, val] of results) tfMap[k] = val;
+      const tsNow = _toUtcSgtParts(Date.now());
+      CORE_LIVE_SR = {
+        status: "LIVE",
+        source: `Browser Live BinanceVision @ ${tsNow.shortPair}`,
+        fetched_at_utc: tsNow.utc,
+        fetched_at_sgt: tsNow.sgt,
+        core_order: ["1W", "1D", "4H", "1H"],
+        timeframes: tfMap,
+        confluence_zones: computeClientConfluence(tfMap, refPrice),
+        magnet_overlaps: state?.sr_bands?.magnet_overlaps || [],
+        intraday_snapshot: state?.sr_bands?.intraday_snapshot || {},
+      };
+    } catch (err) {
+      CORE_LIVE_ERROR = `Live browser S/R fetch failed (${String(err?.message || err)})`;
+    } finally {
+      CORE_LIVE_LOADING = false;
       render(LAST_STATE);
     }
   }
@@ -997,8 +1091,9 @@
         : "";
 
     const sr = state?.sr_bands || null;
+    const activeSr = CORE_LIVE_SR || sr;
     const overlaps = sr?.magnet_overlaps || [];
-    const staircase = buildUnifiedStaircase(sr, refPrice, overlaps);
+    const staircase = buildUnifiedStaircase(activeSr, refPrice, overlaps);
     const cmc = state?.derivatives?.cmc_liquidations || null;
     const ladder = state?.spot_magnet?.magnets?.liquidation_ladder || [];
     const wick24 = get24hWickRange(state);
@@ -1045,6 +1140,16 @@
       },
       wick_range_24h: wick24,
       sr_bands: sr,
+      browser_live_sr_override: CORE_LIVE_SR
+        ? {
+            source: CORE_LIVE_SR.source,
+            fetched_at_utc: CORE_LIVE_SR.fetched_at_utc,
+            fetched_at_sgt: CORE_LIVE_SR.fetched_at_sgt,
+            timeframes: CORE_LIVE_SR.timeframes,
+            confluence_zones: CORE_LIVE_SR.confluence_zones,
+            note: "Client-side closed candles refreshed; server-side magnets/ETF/OI timestamp remains updated_at_utc.",
+          }
+        : null,
       liquidation_clusters: {
         strict_rule: "NEVER mix or sum CMC Exact Hyperliquid with Modeled F3 Ladder.",
         cmc_exact_hyperliquid: cmc
@@ -1106,33 +1211,36 @@ ${JSON.stringify(payload, null, 2)}
     LAST_STATE = state ?? LAST_STATE;
     const host = document.getElementById("srMapRoot");
     if (!host) return;
-    const sr = LAST_STATE?.sr_bands;
+    const serverSr = LAST_STATE?.sr_bands;
+    const activeSr = CORE_LIVE_SR || serverSr;
     const refPrice = getRefPrice(LAST_STATE);
 
-    if (!LAST_STATE || !sr) {
+    if (!LAST_STATE || !activeSr) {
       host.innerHTML = `<div class="card"><p class="mut" style="margin:0;">Waiting for Final Spot Decision telemetry…</p></div>`;
       return;
     }
 
-    const overlaps = sr.magnet_overlaps || [];
-    const staircase = buildUnifiedStaircase(sr, refPrice, overlaps);
-    const coreOrder = sr.core_order || ["1W", "1D", "4H", "1H"];
-    const confR = sr.confluence_zones?.resistance || [];
-    const confS = sr.confluence_zones?.support || [];
-    const intradayMap = INTRADAY_DATA?.timeframes || sr.intraday_snapshot || {};
+    const overlaps = serverSr?.magnet_overlaps || [];
+    const staircase = buildUnifiedStaircase(activeSr, refPrice, overlaps);
+    const coreOrder = activeSr.core_order || ["1W", "1D", "4H", "1H"];
+    const confR = activeSr.confluence_zones?.resistance || [];
+    const confS = activeSr.confluence_zones?.support || [];
+    const intradayMap = INTRADAY_DATA?.timeframes || activeSr.intraday_snapshot || {};
     const intradaySource = INTRADAY_DATA?.source || "Hourly Snapshot Fallback (click Refresh Intraday for live 15m/30m/12H bars)";
     const wick24 = get24hWickRange(LAST_STATE);
     const ev = extractCrossDeskEvidence(LAST_STATE);
     const gate = evaluateDecisionGate(LAST_STATE, refPrice, ev, staircase, USER_PLAN);
     const tsPair = fmtUtcSgt(LAST_STATE.updated_at_utc);
+    const showLiveCoreBtn = Boolean(gate.isStale || serverSr?.status !== "LIVE" || CORE_LIVE_SR);
 
     host.innerHTML = `
       <div class="actions" style="margin-bottom:10px;justify-content:space-between;flex-wrap:wrap;gap:8px;">
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
           <button type="button" class="btn btn-primary" id="btnCopySrAi">[Copy Final Decision AI Prompt + JSON]</button>
+          <button type="button" class="btn" id="btnRefreshSrData" ${REFRESHING_STATE ? "disabled" : ""}>[${REFRESHING_STATE ? "Refreshing…" : "Refresh Data"}]</button>
           <span class="mut" id="srAiMsg">FINAL SPOT DECISION DESK · 1.0x Spot Only · Selective Cross-Desk + S/R + Dual Magnets.</span>
         </div>
-        <span class="badge ${gate.isStale ? "dn" : (sr.status === "LIVE" ? "up" : "warn")}">
+        <span class="badge ${gate.isStale ? "dn" : (serverSr?.status === "LIVE" ? "up" : "warn")}">
           ${escHtml(tsPair.shortPair)}${gate.isStale ? " (STALE >65m)" : ""} · Spot ${fmtUsd(refPrice, 1)}
         </span>
       </div>
@@ -1175,9 +1283,12 @@ ${JSON.stringify(payload, null, 2)}
         <div class="srmap-sec-head" style="margin-bottom:8px;">
           <div>
             <h2>Block 3 · Unified Structural Price Staircase (1W · 1D · 4H · 1H)</h2>
-            <div class="mut">Top ceilings above live BTC and top floors below live BTC · Automatically merges Multi-TF Confluence zones.</div>
+            <div class="mut">Top ceilings above live BTC and top floors below live BTC · Automatically merges Multi-TF Confluence zones.${CORE_LIVE_SR ? " (" + escHtml(CORE_LIVE_SR.source) + ")" : ""}</div>
+            ${CORE_LIVE_ERROR ? `<div style="color:var(--dn);font-size:11px;margin-top:3px;">${escHtml(CORE_LIVE_ERROR)}</div>` : ""}
           </div>
-          <div style="display:flex;gap:5px;flex-wrap:wrap;">
+          <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;">
+            ${CORE_LIVE_SR ? `<span class="badge warn">BROWSER LIVE S/R${gate.isStale ? " · Server Magnets/ETF Still Stale" : ""}</span>` : ""}
+            ${showLiveCoreBtn ? `<button type="button" class="btn" id="btnLoadLiveCoreSr" ${CORE_LIVE_LOADING ? "disabled" : ""}>[${CORE_LIVE_LOADING ? "Loading Live S/R…" : (CORE_LIVE_SR ? "Refresh Live Browser S/R" : "Load Live Browser S/R (1W–1H)")}]</button>` : ""}
             <span class="badge dn">${confR.length} Ceiling Confluence</span>
             <span class="badge up">${confS.length} Floor Confluence</span>
           </div>
@@ -1201,13 +1312,13 @@ ${JSON.stringify(payload, null, 2)}
         </summary>
         <div style="margin-top:10px;">
           <div class="srmap-sec-head" style="margin-bottom:10px;">
-            <div class="mut">Bands padded with 0.18 × ATR(14) around closed-candle fractal swing highs, lows &amp; S/R flips.</div>
+            <div class="mut">Bands padded with 0.18 × ATR(14) around closed-candle fractal swing highs, lows &amp; S/R flips.${CORE_LIVE_SR ? " <b>" + escHtml(CORE_LIVE_SR.source) + "</b>" : ""}</div>
             <button type="button" class="btn ${INTRADAY_OPEN ? "btn-primary" : ""}" id="btnToggleIntraday">
               ${INTRADAY_OPEN ? "[- Hide Intraday 15m / 30m / 12H]" : "[+ Show Intraday 15m / 30m / 12H (High Noise — Live Fetch)]"}
             </button>
           </div>
           <div class="srmap-tf-grid">
-            ${coreOrder.map((k) => renderTfCard(sr.timeframes?.[k], refPrice)).join("")}
+            ${coreOrder.map((k) => renderTfCard(activeSr.timeframes?.[k], refPrice)).join("")}
           </div>
           ${
             INTRADAY_OPEN
@@ -1235,10 +1346,11 @@ ${JSON.stringify(payload, null, 2)}
   }
 
   function logCurrentRun() {
-    if (!LAST_STATE?.sr_bands) return;
+    const activeSr = CORE_LIVE_SR || LAST_STATE?.sr_bands;
+    if (!LAST_STATE || !activeSr) return;
     const refPrice = getRefPrice(LAST_STATE);
     const ev = extractCrossDeskEvidence(LAST_STATE);
-    const staircase = buildUnifiedStaircase(LAST_STATE.sr_bands, refPrice, LAST_STATE.sr_bands.magnet_overlaps || []);
+    const staircase = buildUnifiedStaircase(activeSr, refPrice, LAST_STATE.sr_bands?.magnet_overlaps || []);
     const gate = evaluateDecisionGate(LAST_STATE, refPrice, ev, staircase, USER_PLAN);
     const nowTs = _toUtcSgtParts(Date.now());
     const entry = {
@@ -1277,7 +1389,39 @@ ${JSON.stringify(payload, null, 2)}
       else if (det.classList?.contains("srmap-rdefs-details")) REGIME_DEFS_OPEN = det.open;
     }, true);
 
-    host.addEventListener("click", (e) => {
+    host.addEventListener("click", async (e) => {
+      if (e.target.closest("#btnRefreshSrData")) {
+        if (REFRESHING_STATE) return;
+        REFRESHING_STATE = true;
+        render(LAST_STATE);
+        const res = await (INIT_OPTS.refreshState ? INIT_OPTS.refreshState() : Promise.resolve({ ok: false, error: "Refresh unavailable" }));
+        REFRESHING_STATE = false;
+        const pktAgeMin = typeof res?.updated_at_ms === "number" ? (Date.now() - res.updated_at_ms) / 60000 : null;
+        if (res?.ok && pktAgeMin != null && pktAgeMin <= 65) {
+          CORE_LIVE_SR = null;
+          CORE_LIVE_ERROR = null;
+        }
+        render(LAST_STATE);
+        const msgEl = document.getElementById("srAiMsg");
+        if (msgEl) {
+          if (res?.ok) {
+            const clickTs = _toUtcSgtParts(Date.now());
+            const pktTs = fmtUtcSgt(res.updated_at_utc);
+            msgEl.textContent = `Refreshed @ ${clickTs.shortPair} · Server packet: ${pktTs.shortPair}`;
+            msgEl.style.color = pktAgeMin != null && pktAgeMin > 65 ? "var(--warn)" : "var(--up)";
+          } else {
+            msgEl.textContent = `Refresh failed: ${res?.error || "unknown error"}`;
+            msgEl.style.color = "var(--dn)";
+          }
+        }
+        return;
+      }
+
+      if (e.target.closest("#btnLoadLiveCoreSr")) {
+        if (LAST_STATE) fetchLiveCoreBands(LAST_STATE);
+        return;
+      }
+
       if (e.target.closest("#btnToggleIntraday")) {
         MATRIX_OPEN = true;
         INTRADAY_OPEN = !INTRADAY_OPEN;

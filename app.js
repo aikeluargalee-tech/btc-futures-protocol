@@ -19,26 +19,52 @@ let RHYME_LENS = "AUTO";
 let RHYME_COND = "ALL";
 let NEWS_CAT = "ALL";
 
-async function fetchJson(url) {
-  const r = await fetch(url, { cache: "no-store" });
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  return r.json();
+async function fetchJson(url, retries = 2) {
+  let lastErr = null;
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      const r = await fetch(url, { cache: "no-store" });
+      if (r.ok) return await r.json();
+      const err = new Error(`HTTP ${r.status}`);
+      err.noRetry = r.status >= 400 && r.status < 500 && r.status !== 408 && r.status !== 429;
+      throw err;
+    } catch (err) {
+      lastErr = err;
+      if (err?.noRetry || attempt >= retries) throw err;
+    }
+    await new Promise((res) => setTimeout(res, 500 * (attempt + 1)));
+  }
+  throw lastErr || new Error("Fetch failed");
 }
 
 async function pollLivePrice() {
   try {
-    const r = await fetchJson("https://data-api.binance.vision/api/v3/ticker/price?symbol=BTCUSDT");
+    const r = await fetchJson("https://data-api.binance.vision/api/v3/ticker/price?symbol=BTCUSDT", 0);
     LIVE.price = +r.price;
     LIVE.src = "BinanceVision";
     LIVE.at = Date.now();
   } catch {
     try {
-      const r2 = await fetchJson("https://api.exchange.coinbase.com/products/BTC-USD/ticker");
+      const r2 = await fetchJson("https://api.exchange.coinbase.com/products/BTC-USD/ticker", 0);
       LIVE.price = +r2.price;
       LIVE.src = "Coinbase";
       LIVE.at = Date.now();
     } catch {
-      LIVE.src = null;
+      try {
+        const r3 = await fetchJson("https://api.kraken.com/0/public/Ticker?pair=XBTUSD", 0);
+        const kRes = r3?.result || {};
+        const kKey = Object.keys(kRes).find((k) => k !== "last");
+        const px = kKey ? +kRes[kKey]?.c?.[0] : NaN;
+        if (Number.isFinite(px) && px > 0) {
+          LIVE.price = px;
+          LIVE.src = "Kraken";
+          LIVE.at = Date.now();
+        } else {
+          LIVE.src = null;
+        }
+      } catch {
+        LIVE.src = null;
+      }
     }
   }
   renderHeaderLive();
@@ -1970,27 +1996,8 @@ function bindEvents() {
   };
 }
 
-async function init() {
-  window.DeskI18n?.init();
-  bindEvents();
-  const trapsLoad = window.SpotTrapsModule?.loadData
-    ? window.SpotTrapsModule.loadData().catch((err) => console.warn("Spot traps bundle skipped:", err))
-    : Promise.resolve();
-  const [loadedState] = await Promise.all([fetchJson("data/state.json?t=" + Date.now()), trapsLoad]);
-  STATE = loadedState;
-  window.SpotTrapsModule?.init({
-    getLivePrice: activePrice,
-    copyWithFeedback: copyTextWithFeedback,
-    buildTelemetryPacket: (s) => buildRawTelemetryPacket(s),
-  });
-  window.SrMapModule?.init({
-    getLivePrice: activePrice,
-    copyWithFeedback: copyTextWithFeedback,
-    openTrapGuide: (trapId) => {
-      activateTab("traps");
-      window.SpotTrapsModule?.openReader(trapId);
-    },
-  });
+function renderAllTabsFromState() {
+  if (!STATE) return;
   $("snapMeta").textContent = `v${STATE.protocol_version || "4.0"} · Updated ${STATE.updated_at_utc} · 4H Close ${STATE.last_4h_close_utc || "—"} · Source ${STATE.ticker?.source || "—"}`;
   renderHeaderLive();
   renderSignalTab();
@@ -2004,10 +2011,62 @@ async function init() {
   window.SpotTrapsModule?.render(STATE);
   window.SrMapModule?.render(STATE);
   renderEntryHub();
+}
+
+async function refreshStateFromServer(silent = false) {
+  try {
+    const nextState = await fetchJson("data/state.json?t=" + Date.now(), 2);
+    if (!nextState || typeof nextState !== "object") {
+      throw new Error("Invalid state packet");
+    }
+    STATE = nextState;
+    await pollLivePrice();
+    const editingField = /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName || "");
+    if (!silent || !editingField) {
+      renderAllTabsFromState();
+    } else {
+      $("snapMeta").textContent = `v${STATE.protocol_version || "4.0"} · Updated ${STATE.updated_at_utc} · 4H Close ${STATE.last_4h_close_utc || "—"} · Source ${STATE.ticker?.source || "—"}`;
+      renderHeaderLive();
+    }
+    return {
+      ok: true,
+      updated_at_utc: STATE.updated_at_utc,
+      updated_at_ms: STATE.updated_at_ms,
+    };
+  } catch (err) {
+    if (!silent) console.warn("Manual state refresh failed:", err);
+    return { ok: false, error: String(err?.message || err) };
+  }
+}
+
+async function init() {
+  window.DeskI18n?.init();
+  bindEvents();
+  const trapsLoad = window.SpotTrapsModule?.loadData
+    ? window.SpotTrapsModule.loadData().catch((err) => console.warn("Spot traps bundle skipped:", err))
+    : Promise.resolve();
+  const [loadedState] = await Promise.all([fetchJson("data/state.json?t=" + Date.now(), 2), trapsLoad]);
+  STATE = loadedState;
+  window.SpotTrapsModule?.init({
+    getLivePrice: activePrice,
+    copyWithFeedback: copyTextWithFeedback,
+    buildTelemetryPacket: (s) => buildRawTelemetryPacket(s),
+  });
+  window.SrMapModule?.init({
+    getLivePrice: activePrice,
+    copyWithFeedback: copyTextWithFeedback,
+    refreshState: () => refreshStateFromServer(false),
+    openTrapGuide: (trapId) => {
+      activateTab("traps");
+      window.SpotTrapsModule?.openReader(trapId);
+    },
+  });
+  renderAllTabsFromState();
   showHub();
   seedCalcFromState();
   pollLivePrice();
   setInterval(pollLivePrice, 5000);
+  setInterval(() => refreshStateFromServer(true), 5 * 60 * 1000);
 }
 
 init().catch((err) => {

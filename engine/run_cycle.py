@@ -99,6 +99,19 @@ def main() -> int:
     )
     sr_bands = compute_sr_bands(market, spot_magnet=spot_magnet, now_utc=now)
 
+    if (
+        (market.get("ticker") or {}).get("price") is None
+        and (sr_bands or {}).get("status") != "LIVE"
+        and prev_state
+        and (prev_state.get("ticker") or {}).get("price") is not None
+        and (prev_state.get("sr_bands") or {}).get("status") == "LIVE"
+    ):
+        print(
+            "[ERROR] Total market feed outage (no live BTC price or S/R bands); "
+            "preserving existing data/state.json without overwriting."
+        )
+        return 1
+
     _save_json(LEDGER_PATH, ledger)
     _save_json(AUDIT_PATH, ledger["audit_log"][-100:])
 
