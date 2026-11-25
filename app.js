@@ -1293,11 +1293,31 @@ function renderEntryHub() {
     },
   ];
 
+  const trapSum = window.SpotTrapsModule?.getHubSummary ? window.SpotTrapsModule.getHubSummary(STATE) : null;
+  const trapBadge = trapSum
+    ? `START HERE · ${trapSum.activeCount} ACTIVE${trapSum.watchCount ? " / " + trapSum.watchCount + " WATCH" : ""}`
+    : "START HERE · 16+1";
+  const trapBadgeCls = trapSum?.activeCount > 0 ? "dn" : trapSum?.watchCount > 0 ? "warn" : "up";
+  const trapStatus = trapSum
+    ? `Phase 1: ${trapSum.trafficLight.color}${trapSum.topTitles.length ? " · Active: " + trapSum.topTitles.join(", ") : " · 16 Spot Traps + Bonus B1 Ready"}`
+    : "16 Spot Traps + Bonus B1 ('If-Then' Chart Hygiene) + Pre-Trade Decision Scanner";
+
   host.innerHTML = `
     <div class="hub-header">
       <span>// SELECT WORKSTATION MODULE</span>
-      <span>CLICK CARD OR PRESS KEYS [1–8] &#9658;</span>
+      <span>CLICK CARD OR PRESS KEYS [1–9] &#9658;</span>
     </div>
+    <button type="button" class="hub-featured-card" data-open-tab="traps">
+      <div class="hub-card-top">
+        <div class="hub-card-left">
+          <span class="hub-num">[09]</span>
+          <span class="hub-title">${esc(tr("tab_traps", "Spot Trap Radar & Field Guide"))}</span>
+        </div>
+        <span class="badge ${esc(trapBadgeCls)}">${esc(trapBadge)}</span>
+      </div>
+      <div class="hub-status">&#9658; ${esc(trapStatus)}</div>
+      <div class="hub-desc">New to BTC? Check today's active market traps, scan your trade idea or chart call before clicking, or read the 16+1 Spot Field Guide.</div>
+    </button>
     <div class="hub-grid">
       ${cards.map((c) => `
         <button type="button" class="hub-card" data-open-tab="${esc(c.tab)}">
@@ -1314,8 +1334,8 @@ function renderEntryHub() {
       `).join("")}
     </div>
     <div class="hub-footer">
-      <span>COMMAND HUB · 8 MODULES</span>
-      <span>KEYS [1–8] OPEN · [0/ESC] HUB · NO LOGIN</span>
+      <span>COMMAND HUB · 9 MODULES</span>
+      <span>KEYS [1–9] OPEN · [0/ESC] HUB · NO LOGIN</span>
     </div>
   `;
 }
@@ -1337,6 +1357,7 @@ function activateTab(tabId) {
   document.querySelectorAll("#tabNav .tab-btn[data-tab]").forEach((x) => x.classList.toggle("active", x.dataset.tab === tabId));
   document.querySelectorAll(".tab-panel").forEach((p) => p.classList.toggle("active", p.id === `tab-${tabId}`));
   if (tabId === "regime") renderChart();
+  if (tabId === "traps") window.SpotTrapsModule?.render(STATE);
   window.scrollTo(0, 0);
 }
 
@@ -1778,7 +1799,7 @@ function bindEvents() {
       showHub();
       return;
     }
-    const map = { "1": "signal", "2": "regime", "3": "spot", "4": "rhyme", "5": "news", "6": "shield", "7": "ledger", "8": "audit" };
+    const map = { "1": "signal", "2": "regime", "3": "spot", "4": "rhyme", "5": "news", "6": "shield", "7": "ledger", "8": "audit", "9": "traps" };
     if (map[e.key]) activateTab(map[e.key]);
   });
   if ($("btnCopyShieldAi")) {
@@ -1920,6 +1941,7 @@ function bindEvents() {
   window.onDeskLangChanged = () => {
     renderHeaderLive();
     renderEntryHub();
+    if (ACTIVE_VIEW === "traps") window.SpotTrapsModule?.render(STATE);
   };
   $("btnDlJson").onclick = () => {
     const u = URL.createObjectURL(new Blob([JSON.stringify(STATE, null, 2)], { type: "application/json" }));
@@ -1934,7 +1956,16 @@ function bindEvents() {
 async function init() {
   window.DeskI18n?.init();
   bindEvents();
-  STATE = await fetchJson("data/state.json?t=" + Date.now());
+  const trapsLoad = window.SpotTrapsModule?.loadData
+    ? window.SpotTrapsModule.loadData().catch((err) => console.warn("Spot traps bundle skipped:", err))
+    : Promise.resolve();
+  const [loadedState] = await Promise.all([fetchJson("data/state.json?t=" + Date.now()), trapsLoad]);
+  STATE = loadedState;
+  window.SpotTrapsModule?.init({
+    getLivePrice: activePrice,
+    copyWithFeedback: copyTextWithFeedback,
+    buildTelemetryPacket: (s) => buildRawTelemetryPacket(s),
+  });
   $("snapMeta").textContent = `v${STATE.protocol_version || "4.0"} · Updated ${STATE.updated_at_utc} · 4H Close ${STATE.last_4h_close_utc || "—"} · Source ${STATE.ticker?.source || "—"}`;
   renderHeaderLive();
   renderSignalTab();
@@ -1945,6 +1976,7 @@ async function init() {
   renderShieldTab();
   renderLedgerTab();
   renderAuditTab();
+  window.SpotTrapsModule?.render(STATE);
   renderEntryHub();
   showHub();
   seedCalcFromState();

@@ -9,14 +9,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=17">
+  <link rel="stylesheet" href="style.css?v=18">
 </head>
 <body>
   <div class="wrap">
     <div class="ws-titlebar">
       <span>&#9632; QUANT-WORKSTATION // BTC-PROTOCOL REV 4.0</span>
       <div class="ws-title-right">
-        <span class="ws-sysmeta" data-i18n="sys_meta">SYS: 4H-SWING · MAX LEV 1:2 · KEYS [1-8]</span>
+        <span class="ws-sysmeta" data-i18n="sys_meta">SYS: 4H-SWING · MAX LEV 1:2 · KEYS [1-9]</span>
         <button type="button" class="ws-hub-btn hidden" id="btnBackHub">&#9668; HUB</button>
       </div>
     </div>
@@ -64,6 +64,7 @@
         <button class="tab-btn" data-tab="shield"><kbd>F6</kbd> <span data-i18n="tab_shield">Spot Shield (80/20)</span></button>
         <button class="tab-btn" data-tab="ledger"><kbd>F7</kbd> <span data-i18n="tab_f3">Paper Ledger &amp; Risk Calc</span></button>
         <button class="tab-btn" data-tab="audit"><kbd>F8</kbd> <span data-i18n="tab_f4">Audit Log &amp; Config</span></button>
+        <button class="tab-btn" data-tab="traps"><kbd>F9</kbd> <span data-i18n="tab_traps">Spot Traps (16+1)</span></button>
       </nav>
     </div>
 
@@ -275,8 +276,14 @@
         <p class="mut" style="margin-top:8px;">Store Compliance: <a href="privacy.html" data-i18n="privacy_lbl">Privacy Policy &amp; Data Disclosure</a></p>
       </div>
     </section>
+
+    <!-- TAB 9: SPOT TRAP RADAR & FIELD GUIDE (16 TRAPS + BONUS B1) -->
+    <section class="tab-panel" id="tab-traps">
+      <div id="trapsRoot">Loading Spot Trap Radar &amp; Field Guide…</div>
+    </section>
   </div>
-  <script src="lang.js?v=7"></script>
-  <script src="app.js?v=22"></script>
+  <script src="lang.js?v=8"></script>
+  <script src="traps.js?v=1"></script>
+  <script src="app.js?v=23"></script>
 </body>
 </html>
