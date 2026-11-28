@@ -1135,7 +1135,6 @@ function getDeskModules() {
     : { badge: "FINAL DESK", badgeCls: "warn", status: "1.0x Spot Final Decision Desk" };
 
   const HUB_INTRO_BULLETS_HTML = `<ul class="hub-intro-list">
-    <li>Built for both <b>1.0x Spot beginners</b> and <b>low-leverage Futures traders</b> (strictly capped at 1:2).</li>
     <li>Checks live market risks, spots common traps, and tells you in plain English whether to <b>act or stay safely in cash</b>.</li>
     <li>Copy live market data straight into <b>ChatGPT, Gemini, Claude, or Grok</b> for an instant second opinion.</li>
   </ul>`;
@@ -1157,8 +1156,8 @@ function getDeskModules() {
     },
     srmap: {
       tab: "srmap",
-      num: "08",
-      code: "08",
+      num: "09",
+      code: "09",
       title: tr("tab_srmap", "Final Decision Desk"),
       scope: "1.0x SPOT ONLY",
       scopeCls: "up",
@@ -1172,7 +1171,7 @@ function getDeskModules() {
       tab: "traps",
       num: "05",
       code: "05",
-      title: tr("tab_traps", "Spot Traps (16+1)"),
+      title: tr("tab_traps", "Trap Checker"),
       scope: "1.0x SPOT ONLY",
       scopeCls: "up",
       badge: trapBadge,
@@ -1211,7 +1210,7 @@ function getDeskModules() {
       tab: "spot",
       num: "04",
       code: "04",
-      title: tr("tab_spot", "Spot Magnet (DIBSE)"),
+      title: tr("tab_spot", "Liquidation Magnets"),
       scope: "1.0x SPOT CONTEXT",
       scopeCls: "up",
       badge: dibse.rotation || smReg.name || "SPOT",
@@ -1224,7 +1223,7 @@ function getDeskModules() {
       tab: "rhyme",
       num: "03",
       code: "03",
-      title: tr("tab_rhyme", "S2 Cortex-Rhyme"),
+      title: tr("tab_rhyme", "Market History Check"),
       scope: "HISTORICAL ODDS",
       scopeCls: "",
       badge: crDiag.posture_verdict ? `${crDiag.posture_verdict} (${crTier} N=${crN})` : `${crTier} N=${crN}`,
@@ -1235,9 +1234,9 @@ function getDeskModules() {
     },
     signal: {
       tab: "signal",
-      num: "A1",
-      code: "A1",
-      title: tr("tab_f1", "Futures Signal (Max 1:2 Lev)"),
+      num: "08",
+      code: "08",
+      title: tr("tab_f1", "Leverage Trade Signals"),
       scope: "FUTURES · MAX 1:2 LEV",
       scopeCls: "warn",
       badge: sigSt,
@@ -1248,8 +1247,8 @@ function getDeskModules() {
     },
     ledger: {
       tab: "ledger",
-      num: "A2",
-      code: "A2",
+      num: "A1",
+      code: "A1",
       title: tr("tab_f3", "Paper Ledger & Risk Calc"),
       scope: "FUTURES · MAX 1:2 LEV",
       scopeCls: "warn",
@@ -1261,8 +1260,8 @@ function getDeskModules() {
     },
     audit: {
       tab: "audit",
-      num: "A3",
-      code: "A3",
+      num: "A2",
+      code: "A2",
       title: tr("tab_f4", "Audit Log & Config"),
       scope: "SYSTEM & PRIVACY",
       scopeCls: "",
@@ -1276,7 +1275,7 @@ function getDeskModules() {
       tab: "prompts",
       num: "06",
       code: "06",
-      title: "AI Prompt Library",
+      title: "AI Prompts Hub",
       scope: "SPECIALIZED AI PROMPTS",
       scopeCls: "up",
       badge: `${(window.DeskPromptsModule?.count ? window.DeskPromptsModule.count() : 1)} MASTER PROMPT${(window.DeskPromptsModule?.count ? window.DeskPromptsModule.count() : 1) === 1 ? "" : "S"}`,
@@ -1380,18 +1379,19 @@ function renderNavDrawer() {
     </div>
     <div class="nav-drawer-body">
       ${renderNavItem("hub")}
-      <div class="nav-group-lbl">Step-by-Step Desk (01–08)</div>
+      <div class="nav-group-lbl">Step-by-Step Desk (01–09)</div>
       ${["regime", "news", "rhyme", "spot", "traps", "prompts"].map(renderNavItem).join("")}
       <a class="nav-item nav-item-link" href="salam.html">
         <span class="nav-item-main">
           <span class="nav-item-code">07</span>
-          <span>SALAM Pro Max (3 Verdicts)</span>
+          <span>3 Strategies Verdicts</span>
         </span>
         <span class="badge ${esc(salamCls)}">${esc(salamBadge)}</span>
       </a>
+      ${renderNavItem("signal")}
       ${renderNavItem("srmap")}
-      <div class="nav-group-lbl">Advanced · Futures &amp; System</div>
-      ${["signal", "ledger", "audit"].map(renderNavItem).join("")}
+      <div class="nav-group-lbl">Advanced · Calculator &amp; System</div>
+      ${["ledger", "audit"].map(renderNavItem).join("")}
     </div>
     <div class="nav-drawer-foot">
       <a href="privacy.html" data-i18n="privacy_lbl">${esc(tr("privacy_lbl", "Privacy Policy & Data Disclosure"))}</a>
@@ -1435,7 +1435,8 @@ function renderEntryHub() {
     `;
   };
 
-  const f08 = mods.srmap;
+  const f08 = mods.signal;
+  const f09 = mods.srmap;
   const salamHubBadge = SALAM_META?.exec_state
     ? `3 VERDICTS · ${SALAM_META.exec_state}`
     : "3 VERDICTS · OPEN PAGE →";
@@ -1450,21 +1451,21 @@ function renderEntryHub() {
       ${["regime", "news", "rhyme", "spot", "traps", "prompts"].map(renderCard).join("")}
     </div>
 
-    <div class="hub-section-lbl">Final Verdicts &amp; Execution Desk (07 → 08)</div>
+    <div class="hub-section-lbl">Final Verdicts &amp; Execution Desk (07 → 09)</div>
     <div class="hub-verdict-stack">
       <a class="hub-featured-card salam-card" href="salam.html">
         <div class="hub-card-top">
           <div class="hub-card-left">
             <span class="hub-num">[07]</span>
-            <span class="hub-title">SALAM PRO MAX &middot; 3 VERDICTS</span>
+            <span class="hub-title">3 STRATEGIES VERDICTS</span>
           </div>
           <span class="badge ${esc(salamHubCls)}">${esc(salamHubBadge)}</span>
         </div>
-        <div class="hub-status">&#9658; Volume Profile (30D/7D/4H POC/VAH/VAL) &middot; 1H Sweep Reclaim &middot; 80/20 Spot Shield (Split Bar, Risk Audit &amp; Cheat Sheet)${esc(salamStamp)}</div>
+        <div class="hub-status">&#9658; SALAM Pro Max (Volume Profile + 1H Sweep) &middot; 80/20 Spot Shield (Split Bar, Risk Audit &amp; Cheat Sheet)${esc(salamStamp)}</div>
         <div class="hub-desc">Dedicated 1.0x Spot workstation combining SALAM Tactical + full 80/20 Spot Shield (Sleeves #1 &amp; #2) in one place.</div>
       </a>
 
-      <button type="button" class="hub-featured-card primary" data-open-tab="srmap">
+      <button type="button" class="hub-featured-card" data-open-tab="signal">
         <div class="hub-card-top">
           <div class="hub-card-left">
             <span class="hub-num">[08]</span>
@@ -1475,22 +1476,34 @@ function renderEntryHub() {
         <div class="hub-status">&#9658; ${esc(f08.status)}</div>
         <div class="hub-desc">${esc(f08.desc)}</div>
       </button>
+
+      <button type="button" class="hub-featured-card primary" data-open-tab="srmap">
+        <div class="hub-card-top">
+          <div class="hub-card-left">
+            <span class="hub-num">[09]</span>
+            <span class="hub-title">${esc(f09.title)}</span>
+          </div>
+          <span class="badge ${esc(f09.badgeCls)}">${esc(f09.badge)}</span>
+        </div>
+        <div class="hub-status">&#9658; ${esc(f09.status)}</div>
+        <div class="hub-desc">${esc(f09.desc)}</div>
+      </button>
     </div>
 
     <details class="hub-advanced-drawer" id="hubAdvancedDrawer" ${HUB_ADV_OPEN ? "open" : ""}>
       <summary class="hub-adv-summary">
-        <span>Advanced · Futures (Max 1:2 Lev) &amp; System Tools (A1 · A2 · A3)</span>
+        <span>Advanced · Risk Calculator &amp; System Tools (A1 · A2)</span>
         <span class="badge">TAP TO EXPAND</span>
       </summary>
       <div class="hub-adv-body">
         <div class="hub-grid">
-          ${["signal", "ledger", "audit"].map(renderCard).join("")}
+          ${["ledger", "audit"].map(renderCard).join("")}
         </div>
       </div>
     </details>
 
     <div class="hub-footer">
-      <span>1.0x SPOT FIRST + MAX 1:2 FUTURES · STEPS 01–08 + ADVANCED A1–A3</span>
+      <span>1.0x SPOT FIRST + MAX 1:2 FUTURES · STEPS 01–09 + ADVANCED A1–A2</span>
       <span><a href="privacy.html" data-i18n="privacy_lbl">${esc(tr("privacy_lbl", "Privacy Policy & Data Disclosure"))}</a></span>
     </div>
   `;
