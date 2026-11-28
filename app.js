@@ -1139,12 +1139,12 @@ function getDeskModules() {
       tab: "hub",
       num: "HOME",
       code: "HUB",
-      title: "BTC 1.0x Spot Workstation",
-      scope: "1.0x SPOT FIRST",
+      title: "What is BTC Desktop v4?",
+      scope: "1.0x SPOT ONLY · NO LEVERAGE",
       scopeCls: "up",
       badge: srInfo.badge,
       badgeCls: srInfo.badgeCls,
-      purpose: "Start with Final Decision or Spot Traps — tap \u2630 anytime to switch tools.",
+      purpose: "A free, rule-based Bitcoin Spot helper built for beginners (buy & hold real BTC only — no leverage, no borrowing). It checks live market risks, spots common traps, and tells you in plain English whether to act or safely wait in cash — plus lets you copy live data into ChatGPT, Gemini, Claude, or Grok for a second opinion.",
       status: srInfo.status,
       desc: "Command Hub overview",
     },
@@ -1359,20 +1359,6 @@ function renderNavDrawer() {
   `;
 }
 
-function closeLangMenu() {
-  $("langMenu")?.classList.add("hidden");
-  $("btnLangToggle")?.setAttribute("aria-expanded", "false");
-}
-
-function toggleLangMenu() {
-  const menu = $("langMenu");
-  if (!menu) return;
-  const willOpen = menu.classList.contains("hidden");
-  if (willOpen) closeNavDrawer();
-  menu.classList.toggle("hidden", !willOpen);
-  $("btnLangToggle")?.setAttribute("aria-expanded", String(willOpen));
-}
-
 function closeNavDrawer() {
   $("navDrawer")?.classList.add("hidden");
   $("navBackdrop")?.classList.add("hidden");
@@ -1380,7 +1366,6 @@ function closeNavDrawer() {
 }
 
 function openNavDrawer() {
-  closeLangMenu();
   renderNavDrawer();
   $("navDrawer")?.classList.remove("hidden");
   $("navBackdrop")?.classList.remove("hidden");
@@ -1488,7 +1473,6 @@ function renderEntryHub() {
 function showHub() {
   ACTIVE_VIEW = "hub";
   closeNavDrawer();
-  closeLangMenu();
   $("entryHubView")?.classList.add("active");
   $("moduleChrome")?.classList.add("hidden");
   document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
@@ -1504,7 +1488,6 @@ function activateTab(tabId) {
   }
   ACTIVE_VIEW = tabId;
   closeNavDrawer();
-  closeLangMenu();
   $("entryHubView")?.classList.remove("active");
   const showFuturesCopy = tabId === "signal" || tabId === "regime";
   $("moduleChrome")?.classList.toggle("hidden", !showFuturesCopy);
@@ -1950,21 +1933,12 @@ function bindEvents() {
     const b = e.target.closest("button[data-open-tab]");
     if (b) activateTab(b.dataset.openTab);
   });
-  $("btnLangToggle")?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    toggleLangMenu();
-  });
-  document.addEventListener("click", (e) => {
-    if (!e.target.closest(".lang-picker")) closeLangMenu();
-  });
   document.addEventListener("keydown", (e) => {
     if (e.altKey || e.ctrlKey || e.metaKey) return;
     if (/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName || "")) return;
     if (e.key === "Escape") {
-      const langOpen = !$("langMenu")?.classList.contains("hidden");
       const navOpen = !$("navDrawer")?.classList.contains("hidden");
-      if (langOpen || navOpen) {
-        closeLangMenu();
+      if (navOpen) {
         closeNavDrawer();
         return;
       }

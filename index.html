@@ -10,33 +10,27 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=28">
+  <link rel="stylesheet" href="style.css?v=29">
 </head>
 <body>
   <div class="wrap">
     <div class="ws-titlebar">
       <button type="button" class="ws-brand-btn" id="btnBrandHome" title="Return to Home Hub"><img class="ws-brand-icon" src="assets/btc-desktop-v4-icon.png?v=1" width="22" height="22" alt="BTC Desktop v4"><span>BTC Desktop v4</span></button>
       <div class="ws-title-right">
-        <div class="lang-picker">
-          <button type="button" class="ws-ctrl-btn" id="btnLangToggle" aria-haspopup="true" aria-expanded="false" aria-label="Select Language">
-            <img id="langCurFlag" src="assets/flags/en.png?v=1" width="16" height="11" alt="EN">
-            <span id="langCurCode">EN</span>
-            <span aria-hidden="true">&#9662;</span>
-          </button>
-          <div class="lang-menu hidden" id="langMenu" role="menu">
-            <button type="button" class="lang-opt active" data-lang="en"><img src="assets/flags/en.png?v=1" width="18" height="12" alt="EN"><span>English (EN)</span></button>
-            <button type="button" class="lang-opt" data-lang="zh"><img src="assets/flags/zh.png?v=1" width="18" height="12" alt="ZH"><span>中文 (ZH)</span></button>
-            <button type="button" class="lang-opt" data-lang="id"><img src="assets/flags/id.png?v=1" width="18" height="12" alt="ID"><span>Indonesia (ID)</span></button>
-            <button type="button" class="lang-opt" data-lang="ko"><img src="assets/flags/ko.png?v=1" width="18" height="12" alt="KO"><span>한국어 (KO)</span></button>
-            <button type="button" class="lang-opt" data-lang="ja"><img src="assets/flags/ja.png?v=1" width="18" height="12" alt="JA"><span>日本語 (JA)</span></button>
-            <button type="button" class="lang-opt" data-lang="fr"><img src="assets/flags/fr.png?v=1" width="18" height="12" alt="FR"><span>Français (FR)</span></button>
-            <button type="button" class="lang-opt" data-lang="es"><img src="assets/flags/es.png?v=1" width="18" height="12" alt="ES"><span>Español (ES)</span></button>
-          </div>
-        </div>
         <button type="button" class="ws-ctrl-btn ws-menu-btn" id="btnMenuToggle" aria-haspopup="true" aria-expanded="false" aria-label="Open Navigation Menu">
           <span class="burger-icon" aria-hidden="true"><span></span><span></span><span></span></span>
         </button>
       </div>
+    </div>
+
+    <div class="lang-bar" id="langBar" role="group" aria-label="Language">
+      <button type="button" class="lang-btn active" data-lang="en" title="English (EN)" aria-label="English"><img src="assets/flags/en.png?v=1" width="24" height="16" alt="EN"></button>
+      <button type="button" class="lang-btn" data-lang="zh" title="中文 (ZH)" aria-label="中文"><img src="assets/flags/zh.png?v=1" width="24" height="16" alt="ZH"></button>
+      <button type="button" class="lang-btn" data-lang="id" title="Indonesia (ID)" aria-label="Indonesia"><img src="assets/flags/id.png?v=1" width="24" height="16" alt="ID"></button>
+      <button type="button" class="lang-btn" data-lang="ko" title="한국어 (KO)" aria-label="한국어"><img src="assets/flags/ko.png?v=1" width="24" height="16" alt="KO"></button>
+      <button type="button" class="lang-btn" data-lang="ja" title="日本語 (JA)" aria-label="日本語"><img src="assets/flags/ja.png?v=1" width="24" height="16" alt="JA"></button>
+      <button type="button" class="lang-btn" data-lang="fr" title="Français (FR)" aria-label="Français"><img src="assets/flags/fr.png?v=1" width="24" height="16" alt="FR"></button>
+      <button type="button" class="lang-btn" data-lang="es" title="Español (ES)" aria-label="Español"><img src="assets/flags/es.png?v=1" width="24" height="16" alt="ES"></button>
     </div>
 
     <div class="nav-backdrop hidden" id="navBackdrop"></div>
@@ -45,11 +39,11 @@
     <header class="topbar" id="pageTopCard">
       <div class="brand">
         <div class="page-head-row">
-          <h1 id="pageTitle">BTC 1.0x Spot Workstation</h1>
-          <span class="badge" id="pageScopeBadge">1.0x SPOT FIRST</span>
+          <h1 id="pageTitle">What is BTC Desktop v4?</h1>
+          <span class="badge" id="pageScopeBadge">1.0x SPOT ONLY · NO LEVERAGE</span>
           <span class="badge hidden" id="pageVerdictBadge"></span>
         </div>
-        <div class="page-purpose" id="pagePurpose">Start with Final Decision or Spot Traps — tap &#9776; anytime to switch tools.</div>
+        <div class="page-purpose" id="pagePurpose">A free, rule-based Bitcoin Spot helper built for beginners (buy &amp; hold real BTC only — no leverage, no borrowing). It checks live market risks, spots common traps, and tells you in plain English whether to act or safely wait in cash — plus lets you copy live data into ChatGPT, Gemini, Claude, or Grok for a second opinion.</div>
         <div class="sub" id="snapMeta">Loading snapshot…</div>
       </div>
       <div class="live-bar">
@@ -284,6 +278,6 @@
   <script src="traps.js?v=2"></script>
   <script src="sr_map.js?v=8"></script>
   <script src="prompts.js?v=2"></script>
-  <script src="app.js?v=31"></script>
+  <script src="app.js?v=32"></script>
 </body>
 </html>

@@ -154,53 +154,61 @@ html, body {
   background: var(--acc);
 }
 
-.lang-picker {
-  position: relative;
-}
-
-.lang-menu {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 4px);
-  min-width: 168px;
-  background: var(--panel);
-  border: 1.5px solid var(--line-dark);
-  box-shadow: 4px 4px 0 var(--line-dark);
-  padding: 4px;
-  z-index: 40;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.lang-opt {
+.lang-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 100%;
-  background: transparent;
-  border: 1px solid transparent;
-  padding: 5px 8px;
-  font: inherit;
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--text);
-  text-transform: none;
-  letter-spacing: 0;
-  text-align: left;
+  justify-content: space-between;
+  gap: 6px;
+  background: var(--panel);
+  border: 1.5px solid var(--line-dark);
+  box-shadow: 3px 3px 0 var(--shadow);
+  padding: 7px 12px;
+  margin-bottom: 10px;
+}
+
+.lang-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 0;
+  max-width: 56px;
+  height: 32px;
+  padding: 4px;
+  background: var(--panel-alt);
+  border: 2px solid var(--line);
   cursor: pointer;
 }
 
-.lang-opt:hover {
-  background: var(--panel-alt);
-  border-color: var(--line);
+.lang-btn:hover {
+  border-color: var(--line-dark);
+  background: #ffffff;
 }
 
-.lang-opt.active {
+.lang-btn.active {
   background: var(--up-bg);
   border-color: var(--up);
-  color: var(--up);
-  font-weight: 700;
+}
+
+.lang-btn img {
+  display: block;
+  width: 24px;
+  height: 16px;
+  object-fit: cover;
+}
+
+@media (max-width: 520px) {
+  .lang-bar {
+    padding: 6px 8px;
+    gap: 4px;
+  }
+  .lang-btn {
+    height: 28px;
+    padding: 3px;
+  }
+  .lang-btn img {
+    width: 20px;
+    height: 13px;
+  }
 }
 
 .nav-backdrop {
