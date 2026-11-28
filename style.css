@@ -211,6 +211,40 @@ html, body {
   }
 }
 
+.clock-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  background: var(--panel-stripe);
+  border: 1px solid var(--line-dark);
+  box-shadow: 2px 2px 0 var(--shadow);
+  padding: 5px 10px;
+  margin-bottom: 10px;
+  font-size: 10.5px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.clock-item b {
+  color: var(--acc);
+  letter-spacing: 0.04em;
+  margin-right: 4px;
+}
+
+.clock-sep {
+  color: var(--line);
+}
+
+@media (max-width: 520px) {
+  .clock-bar {
+    font-size: 9.5px;
+    padding: 4px 8px;
+    gap: 4px 8px;
+  }
+}
+
 .nav-backdrop {
   position: fixed;
   inset: 0;

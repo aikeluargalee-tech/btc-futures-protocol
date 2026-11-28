@@ -1140,11 +1140,11 @@ function getDeskModules() {
       num: "HOME",
       code: "HUB",
       title: "What is BTC Desktop v4?",
-      scope: "1.0x SPOT ONLY · NO LEVERAGE",
+      scope: "1.0x SPOT + MAX 1:2 FUTURES",
       scopeCls: "up",
       badge: srInfo.badge,
       badgeCls: srInfo.badgeCls,
-      purpose: "A free, rule-based Bitcoin Spot helper built for beginners (buy & hold real BTC only — no leverage, no borrowing). It checks live market risks, spots common traps, and tells you in plain English whether to act or safely wait in cash — plus lets you copy live data into ChatGPT, Gemini, Claude, or Grok for a second opinion.",
+      purpose: "A free, rule-based Bitcoin trading helper for both 1.0x Spot beginners and low-leverage Futures traders (strictly capped at 1:2). It checks live market risks, spots common traps, and tells you in plain English whether to act or stay safely in cash — plus lets you copy live data into ChatGPT, Gemini, Claude, or Grok for a second opinion.",
       status: srInfo.status,
       desc: "Command Hub overview",
     },
@@ -1281,6 +1281,40 @@ function getDeskModules() {
   };
 }
 
+function formatNextUpdateLine() {
+  const now = new Date();
+  const y = now.getUTCFullYear();
+  const m = now.getUTCMonth();
+  const d = now.getUTCDate();
+  const h = now.getUTCHours();
+  const min = now.getUTCMinutes();
+  let nextUtc;
+  if (min < 7) {
+    nextUtc = new Date(Date.UTC(y, m, d, h, 7, 0));
+  } else if (min < 37) {
+    nextUtc = new Date(Date.UTC(y, m, d, h, 37, 0));
+  } else {
+    nextUtc = new Date(Date.UTC(y, m, d, h + 1, 7, 0));
+  }
+  const minsLeft = Math.max(0, Math.ceil((nextUtc.getTime() - now.getTime()) / 60000));
+  const waitLabel = minsLeft <= 1 ? "<1m" : `${minsLeft}m`;
+  const hhmmUtc = nextUtc.toISOString().slice(11, 16) + " UTC";
+  const hhmmSgt = new Date(nextUtc.getTime() + 8 * 3600_000).toISOString().slice(11, 16) + " SGT";
+  const lastBit = STATE?.updated_at_utc ? ` · Last: ${fmtUtcSgtCompact(STATE.updated_at_utc)}` : "";
+  return `Next Update: ${hhmmUtc} / ${hhmmSgt} (in ${waitLabel})${lastBit}`;
+}
+
+function tickLiveClock() {
+  const now = new Date();
+  const utcStr = now.toISOString().slice(0, 19).replace("T", " ");
+  const sgtStr = new Date(now.getTime() + 8 * 3600_000).toISOString().slice(0, 19).replace("T", " ");
+  if ($("clockUtc")) $("clockUtc").textContent = utcStr;
+  if ($("clockSgt")) $("clockSgt").textContent = sgtStr;
+  if (STATE && $("snapMeta")) {
+    $("snapMeta").textContent = formatNextUpdateLine();
+  }
+}
+
 function renderPageHeader(viewId = ACTIVE_VIEW) {
   const mods = getDeskModules();
   const meta = mods[viewId] || mods.hub;
@@ -1301,9 +1335,7 @@ function renderPageHeader(viewId = ACTIVE_VIEW) {
   }
   if ($("pagePurpose")) $("pagePurpose").textContent = meta.purpose;
   if (STATE && $("snapMeta")) {
-    const updPair = fmtUtcSgtCompact(STATE.updated_at_utc);
-    const h4Pair = STATE.last_4h_close_utc ? fmtUtcSgtCompact(STATE.last_4h_close_utc) : "—";
-    $("snapMeta").textContent = `v${STATE.protocol_version || "4.0"} · Updated ${updPair} · 4H Close ${h4Pair} · Source ${STATE.ticker?.source || "—"}`;
+    $("snapMeta").textContent = formatNextUpdateLine();
   }
 }
 
@@ -2158,6 +2190,8 @@ async function refreshStateFromServer(silent = false) {
 }
 
 async function init() {
+  tickLiveClock();
+  setInterval(tickLiveClock, 1000);
   window.DeskI18n?.init();
   bindEvents();
   const trapsLoad = window.SpotTrapsModule?.loadData

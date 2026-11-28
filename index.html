@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=29">
+  <link rel="stylesheet" href="style.css?v=30">
 </head>
 <body>
   <div class="wrap">
@@ -33,6 +33,12 @@
       <button type="button" class="lang-btn" data-lang="es" title="Español (ES)" aria-label="Español"><img src="assets/flags/es.png?v=1" width="24" height="16" alt="ES"></button>
     </div>
 
+    <div class="clock-bar" id="liveClockBar" aria-live="off">
+      <span class="clock-item"><b>UTC</b> <span id="clockUtc">--:--:--</span></span>
+      <span class="clock-sep">|</span>
+      <span class="clock-item"><b>SGT (UTC+8)</b> <span id="clockSgt">--:--:--</span></span>
+    </div>
+
     <div class="nav-backdrop hidden" id="navBackdrop"></div>
     <aside class="nav-drawer hidden" id="navDrawer" aria-label="Workstation Navigation"></aside>
 
@@ -40,11 +46,11 @@
       <div class="brand">
         <div class="page-head-row">
           <h1 id="pageTitle">What is BTC Desktop v4?</h1>
-          <span class="badge" id="pageScopeBadge">1.0x SPOT ONLY · NO LEVERAGE</span>
+          <span class="badge" id="pageScopeBadge">1.0x SPOT + MAX 1:2 FUTURES</span>
           <span class="badge hidden" id="pageVerdictBadge"></span>
         </div>
-        <div class="page-purpose" id="pagePurpose">A free, rule-based Bitcoin Spot helper built for beginners (buy &amp; hold real BTC only — no leverage, no borrowing). It checks live market risks, spots common traps, and tells you in plain English whether to act or safely wait in cash — plus lets you copy live data into ChatGPT, Gemini, Claude, or Grok for a second opinion.</div>
-        <div class="sub" id="snapMeta">Loading snapshot…</div>
+        <div class="page-purpose" id="pagePurpose">A free, rule-based Bitcoin trading helper for both 1.0x Spot beginners and low-leverage Futures traders (strictly capped at 1:2). It checks live market risks, spots common traps, and tells you in plain English whether to act or stay safely in cash — plus lets you copy live data into ChatGPT, Gemini, Claude, or Grok for a second opinion.</div>
+        <div class="sub" id="snapMeta">Next Update: calculating…</div>
       </div>
       <div class="live-bar">
         <div>
@@ -278,6 +284,6 @@
   <script src="traps.js?v=2"></script>
   <script src="sr_map.js?v=8"></script>
   <script src="prompts.js?v=2"></script>
-  <script src="app.js?v=32"></script>
+  <script src="app.js?v=33"></script>
 </body>
 </html>
