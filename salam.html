@@ -1070,6 +1070,108 @@ footer.ws-foot {
   white-space: nowrap;
 }
 .ws-back-btn:hover { background: #ffffff; }
+
+/* ── MERGED 80/20 SPOT SHIELD BAR & AUDIT SUB-DRAWER ──────────────────────── */
+.shield-split-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.shield-split-posture {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--warn);
+}
+
+.shield-split-posture.up {
+  color: var(--up);
+}
+
+.shield-split-bar {
+  display: flex;
+  height: 20px;
+  border: 1px solid var(--line-dark);
+  background: var(--panel-alt);
+  margin: 7px 0;
+}
+
+.shield-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.pf-subdrawer {
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.pf-subdrawer > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 7px 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--acc);
+  background: var(--panel-alt);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pf-subdrawer > summary::-webkit-details-marker {
+  display: none;
+}
+
+.pf-subdrawer > summary::before {
+  content: "▸ ";
+  color: var(--acc-bright);
+  margin-right: 4px;
+}
+
+.pf-subdrawer[open] > summary::before {
+  content: "▾ ";
+}
+
+.pf-subdrawer-body {
+  padding: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.pf-table-wrap {
+  overflow-x: auto;
+  margin-bottom: 10px;
+}
+
+.pf-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10.5px;
+}
+
+.pf-table th,
+.pf-table td {
+  border: 1px solid var(--line);
+  padding: 5px 7px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.pf-table th {
+  background: var(--panel-alt);
+  color: var(--acc);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 10px;
+}
 </style>
 </head>
 <body>
@@ -1195,6 +1297,10 @@ footer.ws-foot {
     </summary>
     <div class="drawer-body">
       <div class="plain-hint"><b>In plain English:</b> Two rule-based Spot engines tested on 5.9 years of Bitcoin history. They use closed Binance Spot candles only and stay active even when futures data is down.</div>
+      <div class="subcard" id="shieldSplitBox" style="margin-bottom:10px;">
+        <div class="subcard-head"><span>80/20 Spot Shield Posture</span><span class="chip">LOADING…</span></div>
+        <div class="dimv">Calculating combined 80/20 allocation…</div>
+      </div>
       <div class="grid-2">
         <div class="subcard" id="sleeve1Box">
           <div class="subcard-head"><span>Sleeve #1 · 4H VWAP Shield (80%)</span><span class="chip">—</span></div>
@@ -1208,6 +1314,56 @@ footer.ws-foot {
       <div class="note">
         <b>80/20 Rebalance Rule:</b> Keep separate ledgers for Sleeve #1 (80%) and Sleeve #2 (20%, hard cap 15%–20%). Check weights every Jan 1, Apr 1, Jul 1, and Oct 1 at 00:00 UTC (08:00 SGT) and rebalance only if drift goes outside 77%–83% (+/-3%).
       </div>
+      <details class="pf-subdrawer">
+        <summary>Independent Risk Audit &amp; Plain-English Cheat Sheet (80/20 Sleeves)</summary>
+        <div class="pf-subdrawer-body">
+          <div class="pf-table-wrap">
+            <table class="pf-table">
+              <thead>
+                <tr><th>Sleeve / Metric</th><th>Full Sample</th><th>OOS / Stress</th><th>Audit Caveat &amp; Live Expectation</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><b>Sleeve #1 (80%)</b> · 4H VWAP Shield</td>
+                  <td>+395.3% · 1.07 Sharpe · -22.8% DD</td>
+                  <td><b>27/27</b> beat B&amp;H · +15.1% OOS</td>
+                  <td class="dimv">Live baseline (~0.90–0.95 Sharpe, -30% DD, ~27% WR, up to 9-loss streak, ~65% time in USDT) is softer than #2 rank peak.</td>
+                </tr>
+                <tr>
+                  <td><b>Sleeve #2 (20%)</b> · 1D TTM Squeeze</td>
+                  <td>+93.9% · 2.31x Payoff · 18 Trades</td>
+                  <td>+42.3% OOS · 8/27 blend gate</td>
+                  <td class="dimv">Experimental 1D volatility breakout built on 18 historical trades; hard-capped at 15%–20% weight.</td>
+                </tr>
+                <tr>
+                  <td><b>Execution &amp; Friction</b></td>
+                  <td>Closed 4H/1D OHLCV only</td>
+                  <td>0.30% RT backtest (0.075% BNB)</td>
+                  <td class="dimv">Backtested at 0.10% fee + 0.05% slip/side; BNB discount lowers fee to 0.075%. 4H closes SGT: 00/04/08/12/16/20.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="grid-2">
+            <div class="subcard">
+              <div class="subcard-head"><span>Sleeve #1 — Core Trend Engine (80% · Closed 4H Bars)</span></div>
+              <ul class="dimv" style="margin:0;padding-left:16px;line-height:1.5;">
+                <li><b>Job:</b> Rides sustained multi-week Bitcoin uptrends and automatically steps into 100% USDT during macro bear markets (~65% time in cash historically).</li>
+                <li><b>Buys BTC only when all 3 agree:</b> Close is above the shifted <b>120D EMA</b> macro shield, above the 15-day Rolling VWAP + <b>0.50×ATR(14)</b> noise buffer, and the 12-bar VWAP slope is rising.</li>
+                <li><b>Exits to USDT when:</b> Closed 4H price falls below 120D EMA, breaks below RVWAP − 0.50×ATR, or hits the <b>3.0×ATR</b> hard stop.</li>
+              </ul>
+            </div>
+            <div class="subcard">
+              <div class="subcard-head"><span>Sleeve #2 — Volatility Breakout Sidekick (20% Cap · Closed 1D Bars)</span></div>
+              <ul class="dimv" style="margin:0;padding-left:16px;line-height:1.5;">
+                <li><b>Job:</b> Catches sharp coiled breakouts — including violent bottom rebounds while price is still below the 120D EMA (<b>no macro off-switch</b>).</li>
+                <li><b>Buys BTC when:</b> Daily Bollinger Bands stay compressed inside Keltner Channels for <b>&gt;= 3 consecutive days</b>, then release with rising positive 20-bar OLS momentum and Close &gt; KC Mid.</li>
+                <li><b>Exits to USDT when:</b> Daily close drops below <b>SMA(21)</b>, OLS momentum turns negative (&lt; 0), or the <b>2.0×ATR</b> catastrophe stop hits.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </details>
     </div>
   </details>
 
@@ -1722,6 +1878,60 @@ function renderSleeves(d, state) {
   }
 
   $('sumSleeves').textContent = `S1: ${s1Live ? s1.state.action : 'N/A'} | S2: ${s2Live ? s2.state.action : 'N/A'}`;
+
+  const splitBox = $('shieldSplitBox');
+  if (splitBox) {
+    if (!s1Live && !s2Live) {
+      splitBox.innerHTML = `<div class="subcard-head"><span>80/20 Spot Shield Posture</span><span class="chip bad">UNAVAILABLE</span></div>
+        <div class="dimv">Closed Spot candles unavailable for Sleeves #1 and #2.</div>`;
+    } else {
+      const s1InBtc = s1Live && (s1.state.action === 'BUY BTC' || s1.state.action === 'HOLD BTC');
+      const s2InBtc = s2Live && (s2.state.action === 'BUY BTC' || s2.state.action === 'HOLD BTC');
+      const btcPct = (s1InBtc ? 80 : 0) + (s2InBtc ? 20 : 0);
+      const usdtPct = 100 - btcPct;
+      const postureLabel = btcPct === 100
+        ? '100% BTC (FULL RISK-ON)'
+        : btcPct === 80
+          ? '80% BTC / 20% USDT (CORE TREND)'
+          : btcPct === 20
+            ? '20% BTC / 80% USDT (SQUEEZE PROBE)'
+            : '100% USDT (BEAR SHIELD ACTIVE)';
+      const qReb = nextQuarterRebalance();
+      const s1ChipCls = s1InBtc ? 'ok' : (s1Live && s1.state.action === 'SELL BTC' ? 'bad' : '');
+      const s2ChipCls = s2InBtc ? 'ok' : (s2Live && s2.state.action === 'SELL BTC' ? 'bad' : '');
+      splitBox.innerHTML = `
+        <div class="subcard-head">
+          <span>80/20 Spot Shield Posture · BTC ${btcPct}% / USDT ${usdtPct}%</span>
+          <span>
+            <span class="chip ${s1ChipCls}">S1 (80%): ${s1Live ? esc(s1.state.action) : 'N/A'}</span>
+            <span class="chip ${s2ChipCls}">S2 (20%): ${s2Live ? esc(s2.state.action) : 'N/A'}</span>
+          </span>
+        </div>
+        <div class="shield-split-head">
+          <div class="shield-split-posture ${btcPct > 0 ? 'up' : ''}">${esc(postureLabel)}</div>
+          <div class="dimv">Next Quarterly Rebalance (±3% band): <b>${esc(qReb.dateUtc)} / ${esc(qReb.dateSgt)}</b> (in ${qReb.daysLeft.toFixed(1)}d)</div>
+        </div>
+        <div class="shield-split-bar">
+          ${btcPct > 0 ? `<div class="shield-seg" style="width:${btcPct}%;background:var(--up-bg);color:var(--up);border-right:${usdtPct > 0 ? '1px solid var(--line-dark)' : 'none'};">BTC ${btcPct}%</div>` : ''}
+          ${usdtPct > 0 ? `<div class="shield-seg" style="width:${usdtPct}%;background:var(--warn-bg);color:var(--warn);">USDT CASH ${usdtPct}%</div>` : ''}
+        </div>`;
+    }
+  }
+}
+
+function nextQuarterRebalance() {
+  const now = new Date();
+  const y = now.getUTCFullYear();
+  const cands = [0, 3, 6, 9].map(m => new Date(Date.UTC(y, m, 1, 0, 0, 0)));
+  cands.push(new Date(Date.UTC(y + 1, 0, 1, 0, 0, 0)));
+  const target = cands.find(d => d.getTime() > now.getTime()) || cands[cands.length - 1];
+  const daysLeft = Math.max(0, (target.getTime() - now.getTime()) / 86_400_000);
+  const sgtTarget = new Date(target.getTime() + 8 * 3600_000);
+  return {
+    dateUtc: target.toISOString().slice(0, 16).replace('T', ' ') + ' UTC',
+    dateSgt: sgtTarget.toISOString().slice(0, 16).replace('T', ' ') + ' SGT',
+    daysLeft,
+  };
 }
 
 function stat(k, v, hint) {

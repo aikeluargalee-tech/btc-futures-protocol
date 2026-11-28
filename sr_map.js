@@ -953,7 +953,7 @@
       <div class="card">
         <div class="srmap-sec-head" style="margin-bottom:8px;">
           <div>
-            <h2>Block 2 · Selective Cross-Desk Evidence (Best of F1–F6)</h2>
+            <h2>Block 2 · Selective Cross-Desk Evidence</h2>
             <div class="mut">1.0x Spot 1H–4H timing layer only — combines Trend, Flows/Premium, Events &amp; Historical Odds without clutter.</div>
           </div>
           <span class="badge">SCOPE: 1H–4H TIMING ONLY</span>
@@ -961,7 +961,7 @@
 
         <div class="srmap-evidence-grid">
           <div class="srmap-ev-card">
-            <div class="srmap-ctx-kicker">REGIME &amp; 120D MACRO SHIELD (F2 + F6)</div>
+            <div class="srmap-ctx-kicker">REGIME &amp; 120D MACRO SHIELD (F2 + 120D EMA)</div>
             <div class="srmap-ctx-val">
               <span class="badge ${rCls}">${escHtml(r.code)}: ${escHtml(r.name)}</span>
               <span class="badge">1D ${escHtml(r.daily_structure)}</span>

@@ -887,136 +887,6 @@ function renderNewsTab() {
   `;
 }
 
-function renderShieldTab() {
-  const sh = STATE.spot_shield;
-  if (!sh || sh.status === "unavailable" || !sh.sleeve1 || !sh.sleeve2) {
-    $("shieldHeroBox").innerHTML = `<h2>Spot Shield (80/20 Dual-Sleeve Compass)</h2><p class="mut">Spot Shield telemetry unavailable (${esc((sh?.errors || []).join(", ") || "waiting for cycle")}).</p>`;
-    $("shieldS1Box").innerHTML = "";
-    $("shieldS2Box").innerHTML = "";
-    $("shieldAuditBox").innerHTML = "";
-    $("shieldGuideBox").innerHTML = "";
-    return;
-  }
-
-  const pf = sh.portfolio || {};
-  const qr = pf.quarterly_rebalance || {};
-  const s1 = sh.sleeve1 || {};
-  const s2 = sh.sleeve2 || {};
-  const s1i = s1.indicators || {};
-  const s2i = s2.indicators || {};
-  const s1c = s1.conditions || {};
-  const s2c = s2.conditions || {};
-  const btcPct = pf.target_btc_pct ?? 0;
-  const usdtPct = pf.target_usdt_pct ?? (100 - btcPct);
-  const actCls = (a) => (a === "BUY BTC" || a === "HOLD BTC" ? "up" : a === "SELL BTC" ? "dn" : "warn");
-  const posCls = (p) => (p === "LONG" ? "up" : "warn");
-  const rowCond = (lbl, ok, detail) => `
-    <div class="row">
-      <div><div class="title">${esc(lbl)}</div><div class="mut">${esc(detail)}</div></div>
-      <span class="badge ${ok ? "up" : "dn"}">${ok ? "PASS" : "FAIL"}</span>
-    </div>`;
-
-  const pmH = STATE.context_overlays?.patient_money_h;
-  const cApr = pmH?.carry_apr_pct;
-  const cCls = typeof cApr === "number" ? (cApr >= 10 ? "up" : cApr < 2 ? "warn" : "") : "";
-
-  $("shieldHeroBox").innerHTML = `
-    <h2>Spot Shield (80/20) · Pure Closed-Bar BTCUSDT Portfolio Posture</h2>
-    <div class="signal-head" style="margin-bottom:6px;">
-      <div>
-        <div class="big-num ${btcPct > 0 ? "up" : "warn"}">${esc(pf.posture_label || "100% USDT")}</div>
-        <div class="mut">${esc(pf.split_label || "80% 4H VWAP Shield / 20% 1D TTM Squeeze")} · Updated ${esc(sh.updated_at_utc || "—")}</div>
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <span class="badge ${actCls(s1.action)}">S1 (80%): ${esc(s1.action)}</span>
-        <span class="badge ${actCls(s2.action)}">S2 (20%): ${esc(s2.action)}</span>
-        ${pmH?.carry_summary ? `<span class="badge ${cCls}">${esc(pmH.carry_summary)}</span>` : ""}
-      </div>
-    </div>
-    <div class="shield-split-bar">
-      ${btcPct > 0 ? `<div class="shield-seg" style="width:${btcPct}%;background:var(--up-bg);color:var(--up);border-right:${usdtPct > 0 ? "1px solid var(--line-dark)" : "none"};">BTC ${btcPct}%</div>` : ""}
-      ${usdtPct > 0 ? `<div class="shield-seg" style="width:${usdtPct}%;background:var(--warn-bg);color:var(--warn);">USDT CASH ${usdtPct}%</div>` : ""}
-    </div>
-    <div class="reject-box" style="margin-top:8px;">
-      <b>Operational Boundary:</b> Slow mechanical <b>Spot-Only</b> rotation compass. Keep strictly in a separate capital bucket from <b>F3 Spot Magnet (DIBSE)</b> tactical sweep inventory. Next Quarterly Rebalance (±3% band): <b>${esc(qr.next_rebalance_utc || "—")}</b> (in ${num(qr.days_remaining, 1)}d).
-    </div>
-  `;
-
-  $("shieldS1Box").innerHTML = `
-    <h2>Sleeve #1 · 80% Weight · 4H Rolling VWAP Shield (tier1_5_vwap_shield)</h2>
-    <div class="signal-head" style="margin-bottom:8px;">
-      <div class="big-num ${posCls(s1.position_state)}">${esc(s1.action)}</div>
-      <span class="badge ${posCls(s1.position_state)}">${esc(s1.position_state)} · ${num(s1.days_in_state, 1)}d</span>
-    </div>
-    ${rowCond("1. Macro Shield (Close > 120D EMA)", s1c.above_120d_ema, `Close ${usd(s1i.close, 1)} vs 120D EMA ${usd(s1i.macro_120d_ema, 1)} (${pct(s1i.dist_to_macro_ema_pct, 2)})`)}
-    ${rowCond("2. Upper Band (Close > RVWAP90 + 0.5×ATR)", s1c.above_upper_band, `Upper ${usd(s1i.upper_band, 1)} (${pct(s1i.dist_to_upper_band_pct, 2)}) · Lower Exit ${usd(s1i.lower_band, 1)}`)}
-    ${rowCond("3. 12-Bar RVWAP Slope > 0 (48H Trend)", s1c.vwap_slope_rising, `Slope ${usd(s1i.vwap_slope_12, 1)} · RVWAP(90) ${usd(s1i.rolling_vwap_90, 1)}`)}
-    <dl class="kv" style="margin-top:8px;">${kv([
-      ["Closed 4H Bar UTC", s1.last_bar_utc || "—"],
-      ["ATR(14) 4H / ±0.50 Buffer", `${usd(s1i.atr_14, 1)} (±${usd((s1i.atr_14 || 0) * 0.5, 1)})`],
-      ["3.0×ATR Active Stop", s1.active_stop_loss != null ? usd(s1.active_stop_loss, 1) : "FLAT (None latched)"],
-      ["Last State Flip UTC", s1.last_flip_utc || "—"],
-    ])}</dl>
-  `;
-
-  $("shieldS2Box").innerHTML = `
-    <h2>Sleeve #2 · 20% Weight · 1D TTM Squeeze (Experimental Cap)</h2>
-    <div class="signal-head" style="margin-bottom:8px;">
-      <div class="big-num ${posCls(s2.position_state)}">${esc(s2.action)}</div>
-      <span class="badge ${posCls(s2.position_state)}">${esc(s2.position_state)} · ${num(s2.days_in_state, 1)}d</span>
-    </div>
-    ${rowCond("1. BB(20,2) Inside KC(20,1.5) Squeeze", s2i.squeeze_on, `Active Streak: ${s2i.squeeze_streak_days ?? 0}d / 3d min · BB/KC Ratio ${num(s2i.bb_kc_width_ratio, 2)}x`)}
-    ${rowCond("2. Squeeze Release Trigger Today", s2c.squeeze_release, s2c.squeeze_release ? "Fired today after >= 3d coil" : "No release on latest 1D close")}
-    ${rowCond("3. Causal OLS Momentum > 0 & Rising", s2c.mom_positive && s2c.mom_rising, `Mom ${num(s2i.mom_ols, 1)} vs Prev ${num(s2i.prev_mom_ols, 1)}`)}
-    ${rowCond("4. Above KC Mid & SMA(21) Trail", s2c.above_kc_mid && s2c.above_sma_21, `Close ${usd(s2i.close, 1)} vs KC Mid ${usd(s2i.kc_mid_ema20, 1)} / SMA21 ${usd(s2i.sma_21_exit, 1)}`)}
-    <dl class="kv" style="margin-top:8px;">${kv([
-      ["Closed 1D Bar UTC", s2.last_bar_utc || "—"],
-      ["ATR(14) 1D / 2.0×ATR Stop", `${usd(s2i.atr_14, 1)} / ${s2.active_stop_loss != null ? usd(s2.active_stop_loss, 1) : "FLAT"}`],
-      ["Last State Flip UTC", s2.last_flip_utc || "—"],
-    ])}</dl>
-  `;
-
-  const w = sh.audit_warnings || {};
-  $("shieldAuditBox").innerHTML = `
-    <h2>Independent Risk Audit &amp; Psychology Reality Check</h2>
-    <div style="overflow-x:auto;">
-      <table>
-        <thead><tr><th>Sleeve / Metric</th><th>Full Sample</th><th>OOS / Stress</th><th>Audit Caveat &amp; Live Expectation</th></tr></thead>
-        <tbody>
-          <tr><td><b>Sleeve #1 (80%)</b> · 4H VWAP Shield</td><td>+395.3% · 1.07 Sharpe · -22.8% DD</td><td><b>27/27</b> beat B&amp;H · +15.1% OOS</td><td class="mut">${esc(w.sleeve1_realistic_expectation || "")}</td></tr>
-          <tr><td><b>Sleeve #2 (20%)</b> · 1D TTM Squeeze</td><td>+93.9% · 2.31x Payoff · 18 Trades</td><td>+42.3% OOS · 8/27 blend gate</td><td class="mut">${esc(w.sleeve2_sample_warning || "")}</td></tr>
-          <tr><td><b>Execution &amp; Friction</b></td><td>Closed 4H/1D OHLCV only</td><td>0.30% RT backtest (0.075% BNB)</td><td class="mut">${esc(w.fee_schedule_note || "")}</td></tr>
-        </tbody>
-      </table>
-    </div>
-  `;
-
-  $("shieldGuideBox").innerHTML = `
-    <h2>How Sleeve #1 &amp; Sleeve #2 Work (Plain-English Cheat Sheet)</h2>
-    <div class="grid-2">
-      <div>
-        <p style="margin:0 0 6px;"><b>Sleeve #1 — Core Trend Engine (80% · Closed 4H Bars)</b></p>
-        <ul class="mut" style="margin:0;padding-left:16px;line-height:1.5;">
-          <li><b>Job:</b> Rides sustained multi-week Bitcoin uptrends and automatically steps into 100% USDT during macro bear markets (~65% time in cash historically).</li>
-          <li><b>Buys BTC only when all 3 agree:</b> Close is above the shifted <b>120D EMA</b> macro shield, above the 15-day Rolling VWAP + <b>0.50×ATR(14)</b> noise buffer, and the 12-bar VWAP slope is rising.</li>
-          <li><b>Exits to USDT when:</b> Closed 4H price falls below 120D EMA, breaks below RVWAP − 0.50×ATR, or hits the <b>3.0×ATR</b> hard stop.</li>
-        </ul>
-      </div>
-      <div>
-        <p style="margin:0 0 6px;"><b>Sleeve #2 — Volatility Breakout Sidekick (20% Cap · Closed 1D Bars)</b></p>
-        <ul class="mut" style="margin:0;padding-left:16px;line-height:1.5;">
-          <li><b>Job:</b> Catches sharp coiled breakouts — including violent bottom rebounds while price is still below the 120D EMA (<b>no macro off-switch</b>).</li>
-          <li><b>Buys BTC when:</b> Daily Bollinger Bands stay compressed inside Keltner Channels for <b>&gt;= 3 consecutive days</b>, then release with rising positive 20-bar OLS momentum and Close &gt; KC Mid.</li>
-          <li><b>Exits to USDT when:</b> Daily close drops below <b>SMA(21)</b>, OLS momentum turns negative (&lt; 0), or the <b>2.0×ATR</b> catastrophe stop hits.</li>
-        </ul>
-      </div>
-    </div>
-    <p class="mut" style="margin:8px 0 0;border-top:1px solid var(--line);padding-top:6px;">
-      <b>80/20 Portfolio Rule:</b> Both sleeves track completely segregated BTC/USDT ledgers (one sleeve never sells the other's BTC) using pure closed Binance Spot OHLCV only. Rebalance back to 80/20 quarterly (Jan 1, Apr 1, Jul 1, Oct 1 · 00:00 UTC) only if drift exceeds <b>±3%</b> ([77%, 83%]).
-    </p>
-  `;
-}
-
 function renderChart() {
   const bars = (STATE?.charts?.[CHART_TF] || []).slice(-60);
   if (bars.length < 2) {
@@ -1234,8 +1104,6 @@ function getDeskModules() {
   const cr24Med = cr.after_similar_setups?.["24h"]?.median_pct;
   const nm = STATE?.news_macro || {};
   const mb = nm.macro_bias || {};
-  const sh = STATE?.spot_shield || {};
-  const pf = sh.portfolio || {};
   const port = STATE?.portfolio || {};
   const ov = STATE?.context_overlays || {};
   const mtL = ov.market_time_l;
@@ -1251,9 +1119,6 @@ function getDeskModules() {
   const crCls = crDiag.sample_quality === "solid" ? "up" : crDiag.sample_quality === "moderate" ? "warn" : "dn";
   const nmStatus = mb.status || "MIXED";
   const nmCls = nmStatus === "RISK_ON" ? "up" : nmStatus === "RISK_OFF" ? "dn" : "warn";
-  const btcPct = pf.target_btc_pct ?? 0;
-  const usdtPct = pf.target_usdt_pct ?? (100 - btcPct);
-  const carryShort = pmH?.carry_apr_pct != null ? ` · Carry ${pct(pmH.carry_apr_pct, 2)} APR` : "";
   const nextEvt = mb.next_high_impact?.title || "No High-Impact 7d";
 
   const trapSum = window.SpotTrapsModule?.getHubSummary ? window.SpotTrapsModule.getHubSummary(STATE) : null;
@@ -1308,19 +1173,6 @@ function getDeskModules() {
       purpose: "Check if you're walking into a common BTC spot mistake before clicking Buy or Sell.",
       status: trapStatus,
       desc: "Check active market traps, scan your trade idea or chart call before clicking, or read the 16+1 Field Guide.",
-    },
-    shield: {
-      tab: "shield",
-      num: "06",
-      code: "F6",
-      title: tr("tab_shield", "Spot Shield (80/20)"),
-      scope: "1.0x SPOT ONLY",
-      scopeCls: "up",
-      badge: `BTC ${btcPct}% / USDT ${usdtPct}%`,
-      badgeCls: btcPct > 0 ? "up" : "warn",
-      purpose: "Long-term 80/20 portfolio shield — protect your spot capital during bear markets.",
-      status: `S1 ${sh.sleeve1?.action || "—"} · S2 ${sh.sleeve2?.action || "—"}${carryShort}`,
-      desc: "Pure closed-bar 80/20 BTC\u2194USDT dual-sleeve bear shield & Carry APR check.",
     },
     news: {
       tab: "news",
@@ -1487,7 +1339,7 @@ function renderNavDrawer() {
     <div class="nav-drawer-body">
       ${renderNavItem("hub")}
       <div class="nav-group-lbl">Core 1.0x Spot Desk</div>
-      ${["srmap", "traps", "shield", "news", "prompts"].map(renderNavItem).join("")}
+      ${["srmap", "traps", "news", "prompts"].map(renderNavItem).join("")}
       <a class="nav-item nav-item-link" href="salam.html">
         <span class="nav-item-main">
           <span class="nav-item-code">S</span>
@@ -1605,13 +1457,13 @@ function renderEntryHub() {
         </div>
         <span class="badge ${esc(salamHubCls)}">${esc(salamHubBadge)}</span>
       </div>
-      <div class="hub-status">&#9658; Volume Profile (30D/7D/4H POC/VAH/VAL) &middot; 1H Sweep Reclaim &middot; Rail B Spot Sizing &middot; 80/20 Shields${esc(salamStamp)}</div>
-      <div class="hub-desc">Dedicated standalone 1.0x Spot workstation page &mdash; opens SALAM Pro Max directly inside this app.</div>
+      <div class="hub-status">&#9658; Volume Profile (30D/7D/4H POC/VAH/VAL) &middot; 1H Sweep Reclaim &middot; 80/20 Spot Shield (Split Bar, Risk Audit &amp; Cheat Sheet)${esc(salamStamp)}</div>
+      <div class="hub-desc">Dedicated 1.0x Spot workstation combining SALAM Tactical + full 80/20 Spot Shield (Sleeves #1 &amp; #2) in one place.</div>
     </a>
 
     <div class="hub-section-lbl">Core Spot &amp; Market Context</div>
     <div class="hub-grid">
-      ${["shield", "news", "prompts", "regime", "spot", "rhyme"].map(renderCard).join("")}
+      ${["news", "prompts", "regime", "spot", "rhyme"].map(renderCard).join("")}
     </div>
 
     <details class="hub-advanced-drawer" id="hubAdvancedDrawer" ${HUB_ADV_OPEN ? "open" : ""}>
@@ -1627,7 +1479,7 @@ function renderEntryHub() {
     </details>
 
     <div class="hub-footer">
-      <span>1.0x SPOT FIRST · 10 MODULES + PROMPT LIBRARY · KEYS [1–9, M, P]</span>
+      <span>1.0x SPOT FIRST · 9 MODULES + SALAM + PROMPT LIBRARY · KEYS [1–5, 7–9, M, P]</span>
       <span><a href="privacy.html" data-i18n="privacy_lbl">${esc(tr("privacy_lbl", "Privacy Policy & Data Disclosure"))}</a></span>
     </div>
   `;
@@ -1665,22 +1517,6 @@ function activateTab(tabId) {
   if (tabId === "prompts") window.DeskPromptsModule?.renderLibrary("promptsRoot", copyTextWithFeedback);
   window.scrollTo(0, 0);
 }
-
-const SPOT_SHIELD_AI_PROMPT_TEMPLATE = `### ROLE & OBJECTIVE
-Act as a Systematic Quantitative Spot Portfolio Manager auditing telemetry from **Project F · Spot Shield (80/20 Dual-Sleeve BTCUSDT)**.
-STRICT GUARDRAIL: This is a **strictly causal, closed-bar, unleveraged Spot-Only (BTC <-> USDT)** system using Binance OHLCV candles exclusively (zero leverage, zero shorting, separate capital bucket from DIBSE). Pre-computed posture/action verdict labels are stripped — derive your assessment strictly from raw indicators and conditions, and note that \`insufficient data\` is a valid conclusion.
-
-Provide a crisp 5-part review strictly from the JSON payload:
-1. **Freshness & Null Audit:** Check \`updated_at_utc\` age (flag stale if \`> 65m\`) and list every \`null\` / \`unavailable\` field and what it prevents concluding.
-2. **Portfolio Allocation & Bear Shield Audit:** Verify from raw \`sleeve1.indicators\` and \`sleeve2.indicators\` whether \`120D EMA\` macro shield is open or holding USDT, and audit \`target_btc_pct\` / \`target_usdt_pct\`.
-3. **Sleeve #1 (80% · 4H Rolling VWAP Shield):** Audit distance to \`macro_120d_ema\` and \`upper_band\` (\`RVWAP90 + 0.5×ATR14\`), \`vwap_slope_12\`, and how much rallies must clear before entry criteria align.
-4. **Sleeve #2 (20% · 1D TTM Squeeze Experimental):** Audit \`squeeze_on\`, \`squeeze_streak_days\`, \`bb_kc_width_ratio\`, \`mom_ols\` vs \`prev_mom_ols\`, and distance to \`kc_mid_ema20\` / \`sma_21_exit\`.
-5. **Discipline & Falsification Condition:** Note \`days_in_state\`, next Quarterly Rebalance date, realistic stats (\`~27% WR\` / up to 9 consecutive losses on Sleeve #1; \`18-trade\` cap on Sleeve #2), and state the exact price/close condition that falsifies the current regime.
-
-### LIVE SPOT SHIELD (80/20) TELEMETRY (JSON)
-\`\`\`json
-{{SHIELD_JSON_PAYLOAD}}
-\`\`\``;
 
 const NEWS_MACRO_AI_PROMPT_TEMPLATE = `### ROLE & OBJECTIVE
 Act as an Institutional Cross-Asset Macro & Bitcoin Catalyst Strategist auditing the live **News & Macro Packet**.
@@ -2139,21 +1975,9 @@ function bindEvents() {
       showHub();
       return;
     }
-    const map = { "1": "signal", "2": "regime", "3": "spot", "4": "rhyme", "5": "news", "6": "shield", "7": "ledger", "8": "audit", "9": "traps", "m": "srmap", "M": "srmap", "p": "prompts", "P": "prompts" };
+    const map = { "1": "signal", "2": "regime", "3": "spot", "4": "rhyme", "5": "news", "7": "ledger", "8": "audit", "9": "traps", "m": "srmap", "M": "srmap", "p": "prompts", "P": "prompts" };
     if (map[e.key]) activateTab(map[e.key]);
   });
-  if ($("btnCopyShieldAi")) {
-    $("btnCopyShieldAi").onclick = () => {
-      if (!STATE?.spot_shield) return;
-      const cleanShield = stripSpotShieldVerdicts(STATE.spot_shield);
-      let promptText = SPOT_SHIELD_AI_PROMPT_TEMPLATE.replace("{{SHIELD_JSON_PAYLOAD}}", JSON.stringify(cleanShield, null, 2));
-      const meta = window.DeskI18n?.getMeta();
-      if (meta && meta.code !== "en") {
-        promptText = `**Response Language:** Respond strictly in ${meta.aiName} while keeping all BTC prices and JSON values exact.\n\n` + promptText;
-      }
-      copyTextWithFeedback(promptText, "Copied Spot Shield (80/20) AI Prompt + JSON!", "shieldActionMsg");
-    };
-  }
   if ($("newsCatSeg")) {
     $("newsCatSeg").addEventListener("click", (e) => {
       const b = e.target.closest("button[data-cat]");
@@ -2305,7 +2129,6 @@ function renderAllTabsFromState() {
   renderSpotTab();
   renderRhymeTab();
   renderNewsTab();
-  renderShieldTab();
   renderLedgerTab();
   renderAuditTab();
   window.DeskPromptsModule?.renderLibrary("promptsRoot", copyTextWithFeedback);
