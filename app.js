@@ -758,7 +758,6 @@ function fmtAgeMin(m) {
 }
 
 function renderNewsTab() {
-  window.DeskPromptsModule?.renderNewsShelf("newsPromptShelfBox", copyTextWithFeedback);
   const nm = STATE.news_macro;
   if (!nm) {
     $("newsMacroHeroBox").innerHTML = `<h2>News &amp; Macro Desk</h2><p class="mut">News &amp; Macro telemetry not yet generated in this snapshot.</p>`;
@@ -1414,6 +1413,19 @@ function getDeskModules() {
       status: `Updated ${fmtUtcSgtCompact(STATE?.updated_at_utc)} · Raw JSON Export`,
       desc: "Historical cycle audit log, frozen parameters & Privacy Policy.",
     },
+    prompts: {
+      tab: "prompts",
+      num: "P",
+      code: "P",
+      title: "AI Prompt Library",
+      scope: "SPECIALIZED AI PROMPTS",
+      scopeCls: "up",
+      badge: `${(window.DeskPromptsModule?.count ? window.DeskPromptsModule.count() : 1)} MASTER PROMPT${(window.DeskPromptsModule?.count ? window.DeskPromptsModule.count() : 1) === 1 ? "" : "S"}`,
+      badgeCls: "",
+      purpose: "Standalone specialized master prompts for Grok, Perplexity, Gemini, Claude & ChatGPT — auto-stamped with UTC + SGT time.",
+      status: "Includes 6H BTC Disruption Scanner (+ ready for future master prompts)",
+      desc: "Curated copy-paste prompts separate from live-JSON tab tools.",
+    },
   };
 }
 
@@ -1475,7 +1487,7 @@ function renderNavDrawer() {
     <div class="nav-drawer-body">
       ${renderNavItem("hub")}
       <div class="nav-group-lbl">Core 1.0x Spot Desk</div>
-      ${["srmap", "traps", "shield", "news"].map(renderNavItem).join("")}
+      ${["srmap", "traps", "shield", "news", "prompts"].map(renderNavItem).join("")}
       <a class="nav-item nav-item-link" href="salam.html">
         <span class="nav-item-main">
           <span class="nav-item-code">S</span>
@@ -1599,7 +1611,7 @@ function renderEntryHub() {
 
     <div class="hub-section-lbl">Core Spot &amp; Market Context</div>
     <div class="hub-grid">
-      ${["shield", "news", "regime", "spot", "rhyme"].map(renderCard).join("")}
+      ${["shield", "news", "prompts", "regime", "spot", "rhyme"].map(renderCard).join("")}
     </div>
 
     <details class="hub-advanced-drawer" id="hubAdvancedDrawer" ${HUB_ADV_OPEN ? "open" : ""}>
@@ -1615,7 +1627,7 @@ function renderEntryHub() {
     </details>
 
     <div class="hub-footer">
-      <span>1.0x SPOT FIRST · 10 MODULES · KEYS [1–9, M]</span>
+      <span>1.0x SPOT FIRST · 10 MODULES + PROMPT LIBRARY · KEYS [1–9, M, P]</span>
       <span><a href="privacy.html" data-i18n="privacy_lbl">${esc(tr("privacy_lbl", "Privacy Policy & Data Disclosure"))}</a></span>
     </div>
   `;
@@ -1650,6 +1662,7 @@ function activateTab(tabId) {
   if (tabId === "regime") renderChart();
   if (tabId === "traps") window.SpotTrapsModule?.render(STATE);
   if (tabId === "srmap") window.SrMapModule?.render(STATE);
+  if (tabId === "prompts") window.DeskPromptsModule?.renderLibrary("promptsRoot", copyTextWithFeedback);
   window.scrollTo(0, 0);
 }
 
@@ -2126,7 +2139,7 @@ function bindEvents() {
       showHub();
       return;
     }
-    const map = { "1": "signal", "2": "regime", "3": "spot", "4": "rhyme", "5": "news", "6": "shield", "7": "ledger", "8": "audit", "9": "traps", "m": "srmap", "M": "srmap" };
+    const map = { "1": "signal", "2": "regime", "3": "spot", "4": "rhyme", "5": "news", "6": "shield", "7": "ledger", "8": "audit", "9": "traps", "m": "srmap", "M": "srmap", "p": "prompts", "P": "prompts" };
     if (map[e.key]) activateTab(map[e.key]);
   });
   if ($("btnCopyShieldAi")) {
@@ -2270,7 +2283,7 @@ function bindEvents() {
     renderPageHeader(ACTIVE_VIEW);
     renderNavDrawer();
     renderEntryHub();
-    if (ACTIVE_VIEW === "news") window.DeskPromptsModule?.renderNewsShelf("newsPromptShelfBox", copyTextWithFeedback);
+    if (ACTIVE_VIEW === "prompts") window.DeskPromptsModule?.renderLibrary("promptsRoot", copyTextWithFeedback);
     if (ACTIVE_VIEW === "traps") window.SpotTrapsModule?.render(STATE);
     if (ACTIVE_VIEW === "srmap") window.SrMapModule?.render(STATE);
   };
@@ -2295,6 +2308,7 @@ function renderAllTabsFromState() {
   renderShieldTab();
   renderLedgerTab();
   renderAuditTab();
+  window.DeskPromptsModule?.renderLibrary("promptsRoot", copyTextWithFeedback);
   window.SpotTrapsModule?.render(STATE);
   window.SrMapModule?.render(STATE);
   renderEntryHub();
@@ -2368,7 +2382,7 @@ async function init() {
     getLivePrice: activePrice,
     copyWithFeedback: copyTextWithFeedback,
     refreshState: () => refreshStateFromServer(false),
-    openDisruptionScanner: () => activateTab("news"),
+    openDisruptionScanner: () => activateTab("prompts"),
     openTrapGuide: (trapId) => {
       activateTab("traps");
       window.SpotTrapsModule?.openReader(trapId);

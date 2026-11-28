@@ -2351,7 +2351,22 @@ svg.chart {
   align-items: flex-start;
   flex-wrap: wrap;
   gap: 8px;
+  margin-bottom: 8px;
+}
+
+.prompt-cat-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.prompt-intro-bar {
+  background: var(--acc-soft);
+  border: 1px solid var(--acc);
+  padding: 7px 10px;
   margin-bottom: 10px;
+  font-size: 10.5px;
+  line-height: 1.4;
 }
 
 .prompt-shelf-list {

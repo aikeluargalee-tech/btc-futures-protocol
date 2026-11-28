@@ -127,6 +127,7 @@ D. EXECUTIVE SUMMARY
   const DESK_PROMPTS = [
     {
       id: "disruption_scanner",
+      category: "News & Shocks",
       title: "BTC Disruption Scanner (6H Shock + 72H Calendar)",
       badge: "PRE-TRADE VETO CHECK · LIVE WEB/X AI",
       buttonLabel: "[Copy Disruption Scanner Prompt]",
@@ -143,14 +144,21 @@ D. EXECUTIVE SUMMARY
   ];
 
   const PREVIEW_OPEN = new Set();
+  let ACTIVE_CAT = "ALL";
 
-  function renderNewsShelf(hostId, copyFn) {
+  function renderLibrary(hostId, copyFn) {
     const host = document.getElementById(hostId);
     if (!host) return;
 
     if (host.dataset.bound !== "1") {
       host.dataset.bound = "1";
       host.addEventListener("click", (e) => {
+        const catBtn = e.target.closest("button[data-prompt-cat]");
+        if (catBtn) {
+          ACTIVE_CAT = catBtn.dataset.promptCat || "ALL";
+          renderLibrary(hostId, copyFn);
+          return;
+        }
         const btn = e.target.closest("button[data-copy-prompt]");
         if (!btn) return;
         const id = btn.dataset.copyPrompt;
@@ -184,46 +192,71 @@ D. EXECUTIVE SUMMARY
       );
     }
 
+    const categories = ["ALL", ...new Set(DESK_PROMPTS.map((p) => p.category).filter(Boolean))];
+    if (!categories.includes(ACTIVE_CAT)) ACTIVE_CAT = "ALL";
+    const visible = ACTIVE_CAT === "ALL" ? DESK_PROMPTS : DESK_PROMPTS.filter((p) => p.category === ACTIVE_CAT);
+
     host.innerHTML = `
-      <div class="prompt-shelf-head">
-        <div>
-          <h2>AI Intelligence Prompts</h2>
-          <div class="mut">Live external search prompts built for beginners — stamps exact UTC &amp; SGT (UTC+8) time automatically on copy.</div>
+      <div class="card">
+        <div class="prompt-shelf-head">
+          <div>
+            <h2>Master Prompt Collection</h2>
+            <div class="mut">Standalone specialized prompts (separate from individual page JSON tools).</div>
+          </div>
+          <div class="prompt-cat-bar" role="group" aria-label="Prompt Categories">
+            ${categories
+              .map((cat) => {
+                const n = cat === "ALL" ? DESK_PROMPTS.length : DESK_PROMPTS.filter((p) => p.category === cat).length;
+                const label = cat === "ALL" ? `All (${n})` : `${cat} (${n})`;
+                const on = ACTIVE_CAT === cat ? " active" : "";
+                return `<button type="button" class="tab-btn${on}" data-prompt-cat="${escHtml(cat)}">${escHtml(label)}</button>`;
+              })
+              .join("")}
+          </div>
         </div>
-        <span class="badge">${DESK_PROMPTS.length} PROMPT${DESK_PROMPTS.length === 1 ? "" : "S"}</span>
-      </div>
-      <div class="prompt-shelf-list">
-        ${DESK_PROMPTS.map((p) => {
-          const isOpen = PREVIEW_OPEN.has(p.id);
-          return `
-            <div class="prompt-card">
-              <div class="prompt-card-top">
-                <div class="prompt-card-title">${escHtml(p.title)}</div>
-                <span class="badge warn">${escHtml(p.badge)}</span>
-              </div>
-              <p class="mut" style="margin:4px 0 8px;">${escHtml(p.desc)}</p>
-              <div class="actions">
-                <button type="button" class="btn btn-primary" data-copy-prompt="${escHtml(p.id)}">${escHtml(p.buttonLabel)}</button>
-                <span class="mut" id="promptMsg_${escHtml(p.id)}" style="align-self:center;">Auto-stamps exact UTC + SGT 6h window when copied.</span>
-              </div>
-              <div class="prompt-handoff">
-                <span class="mut"><b>Best with live search:</b></span>
-                ${p.aiLinks.map((a) => `<a class="prompt-chatlink" href="${escHtml(a.url)}" target="_blank" rel="noopener">${escHtml(a.label)}</a>`).join("")}
-              </div>
-              <details class="prompt-preview-drawer" data-prompt-preview="${escHtml(p.id)}" ${isOpen ? "open" : ""}>
-                <summary>Preview Prompt Template</summary>
-                <pre class="prompt-preview-pre" data-preview-pre="${escHtml(p.id)}">${isOpen ? escHtml(p.buildPrompt()) : ""}</pre>
-              </details>
-            </div>
-          `;
-        }).join("")}
+        <div class="prompt-intro-bar">
+          <b>How to use:</b> Pick a specialized prompt below &rarr; click <b>Copy</b> (auto-stamps live <code>UTC + SGT</code> time) &rarr; paste into one of the recommended live AI links.
+        </div>
+        <div class="prompt-shelf-list">
+          ${visible
+            .map((p) => {
+              const isOpen = PREVIEW_OPEN.has(p.id);
+              return `
+                <div class="prompt-card">
+                  <div class="prompt-card-top">
+                    <div class="prompt-card-title">${escHtml(p.title)}</div>
+                    <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;">
+                      ${p.category ? `<span class="badge">${escHtml(p.category)}</span>` : ""}
+                      <span class="badge warn">${escHtml(p.badge)}</span>
+                    </div>
+                  </div>
+                  <p class="mut" style="margin:4px 0 8px;">${escHtml(p.desc)}</p>
+                  <div class="actions">
+                    <button type="button" class="btn btn-primary" data-copy-prompt="${escHtml(p.id)}">${escHtml(p.buttonLabel)}</button>
+                    <span class="mut" id="promptMsg_${escHtml(p.id)}" style="align-self:center;">Auto-stamps exact UTC + SGT 6h window when copied.</span>
+                  </div>
+                  <div class="prompt-handoff">
+                    <span class="mut"><b>Best with live search:</b></span>
+                    ${p.aiLinks.map((a) => `<a class="prompt-chatlink" href="${escHtml(a.url)}" target="_blank" rel="noopener">${escHtml(a.label)}</a>`).join("")}
+                  </div>
+                  <details class="prompt-preview-drawer" data-prompt-preview="${escHtml(p.id)}" ${isOpen ? "open" : ""}>
+                    <summary>Preview Prompt Template</summary>
+                    <pre class="prompt-preview-pre" data-preview-pre="${escHtml(p.id)}">${isOpen ? escHtml(p.buildPrompt()) : ""}</pre>
+                  </details>
+                </div>
+              `;
+            })
+            .join("")}
+        </div>
       </div>
     `;
   }
 
   window.DeskPromptsModule = {
     list: () => DESK_PROMPTS.slice(),
+    count: () => DESK_PROMPTS.length,
     build: (id) => DESK_PROMPTS.find((p) => p.id === id)?.buildPrompt() || "",
-    renderNewsShelf,
+    renderLibrary,
+    renderNewsShelf: renderLibrary,
   };
 })();
