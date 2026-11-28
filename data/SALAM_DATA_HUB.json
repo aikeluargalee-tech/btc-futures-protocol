@@ -12,9 +12,9 @@
  "deriv_src": "OKX",
  "price_src": "TICKER",
  "spot_check": {
-  "bin_price": 60241.81,
-  "okx_price": 60247.3,
-  "spread_pct": 0.0091,
+  "bin_price": 59158.49,
+  "okx_price": 59158.5,
+  "spread_pct": 0.0,
   "ok": true
  },
  "oi_src": "OKX",
@@ -22,7 +22,7 @@
  "fund_src": "OKX",
  "fund_hist_src": "OKX",
  "lsr_src": "OKX",
- "price": 60241.81,
+ "price": 59158.49,
  "atr1d": 3002.751986802045,
  "sma200": 71870.99650000001,
  "vp30": {
@@ -311,10 +311,10 @@
    0.0,
    9790.69011,
    0.0,
-   0.0,
+   2228.82747,
    5917.146640000001,
    0.0,
-   7010.224249999999,
+   8318.2403,
    10673.60511,
    2754.79293,
    0.0,
@@ -324,9 +324,9 @@
    4078.94527,
    0.0,
    0.0,
-   9456.33547,
+   5734.7742,
    0.0,
-   5095.2785,
+   2489.72421,
    7428.53817,
    3251.77547,
    0.0,
@@ -422,40 +422,13 @@
   "above": 60261.27333333333,
   "below": 58840.30533333334
  },
- "atr1h": 438.08326835037315,
+ "atr1h": 383.162311980257,
  "px_chg": {
-  "1h": 0.48314405085374545,
-  "4h": 0.6492313089929924,
-  "24h": -0.9001156037765745
+  "1h": 0.026774170697341226,
+  "4h": -0.25129560696376396,
+  "24h": -3.3128508843095927
  },
  "macro_res": [
-  {
-   "low": 60755.0,
-   "high": 61306.84,
-   "center": 61030.92,
-   "touches": 2,
-   "liq": [
-    "Shorts",
-    38.60108025544709,
-    100
-   ]
-  },
-  {
-   "low": 61824.97,
-   "high": 62742.47,
-   "center": 62337.948749999996,
-   "touches": 8,
-   "liq": null
-  },
-  {
-   "low": 63030.0,
-   "high": 63100.0,
-   "center": 63065.0,
-   "touches": 2,
-   "liq": null
-  }
- ],
- "macro_sup": [
   {
    "low": 60000.0,
    "high": 60000.0,
@@ -464,12 +437,21 @@
    "liq": null
   },
   {
-   "low": 59130.91,
-   "high": 59130.91,
-   "center": 59130.91,
-   "touches": 1,
+   "low": 60755.0,
+   "high": 61306.84,
+   "center": 61030.92,
+   "touches": 2,
    "liq": null
   },
+  {
+   "low": 61824.97,
+   "high": 62742.47,
+   "center": 62337.948749999996,
+   "touches": 8,
+   "liq": null
+  }
+ ],
+ "macro_sup": [
   {
    "low": 57300.38,
    "high": 58115.01,
@@ -477,51 +459,53 @@
    "touches": 3,
    "liq": [
     "Longs",
-    115.80324076634126,
-    25
+    76.4652099394786,
+    50
    ]
+  },
+  {
+   "low": 55130.0,
+   "high": 55130.0,
+   "center": 55130.0,
+   "touches": 1,
+   "liq": null
   }
  ],
  "sup_band": {
-  "low": 57589.52840230965,
-  "high": 59025.581597690354,
-  "touches": 5,
-  "center": 58307.555,
-  "score": 10,
-  "why": [
-   "POC",
-   "VAH/VAL",
-   "round-1k"
-  ],
-  "liq": [
-   "Longs",
-   115.80324076634126,
-   25
-  ]
- },
- "res_band": {
-  "low": 60765.098402309646,
-  "high": 62350.45159769036,
-  "touches": 7,
-  "center": 61557.775,
+  "low": 54604.518402309644,
+  "high": 55655.481597690356,
+  "touches": 1,
+  "center": 55130.0,
   "score": 3,
   "why": [
    "round-1k"
   ],
+  "liq": null
+ },
+ "res_band": {
+  "low": 59860.518402309644,
+  "high": 61521.481597690356,
+  "touches": 7,
+  "center": 60691.0,
+  "score": 6,
+  "why": [
+   "VAH/VAL",
+   "round-1k"
+  ],
   "liq": [
    "Shorts",
-   77.20216051089417,
+   76.4652099394786,
    50
   ]
  },
  "inside_band": {
-  "low": 59062.518402309644,
-  "high": 60440.481597690356,
-  "touches": 3,
-  "center": 59751.5,
+  "low": 58243.02840230965,
+  "high": 59628.18159769035,
+  "touches": 5,
+  "center": 58935.604999999996,
   "liq": [
    "Longs",
-   38.60108025544709,
+   38.2326049697393,
    100
   ]
  },
@@ -530,7 +514,12 @@
    "low": 54604.518402309644,
    "high": 55655.481597690356,
    "touches": 1,
-   "center": 55130.0
+   "center": 55130.0,
+   "score": 3,
+   "why": [
+    "round-1k"
+   ],
+   "liq": null
   },
   {
    "low": 56774.89840230964,
@@ -542,45 +531,35 @@
    "low": 57589.52840230965,
    "high": 59025.581597690354,
    "touches": 5,
-   "center": 58307.555,
-   "score": 10,
-   "why": [
-    "POC",
-    "VAH/VAL",
-    "round-1k"
-   ],
-   "liq": [
-    "Longs",
-    115.80324076634126,
-    25
-   ]
+   "center": 58307.555
   },
   {
-   "low": 58243.02840230965,
-   "high": 59628.18159769035,
-   "touches": 5,
-   "center": 58935.604999999996
+   "low": 59062.518402309644,
+   "high": 60440.481597690356,
+   "touches": 3,
+   "center": 59751.5
   },
   {
    "low": 59860.518402309644,
    "high": 61521.481597690356,
    "touches": 7,
-   "center": 60691.0
+   "center": 60691.0,
+   "score": 6,
+   "why": [
+    "VAH/VAL",
+    "round-1k"
+   ],
+   "liq": [
+    "Shorts",
+    76.4652099394786,
+    50
+   ]
   },
   {
    "low": 60765.098402309646,
    "high": 62350.45159769036,
    "touches": 7,
-   "center": 61557.775,
-   "score": 3,
-   "why": [
-    "round-1k"
-   ],
-   "liq": [
-    "Shorts",
-    77.20216051089417,
-    50
-   ]
+   "center": 61557.775
   },
   {
    "low": 61412.518402309644,
@@ -763,78 +742,78 @@
   "at": null
  },
  "cvd_spot": {
-  "1h": 87.73775,
-  "4h": 2.8052599999999757,
-  "24h": -71.69949999999935
+  "1h": 80.95095000000003,
+  "4h": -49.55452999999994,
+  "24h": -465.2158499999995
  },
  "cvd_perp": {
-  "1h": 404.16049999999996,
-  "4h": 603.2974000000004,
-  "24h": -1281.2330000000024
+  "1h": 142.36059999999998,
+  "4h": -380.8624000000002,
+  "24h": -6346.985900000002
  },
  "perp_src": "OKX-RUBIK",
  "spot_cvd_ok": true,
  "perp_cvd_ok": true,
  "perp_dump": null,
- "oi_btc": 32038.44660000014,
- "oi_4h_chg": -0.062439490456212,
- "oi_24h_chg": -0.7700965085167488,
- "funding": 0.00560434583153,
- "funding_pct90": 52.0,
- "ls_ratio": 2.885407341092211,
+ "oi_btc": 32313.709300000133,
+ "oi_4h_chg": 0.139300592070013,
+ "oi_24h_chg": -1.6836741146749712,
+ "funding": 0.00580102623538,
+ "funding_pct90": 54.0,
+ "ls_ratio": 2.7212506398225558,
  "etf": {
   "latest_date": "27 Nov 2026",
-  "one_day_m": -61.8,
+  "one_day_m": -389.0,
   "one_day_settling": false,
   "prev_date": "27 Nov 2026",
-  "prev_day_m": -61.8,
-  "five_day_m": -1985.1000000000001,
+  "prev_day_m": -389.0,
+  "five_day_m": -2312.3,
   "five_day_days": 5,
-  "twenty_day_m": -6096.1
+  "twenty_day_m": -6423.3
  },
- "oi_usd_m": 1930.0540127723543,
+ "oi_usd_m": 1911.6302484869648,
  "liq_upper": [
   {
    "lev": 10,
-   "price": 66265.99100000001,
-   "usd_m": 154.40432102178835
+   "price": 65074.339,
+   "usd_m": 152.9304198789572
   },
   {
    "lev": 25,
-   "price": 62651.4824,
-   "usd_m": 115.80324076634126
+   "price": 61524.8296,
+   "usd_m": 114.69781490921788
   },
   {
    "lev": 50,
-   "price": 61446.646199999996,
-   "usd_m": 77.20216051089417
+   "price": 60341.6598,
+   "usd_m": 76.4652099394786
   },
   {
    "lev": 100,
-   "price": 60844.2281,
-   "usd_m": 38.60108025544709
+   "price": 59750.0749,
+   "usd_m": 38.2326049697393
   }
  ],
  "liq_lower": [
   {
    "lev": 10,
-   "price": 54217.629,
-   "usd_m": 154.40432102178835
+   "price": 53242.640999999996,
+   "usd_m": 152.9304198789572
   },
   {
    "lev": 25,
-   "price": 57832.137599999995,
-   "usd_m": 115.80324076634126
+   "price": 56792.1504,
+   "usd_m": 114.69781490921788
   },
   {
    "lev": 50,
-   "price": 59036.9738,
-   "usd_m": 77.20216051089417
+   "price": 57975.320199999995,
+   "usd_m": 76.4652099394786
   },
   {
    "lev": 100,
-   "price": 59639.391899999995,
-   "usd_m": 38.60108025544709
+   "price": 58566.905099999996,
+   "usd_m": 38.2326049697393
   }
  ],
  "sleeve1": {
@@ -844,18 +823,18 @@
   "weight_pct": 80,
   "bars_analyzed": 999,
   "last_closed_bar": {
-   "open_utc": "2026-11-27 20:00Z",
-   "close_utc": "2026-11-28 00:00Z",
-   "close_sgt": "2026-11-28 08:00 SGT"
+   "open_utc": "2026-11-28 04:00Z",
+   "close_utc": "2026-11-28 08:00Z",
+   "close_sgt": "2026-11-28 16:00 SGT"
   },
   "indicators": {
-   "close_price": 59923.1,
-   "macro_120d_ema": 73286.18674769587,
-   "rolling_15d_vwap": 62354.914539171725,
-   "vwap_slope_12bar": -1019.4513190698417,
-   "atr_14": 1137.8151069756386,
-   "upper_buffer_price": 62923.822092659546,
-   "lower_buffer_price": 61786.0069856839
+   "close_price": 59832.0,
+   "macro_120d_ema": 73065.30928079181,
+   "rolling_15d_vwap": 62052.5407774075,
+   "vwap_slope_12bar": -1109.917676945668,
+   "atr_14": 1073.9687912187912,
+   "upper_buffer_price": 62589.5251730169,
+   "lower_buffer_price": 61515.5563817981
   },
   "conditions": {
    "above_macro_shield": false,
@@ -867,11 +846,11 @@
   "readiness": {
    "gates_passed": 0,
    "gates_total": 3,
-   "shield_dist_pct": -18.23,
-   "upper_buf_dist_pct": -4.77,
-   "lower_buf_dist_pct": -3.02,
-   "price_hurdle": 73286.19,
-   "rally_to_hurdle_pct": 22.3
+   "shield_dist_pct": -18.11,
+   "upper_buf_dist_pct": -4.41,
+   "lower_buf_dist_pct": -2.74,
+   "price_hurdle": 73065.31,
+   "rally_to_hurdle_pct": 22.12
   },
   "state": {
    "raw_signal": -1,
@@ -883,13 +862,13 @@
     "type": "SELL",
     "time_utc": "2026-10-12 04:00Z",
     "price": 83613.06,
-    "bars_ago": 280,
-    "days_ago": 46.8
+    "bars_ago": 282,
+    "days_ago": 47.2
    },
-   "exposure_pct": 35.9,
+   "exposure_pct": 35.8,
    "if_flat": "HOLD USDT (wait for BUY +1)",
    "if_long": "SELL BTC at next bar open",
-   "reference_3x_atr_sl": 56509.65467907308
+   "reference_3x_atr_sl": 56610.09362634362
   }
  },
  "sleeve2": {
@@ -956,29 +935,29 @@
  "macro_weather": {
   "regime": "HEADWIND",
   "above_sma200": false,
-  "sma200_dist_pct": -16.18,
-  "etf_5d_m": -1985.1000000000001,
-  "etf_1d_m": -61.8,
-  "funding_pct90": 52.0,
+  "sma200_dist_pct": -17.69,
+  "etf_5d_m": -2312.3,
+  "etf_1d_m": -389.0,
+  "funding_pct90": 54.0,
   "crowded_long": false,
-  "summary": "Price -16.2% vs 200D SMA \u00b7 5D ETF -1,985.1M \u00b7 Funding pctile 52"
+  "summary": "Price -17.7% vs 200D SMA \u00b7 5D ETF -2,312.3M \u00b7 Funding pctile 54"
  },
  "rail_b_sizing": {
-  "ref_entry": 59025.58,
+  "ref_entry": 55655.48,
   "ref_source": "Tactical Floor High",
-  "atr1h": 438.08,
-  "stop_dist": 657.12,
-  "stop_price": 58368.46,
-  "stop_pct": 1.113,
-  "implied_port_pct": 67.37,
+  "atr1h": 383.16,
+  "stop_dist": 574.74,
+  "stop_price": 55080.74,
+  "stop_pct": 1.033,
+  "implied_port_pct": 72.63,
   "cap_port_pct_50_50": 15.0,
   "cap_port_pct_100_usdt": 30.0,
-  "required_usdt_share_pct": 224.6,
+  "required_usdt_share_pct": 242.1,
   "vetoed_at_50_50": true,
   "vetoed_at_100_usdt": true
  },
- "generated_at_utc": "2026-11-28T02:18:48Z",
- "generated_at_sgt": "2026-11-28T10:18:48+08:00",
+ "generated_at_utc": "2026-11-28T10:50:46Z",
+ "generated_at_sgt": "2026-11-28T18:50:46+08:00",
  "manual": null,
  "manual_ok": false,
  "manual_at": null,
