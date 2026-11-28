@@ -394,7 +394,7 @@ function renderSpotTab() {
   const sm = STATE?.spot_magnet;
   if (!$("spotDibseHeroBox")) return;
   if (!sm || sm.data_quality !== "LIVE" || !sm.metrics) {
-    $("spotDibseHeroBox").innerHTML = `<h2>Spot Magnet (DIBSE Dual-Sleeve Radar)</h2><p class="mut">Spot telemetry unavailable (${esc(sm?.data_quality || "NO DATA")}).</p>`;
+    $("spotDibseHeroBox").innerHTML = `<h2>Liquidation Magnets (1.0x Spot Dual-Bucket Radar)</h2><p class="mut">Spot telemetry unavailable (${esc(sm?.data_quality || "NO DATA")}).</p>`;
     if ($("spotLsceMagnetBox")) $("spotLsceMagnetBox").innerHTML = `<h2>LSCE Sweep Gate &amp; 6-Factor Magnet</h2><p class="mut">Unavailable</p>`;
     if ($("spotLadderBox")) $("spotLadderBox").innerHTML = `<h2>Modeled 10x–100x Liquidation Ladder</h2><p class="mut">Unavailable</p>`;
     if ($("spotTelemetryFeedsBox")) $("spotTelemetryFeedsBox").innerHTML = "";
@@ -406,7 +406,7 @@ function renderSpotTab() {
   const dibse = sm.dibse || {};
   const lsce = sm.lsce || {};
   const mag = sm.magnets || {};
-  const sig = dibse.dibse_signal || "HOLD BOTH SLEEVES";
+  const sig = dibse.dibse_signal || "HOLD BOTH BUCKETS";
   const sigCls = sig.startsWith("LOOP A") ? "up" : sig.startsWith("LOOP B") ? "dn" : "warn";
 
   const candRows = (diag.all_5_candidates || []).map((c) => `
@@ -426,7 +426,7 @@ function renderSpotTab() {
         <div class="mut">Regime: <b>${esc(diag.name || "—")}</b> (${esc(diag.majority_score || "—")}) · Playbook: <b>${esc(diag.playbook || "—")}</b></div>
       </div>
       <div>
-        <span class="badge ${sigCls}">${esc(dibse.rotation || "Hold Both Sleeves")}</span>
+        <span class="badge ${sigCls}">${esc(dibse.rotation || "Hold Both Buckets")}</span>
         <span class="badge">SANDBOX: 10% USDT + 10% BTC · 80% CORE</span>
       </div>
     </div>
@@ -435,7 +435,7 @@ function renderSpotTab() {
     <div class="grid-2" style="margin-bottom:8px;">
       <div>${candRows}</div>
       <dl class="kv">${kv([
-        ["Target Active Sleeve Mix", `BTC Sleeve ${dibse.target_btc_allocation_pct ?? 10}% | USDT Sleeve ${dibse.target_usdt_reserve_pct ?? 10}% (80% Core)`],
+        ["Target Active Bucket Mix", `BTC Bucket ${dibse.target_btc_allocation_pct ?? 10}% | USDT Bucket ${dibse.target_usdt_reserve_pct ?? 10}% (80% Core)`],
         ["Loop A (Buy -> > P_buy)", dibse.loop_a_zone || "—"],
         ["Loop B (Sell -> < P_sell)", dibse.loop_b_zone || "—"],
         ["Failure / Stop Rule", dibse.stop_rule || "ZERO STOP-LOSSES (Self-Healing Spot Inventory)"],
@@ -514,7 +514,7 @@ function renderSpotTab() {
       ["Variance Premium (IV-RV)", m.variance_premium_pts != null ? `${pct(m.variance_premium_pts, 2)} pts` : "UNAVAILABLE"],
       ["24H Sweep Extremes", `Low ${usd(m.capitulation_wick_low, 0)} · High ${usd(m.euphoria_wick_high, 0)}`],
       ["Spot Leverage Limit", "1.0x UNLEVERAGED ONLY (Zero Margin / Zero Liq Risk)"],
-      ["Zero-Stop Invariant", "80% Core Untouched · Dual-Sleeve Self-Healing Inventory"],
+      ["Zero-Stop Invariant", "80% Core Untouched · Dual-Bucket Self-Healing Inventory"],
     ]],
   ];
 
@@ -1085,7 +1085,7 @@ function seedCalcFromState() {
     $("cStop").value = prop.stop_price;
     $("cTp").value = prop.target1_price;
     $("cDir").value = prop.direction || "LONG";
-    $("cEq").value = Math.round(STATE?.portfolio?.equity_usd || 100000);
+    $("cEq").value = 10000;
     $("cWeekend").value = STATE?.regime?.is_weekend_utc ? "yes" : "no";
   }
   updateCalc();
@@ -1252,10 +1252,10 @@ function getDeskModules() {
       title: tr("tab_f3", "Paper Ledger & Risk Calc"),
       scope: "FUTURES · MAX 1:2 LEV",
       scopeCls: "warn",
-      badge: `OPEN ${(port.open_positions || []).length}/1 · ${usd(port.equity_usd, 0)}`,
+      badge: `PAPER DEMO · ${(port.open_positions || []).length}/1 OPEN`,
       badgeCls: "",
       purpose: "Simulated futures trade ledger and strict 0.40% stop-loss risk calculator.",
-      status: `Open ${(port.open_positions || []).length}/1 · Eq ${usd(port.equity_usd, 0)} · ${mtL ? mtL.day_of_week + " ~" + num(mtL.expected_day_range_pct, 2) + "% day" : "0.40% Risk"}`,
+      status: `Paper Demo · ${(port.open_positions || []).length}/1 Open · ${mtL ? mtL.day_of_week + " ~" + num(mtL.expected_day_range_pct, 2) + "% day" : "0.40% Risk"}`,
       desc: "Interactive v4.0 futures sizing calculator & paper execution history.",
     },
     audit: {
@@ -1461,8 +1461,8 @@ function renderEntryHub() {
           </div>
           <span class="badge ${esc(salamHubCls)}">${esc(salamHubBadge)}</span>
         </div>
-        <div class="hub-status">&#9658; SALAM Pro Max (Volume Profile + 1H Sweep) &middot; 80/20 Spot Shield (Split Bar, Risk Audit &amp; Cheat Sheet)${esc(salamStamp)}</div>
-        <div class="hub-desc">Dedicated 1.0x Spot workstation combining SALAM Tactical + full 80/20 Spot Shield (Sleeves #1 &amp; #2) in one place.</div>
+        <div class="hub-status">&#9658; Strategy 1: Tactical Flow (Volume Profile + 1H Sweep) &middot; Strategies 2 &amp; 3: 80/20 Spot Shield (Split Bar, Risk Audit &amp; Cheat Sheet)${esc(salamStamp)}</div>
+        <div class="hub-desc">Dedicated 1.0x Spot page combining Strategy 1 (Tactical Flow) + Strategies 2 &amp; 3 (80/20 Spot Shield) in one place.</div>
       </a>
 
       <button type="button" class="hub-featured-card" data-open-tab="signal">

@@ -42,7 +42,7 @@
       h_levels: "Identified 4H / 1D Structural Levels",
       h_macro: "Scheduled USD High-Impact Releases (≤ 60m Blackout)",
       h_calc: "Interactive v4.0 Position Sizing Calculator",
-      lbl_eq: "Account Equity (USD)",
+      lbl_eq: "Simulated Capital (USD)",
       lbl_dir: "Direction",
       lbl_wknd: "Weekend Extreme (80/20)",
       opt_norm: "Normal (0.40% risk)",

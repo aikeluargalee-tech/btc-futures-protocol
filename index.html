@@ -156,7 +156,7 @@
     <section class="tab-panel" id="tab-spot">
       <div class="actions" style="margin-bottom:10px;">
         <button class="btn btn-primary" id="btnCopySpotAi">[Copy Spot Magnet AI Prompt + JSON]</button>
-        <span class="mut" id="spotActionMsg" style="align-self:center;">Strict 1.0x Spot-Only (USDT &harr; BTC) DIBSE Dual-Sleeve Audit &amp; Q&amp;A Prompt.</span>
+        <span class="mut" id="spotActionMsg" style="align-self:center;">Strict 1.0x Spot-Only (USDT &harr; BTC) 1.0x Spot Dual-Bucket Audit &amp; Q&amp;A Prompt.</span>
       </div>
       <div class="card" id="spotDibseHeroBox"></div>
       <div class="grid-2">
@@ -218,8 +218,9 @@
     <section class="tab-panel" id="tab-ledger">
       <div class="card">
         <h2 data-i18n="h_calc">Interactive v4.0 Position Sizing Calculator</h2>
+        <p class="mut" style="margin:0 0 8px;">100% simulated paper demo — enter any example capital to calculate position size (not real money).</p>
         <div class="calc-grid">
-          <label class="field"><span data-i18n="lbl_eq">Account Equity (USD)</span><input type="number" id="cEq" value="100000" step="500"></label>
+          <label class="field"><span data-i18n="lbl_eq">Simulated Capital (USD)</span><input type="number" id="cEq" value="10000" step="500"></label>
           <label class="field"><span data-i18n="lbl_dir">Direction</span><select id="cDir"><option value="LONG">LONG</option><option value="SHORT">SHORT</option></select></label>
           <label class="field"><span data-i18n="lbl_wknd">Weekend Extreme (80/20)</span><select id="cWeekend"><option value="no" data-i18n="opt_norm">Normal (0.40% risk)</option><option value="yes" data-i18n="opt_wknd">Weekend Half (0.20%)</option></select></label>
           <label class="field"><span data-i18n="lbl_entry">Entry Price ($)</span><input type="number" id="cEntry" step="10"></label>
@@ -288,10 +289,10 @@
       <div id="promptsRoot">Loading AI Prompt Library…</div>
     </section>
   </div>
-  <script src="lang.js?v=12"></script>
+  <script src="lang.js?v=13"></script>
   <script src="traps.js?v=2"></script>
   <script src="sr_map.js?v=8"></script>
   <script src="prompts.js?v=2"></script>
-  <script src="app.js?v=35"></script>
+  <script src="app.js?v=36"></script>
 </body>
 </html>
