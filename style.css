@@ -998,6 +998,27 @@ svg.chart {
   text-transform: uppercase;
 }
 
+.hub-intro-list {
+  margin: 4px 0 6px;
+  padding-left: 16px;
+  line-height: 1.5;
+}
+
+.hub-intro-list li {
+  margin-bottom: 3px;
+}
+
+.snap-line {
+  line-height: 1.45;
+}
+
+.hub-verdict-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
 .hub-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

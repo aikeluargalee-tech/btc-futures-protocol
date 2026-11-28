@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=30">
+  <link rel="stylesheet" href="style.css?v=31">
 </head>
 <body>
   <div class="wrap">
@@ -49,8 +49,17 @@
           <span class="badge" id="pageScopeBadge">1.0x SPOT + MAX 1:2 FUTURES</span>
           <span class="badge hidden" id="pageVerdictBadge"></span>
         </div>
-        <div class="page-purpose" id="pagePurpose">A free, rule-based Bitcoin trading helper for both 1.0x Spot beginners and low-leverage Futures traders (strictly capped at 1:2). It checks live market risks, spots common traps, and tells you in plain English whether to act or stay safely in cash — plus lets you copy live data into ChatGPT, Gemini, Claude, or Grok for a second opinion.</div>
-        <div class="sub" id="snapMeta">Next Update: calculating…</div>
+        <div class="page-purpose" id="pagePurpose">
+          <ul class="hub-intro-list">
+            <li>Built for both <b>1.0x Spot beginners</b> and <b>low-leverage Futures traders</b> (strictly capped at 1:2).</li>
+            <li>Checks live market risks, spots common traps, and tells you in plain English whether to <b>act or stay safely in cash</b>.</li>
+            <li>Copy live market data straight into <b>ChatGPT, Gemini, Claude, or Grok</b> for an instant second opinion.</li>
+          </ul>
+        </div>
+        <div class="sub" id="snapMeta">
+          <div class="snap-line">Next Update: calculating…</div>
+          <div class="snap-line">Last Update: loading…</div>
+        </div>
       </div>
       <div class="live-bar">
         <div>
@@ -284,6 +293,6 @@
   <script src="traps.js?v=2"></script>
   <script src="sr_map.js?v=8"></script>
   <script src="prompts.js?v=2"></script>
-  <script src="app.js?v=33"></script>
+  <script src="app.js?v=34"></script>
 </body>
 </html>

@@ -1134,6 +1134,12 @@ function getDeskModules() {
     ? window.SrMapModule.getHubInfo(STATE)
     : { badge: "FINAL DESK", badgeCls: "warn", status: "1.0x Spot Final Decision Desk" };
 
+  const HUB_INTRO_BULLETS_HTML = `<ul class="hub-intro-list">
+    <li>Built for both <b>1.0x Spot beginners</b> and <b>low-leverage Futures traders</b> (strictly capped at 1:2).</li>
+    <li>Checks live market risks, spots common traps, and tells you in plain English whether to <b>act or stay safely in cash</b>.</li>
+    <li>Copy live market data straight into <b>ChatGPT, Gemini, Claude, or Grok</b> for an instant second opinion.</li>
+  </ul>`;
+
   return {
     hub: {
       tab: "hub",
@@ -1144,14 +1150,15 @@ function getDeskModules() {
       scopeCls: "up",
       badge: srInfo.badge,
       badgeCls: srInfo.badgeCls,
-      purpose: "A free, rule-based Bitcoin trading helper for both 1.0x Spot beginners and low-leverage Futures traders (strictly capped at 1:2). It checks live market risks, spots common traps, and tells you in plain English whether to act or stay safely in cash — plus lets you copy live data into ChatGPT, Gemini, Claude, or Grok for a second opinion.",
+      purpose: "",
+      purposeHtml: HUB_INTRO_BULLETS_HTML,
       status: srInfo.status,
       desc: "Command Hub overview",
     },
     srmap: {
       tab: "srmap",
-      num: "10",
-      code: "F10",
+      num: "08",
+      code: "08",
       title: tr("tab_srmap", "Final Decision Desk"),
       scope: "1.0x SPOT ONLY",
       scopeCls: "up",
@@ -1163,8 +1170,8 @@ function getDeskModules() {
     },
     traps: {
       tab: "traps",
-      num: "09",
-      code: "F9",
+      num: "05",
+      code: "05",
       title: tr("tab_traps", "Spot Traps (16+1)"),
       scope: "1.0x SPOT ONLY",
       scopeCls: "up",
@@ -1176,8 +1183,8 @@ function getDeskModules() {
     },
     news: {
       tab: "news",
-      num: "05",
-      code: "F5",
+      num: "02",
+      code: "02",
       title: tr("tab_news", "News & Macro"),
       scope: "MACRO & EVENTS",
       scopeCls: "",
@@ -1189,8 +1196,8 @@ function getDeskModules() {
     },
     regime: {
       tab: "regime",
-      num: "02",
-      code: "F2",
+      num: "01",
+      code: "01",
       title: tr("tab_f2", "Regime & Kline Patterns"),
       scope: "MARKET CONTEXT",
       scopeCls: "",
@@ -1202,8 +1209,8 @@ function getDeskModules() {
     },
     spot: {
       tab: "spot",
-      num: "03",
-      code: "F3",
+      num: "04",
+      code: "04",
       title: tr("tab_spot", "Spot Magnet (DIBSE)"),
       scope: "1.0x SPOT CONTEXT",
       scopeCls: "up",
@@ -1215,8 +1222,8 @@ function getDeskModules() {
     },
     rhyme: {
       tab: "rhyme",
-      num: "04",
-      code: "F4",
+      num: "03",
+      code: "03",
       title: tr("tab_rhyme", "S2 Cortex-Rhyme"),
       scope: "HISTORICAL ODDS",
       scopeCls: "",
@@ -1228,9 +1235,9 @@ function getDeskModules() {
     },
     signal: {
       tab: "signal",
-      num: "01",
-      code: "F1",
-      title: tr("tab_f1", "Signal Tab"),
+      num: "A1",
+      code: "A1",
+      title: tr("tab_f1", "Futures Signal (Max 1:2 Lev)"),
       scope: "FUTURES · MAX 1:2 LEV",
       scopeCls: "warn",
       badge: sigSt,
@@ -1241,8 +1248,8 @@ function getDeskModules() {
     },
     ledger: {
       tab: "ledger",
-      num: "07",
-      code: "F7",
+      num: "A2",
+      code: "A2",
       title: tr("tab_f3", "Paper Ledger & Risk Calc"),
       scope: "FUTURES · MAX 1:2 LEV",
       scopeCls: "warn",
@@ -1254,8 +1261,8 @@ function getDeskModules() {
     },
     audit: {
       tab: "audit",
-      num: "08",
-      code: "F8",
+      num: "A3",
+      code: "A3",
       title: tr("tab_f4", "Audit Log & Config"),
       scope: "SYSTEM & PRIVACY",
       scopeCls: "",
@@ -1267,8 +1274,8 @@ function getDeskModules() {
     },
     prompts: {
       tab: "prompts",
-      num: "P",
-      code: "P",
+      num: "06",
+      code: "06",
       title: "AI Prompt Library",
       scope: "SPECIALIZED AI PROMPTS",
       scopeCls: "up",
@@ -1281,7 +1288,7 @@ function getDeskModules() {
   };
 }
 
-function formatNextUpdateLine() {
+function renderSnapMetaHtml() {
   const now = new Date();
   const y = now.getUTCFullYear();
   const m = now.getUTCMonth();
@@ -1300,8 +1307,8 @@ function formatNextUpdateLine() {
   const waitLabel = minsLeft <= 1 ? "<1m" : `${minsLeft}m`;
   const hhmmUtc = nextUtc.toISOString().slice(11, 16) + " UTC";
   const hhmmSgt = new Date(nextUtc.getTime() + 8 * 3600_000).toISOString().slice(11, 16) + " SGT";
-  const lastBit = STATE?.updated_at_utc ? ` · Last: ${fmtUtcSgtCompact(STATE.updated_at_utc)}` : "";
-  return `Next Update: ${hhmmUtc} / ${hhmmSgt} (in ${waitLabel})${lastBit}`;
+  const lastPair = STATE?.updated_at_utc ? fmtUtcSgtCompact(STATE.updated_at_utc) : "—";
+  return `<div class="snap-line">Next Update: ${esc(hhmmUtc)} / ${esc(hhmmSgt)} (in ${esc(waitLabel)})</div><div class="snap-line">Last Update: ${esc(lastPair)}</div>`;
 }
 
 function tickLiveClock() {
@@ -1311,7 +1318,7 @@ function tickLiveClock() {
   if ($("clockUtc")) $("clockUtc").textContent = utcStr;
   if ($("clockSgt")) $("clockSgt").textContent = sgtStr;
   if (STATE && $("snapMeta")) {
-    $("snapMeta").textContent = formatNextUpdateLine();
+    $("snapMeta").innerHTML = renderSnapMetaHtml();
   }
 }
 
@@ -1333,9 +1340,12 @@ function renderPageHeader(viewId = ACTIVE_VIEW) {
       vEl.className = "badge hidden";
     }
   }
-  if ($("pagePurpose")) $("pagePurpose").textContent = meta.purpose;
+  if ($("pagePurpose")) {
+    if (meta.purposeHtml) $("pagePurpose").innerHTML = meta.purposeHtml;
+    else $("pagePurpose").textContent = meta.purpose;
+  }
   if (STATE && $("snapMeta")) {
-    $("snapMeta").textContent = formatNextUpdateLine();
+    $("snapMeta").innerHTML = renderSnapMetaHtml();
   }
 }
 
@@ -1370,17 +1380,16 @@ function renderNavDrawer() {
     </div>
     <div class="nav-drawer-body">
       ${renderNavItem("hub")}
-      <div class="nav-group-lbl">Core 1.0x Spot Desk</div>
-      ${["srmap", "traps", "news", "prompts"].map(renderNavItem).join("")}
+      <div class="nav-group-lbl">Step-by-Step Desk (01–08)</div>
+      ${["regime", "news", "rhyme", "spot", "traps", "prompts"].map(renderNavItem).join("")}
       <a class="nav-item nav-item-link" href="salam.html">
         <span class="nav-item-main">
-          <span class="nav-item-code">S</span>
+          <span class="nav-item-code">07</span>
           <span>SALAM Pro Max (3 Verdicts)</span>
         </span>
         <span class="badge ${esc(salamCls)}">${esc(salamBadge)}</span>
       </a>
-      <div class="nav-group-lbl">Market Context</div>
-      ${["regime", "spot", "rhyme"].map(renderNavItem).join("")}
+      ${renderNavItem("srmap")}
       <div class="nav-group-lbl">Advanced · Futures &amp; System</div>
       ${["signal", "ledger", "audit"].map(renderNavItem).join("")}
     </div>
@@ -1426,8 +1435,7 @@ function renderEntryHub() {
     `;
   };
 
-  const f10 = mods.srmap;
-  const f9 = mods.traps;
+  const f08 = mods.srmap;
   const salamHubBadge = SALAM_META?.exec_state
     ? `3 VERDICTS · ${SALAM_META.exec_state}`
     : "3 VERDICTS · OPEN PAGE →";
@@ -1437,55 +1445,41 @@ function renderEntryHub() {
   const salamStamp = SALAM_META?.generated_at_utc ? ` · Updated ${fmtUtcSgtCompact(SALAM_META.generated_at_utc)}` : "";
 
   host.innerHTML = `
-    <div class="hub-header">
-      <span>// START HERE · 1.0x SPOT DESK</span>
-      <span>TAP CARD OR USE &#9776; MENU &#9658;</span>
+    <div class="hub-section-lbl">Step-by-Step Analysis (01 → 06)</div>
+    <div class="hub-grid">
+      ${["regime", "news", "rhyme", "spot", "traps", "prompts"].map(renderCard).join("")}
     </div>
-    <div class="hub-featured-pair">
+
+    <div class="hub-section-lbl">Final Verdicts &amp; Execution Desk (07 → 08)</div>
+    <div class="hub-verdict-stack">
+      <a class="hub-featured-card salam-card" href="salam.html">
+        <div class="hub-card-top">
+          <div class="hub-card-left">
+            <span class="hub-num">[07]</span>
+            <span class="hub-title">SALAM PRO MAX &middot; 3 VERDICTS</span>
+          </div>
+          <span class="badge ${esc(salamHubCls)}">${esc(salamHubBadge)}</span>
+        </div>
+        <div class="hub-status">&#9658; Volume Profile (30D/7D/4H POC/VAH/VAL) &middot; 1H Sweep Reclaim &middot; 80/20 Spot Shield (Split Bar, Risk Audit &amp; Cheat Sheet)${esc(salamStamp)}</div>
+        <div class="hub-desc">Dedicated 1.0x Spot workstation combining SALAM Tactical + full 80/20 Spot Shield (Sleeves #1 &amp; #2) in one place.</div>
+      </a>
+
       <button type="button" class="hub-featured-card primary" data-open-tab="srmap">
         <div class="hub-card-top">
           <div class="hub-card-left">
-            <span class="hub-num">[10]</span>
-            <span class="hub-title">${esc(f10.title)}</span>
+            <span class="hub-num">[08]</span>
+            <span class="hub-title">${esc(f08.title)}</span>
           </div>
-          <span class="badge ${esc(f10.badgeCls)}">${esc(f10.badge)}</span>
+          <span class="badge ${esc(f08.badgeCls)}">${esc(f08.badge)}</span>
         </div>
-        <div class="hub-status">&#9658; ${esc(f10.status)}</div>
-        <div class="hub-desc">${esc(f10.desc)}</div>
+        <div class="hub-status">&#9658; ${esc(f08.status)}</div>
+        <div class="hub-desc">${esc(f08.desc)}</div>
       </button>
-      <button type="button" class="hub-featured-card" data-open-tab="traps">
-        <div class="hub-card-top">
-          <div class="hub-card-left">
-            <span class="hub-num">[09]</span>
-            <span class="hub-title">${esc(f9.title)}</span>
-          </div>
-          <span class="badge ${esc(f9.badgeCls)}">${esc(f9.badge)}</span>
-        </div>
-        <div class="hub-status">&#9658; ${esc(f9.status)}</div>
-        <div class="hub-desc">${esc(f9.desc)}</div>
-      </button>
-    </div>
-
-    <a class="hub-featured-card salam-card" href="salam.html">
-      <div class="hub-card-top">
-        <div class="hub-card-left">
-          <span class="hub-num">[S]</span>
-          <span class="hub-title">SALAM PRO MAX &middot; 3 VERDICTS</span>
-        </div>
-        <span class="badge ${esc(salamHubCls)}">${esc(salamHubBadge)}</span>
-      </div>
-      <div class="hub-status">&#9658; Volume Profile (30D/7D/4H POC/VAH/VAL) &middot; 1H Sweep Reclaim &middot; 80/20 Spot Shield (Split Bar, Risk Audit &amp; Cheat Sheet)${esc(salamStamp)}</div>
-      <div class="hub-desc">Dedicated 1.0x Spot workstation combining SALAM Tactical + full 80/20 Spot Shield (Sleeves #1 &amp; #2) in one place.</div>
-    </a>
-
-    <div class="hub-section-lbl">Core Spot &amp; Market Context</div>
-    <div class="hub-grid">
-      ${["news", "prompts", "regime", "spot", "rhyme"].map(renderCard).join("")}
     </div>
 
     <details class="hub-advanced-drawer" id="hubAdvancedDrawer" ${HUB_ADV_OPEN ? "open" : ""}>
       <summary class="hub-adv-summary">
-        <span>Advanced · Futures (Max 1:2 Lev) &amp; System Tools (F1 · F7 · F8)</span>
+        <span>Advanced · Futures (Max 1:2 Lev) &amp; System Tools (A1 · A2 · A3)</span>
         <span class="badge">TAP TO EXPAND</span>
       </summary>
       <div class="hub-adv-body">
@@ -1496,7 +1490,7 @@ function renderEntryHub() {
     </details>
 
     <div class="hub-footer">
-      <span>1.0x SPOT FIRST · 9 MODULES + SALAM + PROMPT LIBRARY · KEYS [1–5, 7–9, M, P]</span>
+      <span>1.0x SPOT FIRST + MAX 1:2 FUTURES · STEPS 01–08 + ADVANCED A1–A3</span>
       <span><a href="privacy.html" data-i18n="privacy_lbl">${esc(tr("privacy_lbl", "Privacy Policy & Data Disclosure"))}</a></span>
     </div>
   `;
