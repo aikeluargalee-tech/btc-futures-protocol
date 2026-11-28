@@ -12,6 +12,7 @@ const pct = (v, d = 2) => (typeof v === "number" && isFinite(v) ? `${v >= 0 ? "+
 const kv = (rows) => rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
 
 let STATE = null;
+let SALAM_META = null;
 let LIVE = { price: null, src: null, at: 0 };
 let ACTIVE_VIEW = "hub";
 let CHART_TF = "h4";
@@ -1458,6 +1459,13 @@ function renderNavDrawer() {
       </button>
     `;
   };
+  const salamBadge = SALAM_META?.exec_state
+    ? `3 VERDICTS · ${SALAM_META.exec_state}`
+    : "3 VERDICTS · OPEN →";
+  const salamCls = SALAM_META?.exec_state === "FULL" || SALAM_META?.exec_state === "FULL-OKX"
+    ? "up"
+    : (SALAM_META?.exec_state === "PARTIAL" || SALAM_META?.exec_state === "MANUAL" ? "warn" : "");
+
   host.innerHTML = `
     <div class="nav-drawer-head">
       <span>// WORKSTATION MENU</span>
@@ -1467,6 +1475,13 @@ function renderNavDrawer() {
       ${renderNavItem("hub")}
       <div class="nav-group-lbl">Core 1.0x Spot Desk</div>
       ${["srmap", "traps", "shield", "news"].map(renderNavItem).join("")}
+      <a class="nav-item nav-item-link" href="salam.html">
+        <span class="nav-item-main">
+          <span class="nav-item-code">S</span>
+          <span>SALAM Pro Max (3 Verdicts)</span>
+        </span>
+        <span class="badge ${esc(salamCls)}">${esc(salamBadge)}</span>
+      </a>
       <div class="nav-group-lbl">Market Context</div>
       ${["regime", "spot", "rhyme"].map(renderNavItem).join("")}
       <div class="nav-group-lbl">Advanced · Futures &amp; System</div>
@@ -1531,6 +1546,14 @@ function renderEntryHub() {
 
   const f10 = mods.srmap;
   const f9 = mods.traps;
+  const salamHubBadge = SALAM_META?.exec_state
+    ? `3 VERDICTS · ${SALAM_META.exec_state}`
+    : "3 VERDICTS · OPEN PAGE →";
+  const salamHubCls = SALAM_META?.exec_state === "FULL" || SALAM_META?.exec_state === "FULL-OKX"
+    ? "up"
+    : (SALAM_META?.exec_state === "PARTIAL" || SALAM_META?.exec_state === "MANUAL" ? "warn" : "");
+  const salamStamp = SALAM_META?.generated_at_utc ? ` · Updated ${fmtUtcSgtCompact(SALAM_META.generated_at_utc)}` : "";
+
   host.innerHTML = `
     <div class="hub-header">
       <span>// START HERE · 1.0x SPOT DESK</span>
@@ -1560,6 +1583,18 @@ function renderEntryHub() {
         <div class="hub-desc">${esc(f9.desc)}</div>
       </button>
     </div>
+
+    <a class="hub-featured-card salam-card" href="salam.html">
+      <div class="hub-card-top">
+        <div class="hub-card-left">
+          <span class="hub-num">[S]</span>
+          <span class="hub-title">SALAM PRO MAX &middot; 3 VERDICTS</span>
+        </div>
+        <span class="badge ${esc(salamHubCls)}">${esc(salamHubBadge)}</span>
+      </div>
+      <div class="hub-status">&#9658; Volume Profile (30D/7D/4H POC/VAH/VAL) &middot; 1H Sweep Reclaim &middot; Rail B Spot Sizing &middot; 80/20 Shields${esc(salamStamp)}</div>
+      <div class="hub-desc">Dedicated standalone 1.0x Spot workstation page &mdash; opens SALAM Pro Max directly inside this app.</div>
+    </a>
 
     <div class="hub-section-lbl">Core Spot &amp; Market Context</div>
     <div class="hub-grid">
@@ -2265,13 +2300,31 @@ function renderAllTabsFromState() {
   renderNavDrawer();
 }
 
+async function fetchSalamMeta() {
+  try {
+    const sj = await fetchJson("data/SALAM_DATA_HUB.json?t=" + Date.now(), 1);
+    if (!sj || typeof sj !== "object") return null;
+    return {
+      exec_state: sj.exec_state || null,
+      generated_at_utc: sj.generated_at_utc || null,
+      price: sj.price ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function refreshStateFromServer(silent = false) {
   try {
-    const nextState = await fetchJson("data/state.json?t=" + Date.now(), 2);
+    const [nextState, nextSalam] = await Promise.all([
+      fetchJson("data/state.json?t=" + Date.now(), 2),
+      fetchSalamMeta(),
+    ]);
     if (!nextState || typeof nextState !== "object") {
       throw new Error("Invalid state packet");
     }
     STATE = nextState;
+    if (nextSalam) SALAM_META = nextSalam;
     await pollLivePrice();
     const editingField = /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName || "");
     if (!silent || !editingField) {
@@ -2297,8 +2350,13 @@ async function init() {
   const trapsLoad = window.SpotTrapsModule?.loadData
     ? window.SpotTrapsModule.loadData().catch((err) => console.warn("Spot traps bundle skipped:", err))
     : Promise.resolve();
-  const [loadedState] = await Promise.all([fetchJson("data/state.json?t=" + Date.now(), 2), trapsLoad]);
+  const [loadedState, loadedSalam] = await Promise.all([
+    fetchJson("data/state.json?t=" + Date.now(), 2),
+    fetchSalamMeta(),
+    trapsLoad,
+  ]);
   STATE = loadedState;
+  SALAM_META = loadedSalam;
   window.SpotTrapsModule?.init({
     getLivePrice: activePrice,
     copyWithFeedback: copyTextWithFeedback,

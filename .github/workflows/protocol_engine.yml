@@ -34,16 +34,22 @@ jobs:
       - name: Run protocol unit tests
         run: python -m unittest discover -s tests -p "test_*.py" -v
 
+      - name: Run SALAM Pro Max self-tests
+        run: python salam/salam_protocol.py --selftest
+
       - name: Run BTC Futures Protocol Cycle
         env:
           RESET_REVIEW_LOCK: ${{ github.event.inputs.reset_review_lock }}
         run: python -m engine.run_cycle
 
+      - name: Build SALAM Pro Max packet
+        run: python salam/salam_protocol.py --json --out data
+
       - name: Commit updated state and paper ledger
         run: |
           git config user.name "protocol-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/state.json data/ledger.json data/audit_log.json data/rhyme_delta.jsonl
+          git add data/state.json data/ledger.json data/audit_log.json data/rhyme_delta.jsonl data/SALAM_DATA_HUB.json data/SALAM_DATA_HUB.md
           if git diff --cached --quiet; then
             echo "No data changes"
             exit 0
