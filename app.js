@@ -758,6 +758,7 @@ function fmtAgeMin(m) {
 }
 
 function renderNewsTab() {
+  window.DeskPromptsModule?.renderNewsShelf("newsPromptShelfBox", copyTextWithFeedback);
   const nm = STATE.news_macro;
   if (!nm) {
     $("newsMacroHeroBox").innerHTML = `<h2>News &amp; Macro Desk</h2><p class="mut">News &amp; Macro telemetry not yet generated in this snapshot.</p>`;
@@ -2269,6 +2270,7 @@ function bindEvents() {
     renderPageHeader(ACTIVE_VIEW);
     renderNavDrawer();
     renderEntryHub();
+    if (ACTIVE_VIEW === "news") window.DeskPromptsModule?.renderNewsShelf("newsPromptShelfBox", copyTextWithFeedback);
     if (ACTIVE_VIEW === "traps") window.SpotTrapsModule?.render(STATE);
     if (ACTIVE_VIEW === "srmap") window.SrMapModule?.render(STATE);
   };
@@ -2366,6 +2368,7 @@ async function init() {
     getLivePrice: activePrice,
     copyWithFeedback: copyTextWithFeedback,
     refreshState: () => refreshStateFromServer(false),
+    openDisruptionScanner: () => activateTab("news"),
     openTrapGuide: (trapId) => {
       activateTab("traps");
       window.SpotTrapsModule?.openReader(trapId);

@@ -898,6 +898,7 @@
               <input type="checkbox" id="chkDisruptionVeto" ${plan.disruptionVeto ? "checked" : ""}>
               <span>Disruption Veto (Outage / Shock)</span>
             </label>
+            <button type="button" class="btn" id="btnScanDisruption6h">[Scan 6H Shocks &rarr;]</button>
             <button type="button" class="btn btn-primary" id="btnLogSrRun">[Log This Run]</button>
           </div>
         </div>
@@ -1441,6 +1442,11 @@ ${JSON.stringify(payload, null, 2)}
 
       if (e.target.closest("#btnSrOpenTrap05")) {
         INIT_OPTS.openTrapGuide?.("trap_05");
+        return;
+      }
+
+      if (e.target.closest("#btnScanDisruption6h")) {
+        INIT_OPTS.openDisruptionScanner?.();
         return;
       }
 
