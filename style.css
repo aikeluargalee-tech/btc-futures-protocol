@@ -64,6 +64,9 @@ html, body {
 }
 
 .ws-brand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   background: transparent;
   border: none;
   color: #ffffff;
@@ -80,14 +83,23 @@ html, body {
   white-space: nowrap;
 }
 
+.ws-brand-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: #e4e4df;
+  display: block;
+}
+
 .ws-brand-btn:hover {
   text-decoration: underline;
 }
 
 @media (max-width: 520px) {
   .ws-brand-btn {
-    font-size: 9.5px;
-    letter-spacing: 0.02em;
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
   }
 }
 
